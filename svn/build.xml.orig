@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="GBK"?>
+<project name="build" default="all" basedir=".">
+    <property name="antDir" value="/usr/local/apache-ant-1.9.3/lib"/>
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+		<classpath>
+			<pathelement location="${antDir}/ant-contrib.jar"/>
+		</classpath>
+	</taskdef>
+	<taskdef name="xmltask" classname="com.oopsconsultancy.xmltask.ant.XmlTask">
+		<classpath>
+			<pathelement location="${antDir}/xmltask.jar"/>
+		</classpath>
+	</taskdef>
+	<path id="project.frame">
+		<fileset dir="${basedir}/lib">
+			<include name="**/*.jar"/>
+			<!-- 编译时所要用到的所有jar -->
+		</fileset>
+	</path>
+
+	<property name="deploy" value="deploy"/>
+	<!-- 初始化 -->
+	<target name="init" description="初始化">
+
+	</target>
+	<target name="deldeploy" depends="init" description="删除deploy包">
+		<if>
+			<available file="${deploy}" type="dir"/>
+			<then>
+				<delete dir="${deploy}"/>
+				<antcall target="debugMessage">
+					<param name="message" value="清空版本目录：${deploy}"/>
+				</antcall>
+			</then>
+		</if>
+		<if>
+			<not>
+				<available file="${deploy}" type="dir"/>
+			</not>
+			<then>
+				<mkdir dir="${deploy}/jars"/>
+				<mkdir dir="${deploy}/war"/>
+				<antcall target="debugMessage">
+					<param name="message" value="创建目录：${deploy}"/>
+				</antcall>
+			</then>
+		</if>
+	</target>
+	<target name="compileframe" depends="init,deldeploy" description="构建框架的包">
+		<trycatch property="exception">
+			<try>
+				
+			</try>
+			<catch>
+				<fail message="编译打包失败：${exception}"/>
+			</catch>
+			<finally>
+		</finally>
+		</trycatch>
+	</target>
+
+	<!--编译基础包-->
+   <target name="jcb" depends="init,deldeploy,compileframe" description="构建基础包">
+		<trycatch property="exception">
+			<try>
+				<if>
+					<available file="${deploy}" type="dir"/>
+					<then>
+						<path id="project">
+							<fileset dir="${deploy}/jars">
+								<include name="**/*.jar"/>
+								<!-- 编译时所要用到的所有jar -->
+							</fileset>
+						</path>
+					</then>
+				</if>
+				
+
+			</try>
+			<catch>
+				<fail message="编译打包失败：${exception}"/>
+			</catch>
+			<finally>
+		</finally>
+		</trycatch>
+	</target>
+
+
+	<!--构建系统业务包-->
+	<target name="APP-NAME" depends="init,deldeploy,compileframe,jcb" description="构建全部">
+		<trycatch property="exception">
+			<try>
+				<if>
+					<available file="${deploy}" type="dir"/>
+					<then>
+						<path id="project">
+							<fileset dir="${deploy}/jars">
+								<include name="**/*.jar"/>
+								<!-- 编译时所要用到的所有jar -->
+							</fileset>
+						</path>
+					</then>
+				</if>
+				
+				
+				<!--编译adp-->
+				<mkdir dir="${deploy}/adp"/>
+				<copy todir="${deploy}/adp" overwrite="true">
+					<fileset dir="${basedir}/adp/WebRoot">
+						<include name="**/**"/>
+					</fileset>
+				</copy>
+				<copy todir="${deploy}/adp/WEB-INF/classes" overwrite="true">
+					<fileset dir="${basedir}/adp/src">
+						<include name="**/**"/>
+						<exclude name="**/*.java"/>
+					</fileset>
+				</copy>
+				<copy todir="${deploy}/adp/WEB-INF/lib" overwrite="true">
+					<fileset dir="${basedir}/lib">
+						<include name="**/**"/>
+					</fileset>
+					<fileset dir="${deploy}/jars">
+						<include name="**/**"/>
+					</fileset>
+				</copy>
+
+				<javac srcdir="${basedir}/adp/src" destdir="${deploy}/adp/WEB-INF/classes" debug="true" debuglevel="lines,source" encoding="UTF-8">
+					<classpath refid="project.frame"/>
+				</javac>
+				<jar compress="true" update="true" destfile="${deploy}/war/APP-NAME.war">
+					<fileset dir="${deploy}/adp">
+						<include name="**/*.*"/>
+					</fileset>
+				</jar>
+
+			</try>
+			<catch>
+				<fail message="编译打包失败：${exception}"/>
+			</catch>
+			<finally>
+		</finally>
+		</trycatch>
+	</target>
+	<!-- 显示调试消息 -->
+	<target name="debugMessage" description="显示调试消息">
+		<tstamp>
+			<format property="TODAY" pattern="yyyy.MM.dd"/>
+		</tstamp>
+		<tstamp>
+			<format property="TIME" pattern="HH:mm:ss"/>
+		</tstamp>
+		<echo level="info">${TODAY} ${TIME}&lt;debug&gt;: ${message}</echo>
+	</target>
+	<!-- 显示错误消息 -->
+	<target name="errorMessage" description="显示错误消息">
+		<tstamp>
+			<format property="TODAY" pattern="yyyy.MM.dd"/>
+		</tstamp>
+		<tstamp>
+			<format property="TIME" pattern="HH:mm:ss"/>
+		</tstamp>
+		<echo level="error">${TODAY} ${TIME}&lt;error&gt;: ${message}</echo>
+	</target>
+	<target name="test" description="ceshi">
+		<jar compress="true" update="true" destfile="${dist.work.ear}/adp.ear">
+			<fileset dir="${dist.work.server}/" includes="**/**"/>
+		</jar>
+	</target>
+</project>

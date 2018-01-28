@@ -1,0 +1,13 @@
+body, button {
+    font-size: 10pt;
+    font-family: sans-serif;
+}
+
+body { display: flex; flex-direction: column; }
+#toolbar { flex: none; padding: 10px; }
+textarea { flex: auto; width: 100%; }
+
+#name:before { content: "Name: "; font-family: sans-serif; }
+#type:before { content: "Type: "; font-family: sans-serif; }
+output { display: inline-block; width: 300px; font-family: Courier; }
+textarea { font-size: 10pt; font-family: Courier; font-weight: bold; padding: 10px; }

@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}服务器列表{% endblock %}
+{% block content %}
+    {#    <div class="container col-sm-8 col-sm-offset-2 col-md-10 col-md-offset-2 main">#}
+    <div class="container col-sm-8 col-md-12">
+        <div class="col-md-offset-1 console-instance-head clearfix">
+            <div class="pull-left">
+                <h3><span>服务器列表</span></h3>
+            </div>
+        </div>
+        {#        <form id="asset_form">#}
+        {#            <div>#}
+        {#                <a href="{% url 'asset_add' %}" class="btn btn-sm btn-primary "> 添加资产 </a>#}
+        {#            </div>#}
+        {#        </form>#}
+        {#        <div class="actions">#}
+        {#            <label>选择: <select name="action" required>#}
+        {#                <option value="" selected="selected">---------</option>#}
+        {#                <option value="delete_selected">删除选择服务器</option>#}
+        {#            </select>#}
+        {#            </label>#}
+        {#            <input class="select-across" name="select_across" type="hidden" value="0"/>#}
+        {#            <button type="submit" class="btn btn-danger" title="Run the selected action" name="index" value="0">删除#}
+        {#            </button>#}
+        {#            <span class="action-counter" data-actions-icnt="6">0 of {{ assets.count }} selected</span>#}
+        {#        </div>#}
+        {#        <div class="table-responsive">#}
+        <div class="col-md-offset-1 margin-top-1">
+            <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                   id="dataTables-asset">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>ID</th>
+                    <th>主机名</th>
+                    <th>IP地址</th>
+                    <th>所属主机组</th>
+                    <th>部署的应用</th>
+                    <th>备注</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for asset in assets %}
+                    <tr class="gradeX">
+                        <td class="text-center" name="id" value="{{ asset.id }}" data-editable='false'>
+                            <input id="asset_select_id" value="{{ asset.id }}" type="checkbox" class="i-checks">
+                        </td>
+                        <td>{{ asset.id }}</td>
+                        <td>{{ asset.hostname }}</td>
+                        <td><a href="{% url 'asset_change' asset_id=asset.id %}">{{ asset.ip }}</a></td>
+                        <td>
+                            {% for ag in asset.assetgroups.all %}
+                                {{ ag.name }}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% if asset.configs %}
+                                <label class="label label-success mr5"
+                                       ng-repeat="tag in data.tags">{{ asset.configs }}</label>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {#                            <div style="width: 400px;word-wrap: break-word;overflow-y:hidden;white-space:nowrap">#}
+                            <div>
+                                {{ asset.comment }}
+                            </div>
+                        </td>
+                        <td class="text-center" data-editable='false'>
+                            <a href="{% url 'host_connect' asset_id=asset.id %}" target="_blank"
+                               class="btn btn-xs btn-warning">连接</a>
+                            {% if request.user.username == 'admin' %}
+                                <input type="button" class="asset_del btn btn-xs btn-danger" aid="{{ asset.id }}"
+                                       value="删除"/>
+                                {#                                    <a href="{% url 'asset_delete' asset_id=asset.id %}" class="btn btn-xs btn-info">删除</a>#}
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {#            <div>#}
+            {#                <input type="button" id="asset_dels" class="btn btn-danger btn-sm" name="del_button" value="删除"/>#}
+            {#                <input type="button" id="asset_update" class="btn btn-info btn-sm" name="update_button" value="更新"/>#}
+            {#            </div>#}
+        </div>
+        {#        <input type="button" id="exec_cmd" class="btn btn-sm btn-primary" value="执行命令"/>#}
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.asset_del').click(function () {
+                var asset_delete_id = $(this).attr('aid');
+                var result = confirm("请确认是否删除服务器" + asset_delete_id + "？");
+                if (result == true) {
+                    $.ajax({
+                        type: "POST",
+                        url: "/nova/asset/" + asset_delete_id + "/delete/",
+                        success: function (response) {
+                            if (response['rtn'] == "00") {
+                                alert(response['msg']);
+                                parent.location.reload();
+                            }
+                        },
+                        error: function (response) {
+                            alert(response['msg']);
+                        },
+                        dataType: 'json',
+                        contentType: 'application/json',
+                    });
+                }
+            })
+        });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $('#dataTables-asset').DataTable({
+                responsive: true,
+                language: {
+                    "sProcessing": "处理中...",
+                    "sLengthMenu": "显示 _MENU_ 项结果",
+                    "sZeroRecords": "没有匹配结果",
+                    "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+                    "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+                    "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+                    "sInfoPostFix": "",
+                    "sSearch": "搜索:",
+                    "sUrl": "",
+                    "sEmptyTable": "表中数据为空",
+                    "sLoadingRecords": "载入中...",
+                    "sInfoThousands": ",",
+                    "oPaginate": {
+                        "sFirst": "首页",
+                        "sPrevious": "上页",
+                        "sNext": "下页",
+                        "sLast": "末页"
+                    },
+                    "oAria": {
+                        "sSortAscending": ": 以升序排列此列",
+                        "sSortDescending": ": 以降序排列此列"
+                    }
+                }
+            });
+        });
+    </script>
+
+{% endblock %}

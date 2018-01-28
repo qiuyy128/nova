@@ -1,0 +1,509 @@
+{% extends 'base.html' %}
+{% block title %}访问日志分析{% endblock %}
+{% block content %}
+    <style type="text/css">
+        th, td {
+            text-align: center; /** 设置水平方向居中 */
+            vertical-align: middle !important; /** 设置垂直方向居中 */
+        }
+
+        .control-label {
+            padding-top: 7px;
+        }
+
+        .label-width {
+            width: 110px;
+        }
+
+        .request-width {
+            width: 200px;
+            word-break: break-all;
+            word-wrap: break-word;
+        }
+
+        .refer-width {
+            width: 300px;
+            word-break: break-all;
+            word-wrap: break-word;
+        }
+
+        .row {
+            padding-left: -15px;
+            margin-left: -15px;
+        }
+
+        {#        .table th, .table td {#}
+        {#            text-align: center;#}
+        {#            vertical-align: middle !important;#}
+        {#        }#}
+    </style>
+    <div class="container col-sm-8 col-md-12">
+        <div class="col-md-offset-1 console-instance-head clearfix">
+            <div class="pull-left">
+                <h3><span>访问日志分析</span></h3>
+            </div>
+        </div>
+        <div class="col-md-offset-1 margin-top-1">
+            <form class="form-inline row" name="searchBar">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label label-width"><span
+                            class="text-danger">*</span><span>开始时间：</span></label>
+                    <div class="col-sm-3">
+                        <input class="form-control" type="text" id="id_start_time" name="start_time"
+                               value="{{ start_time|date:"Y-m-d H:i:s" }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label label-width"><span
+                            class="text-danger">*</span><span>结束时间：</span></label>
+                    <div class="col-sm-3">
+                        <input class="form-control" type="text" id="id_end_time" name="end_time"
+                               value="{{ end_time|date:"Y-m-d H:i:s" }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label label-width"><span>refer关键字：</span></label>
+                    <div class="col-sm-3">
+                        <input type="text" id="id_refer" name="refer" placeholder="输入refer关键字模糊查询"
+                               class="form-control" style="width: 300px">
+                    </div>
+                </div>
+
+            </form>
+            <form class="form-inline row" name="searchBar">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label label-width"><span>IP地址：</span></label>
+                    <div class="col-sm-3">
+                        <input type="text" id="id_ip" name="ip" placeholder="输入IP地址精确查询"
+                               class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label label-width"><span>访问状态：</span></label>
+                    <div class="col-sm-3">
+                        <input type="text" id="id_status" name="status" placeholder="输入访问状态值精确查询"
+                               class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label label-width"><span>请求URL：</span></label>
+                    <div class="col-sm-3">
+                        <input type="text" id="id_request" name="request" placeholder="输入请求URL关键字模糊查询"
+                               class="form-control" style="width: 300px">
+                    </div>
+                </div>
+            </form>
+            <form class="form-inline row" name="searchBar">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label label-width"><span>userAgent：</span></label>
+                    <div class="col-sm-3">
+                        <input type="text" id="id_userAgent" name="userAgent" placeholder="输入userAgent关键字模糊查询"
+                               class="form-control" style="width: 300px">
+                    </div>
+                </div>
+            </form>
+            <form class="form-inline row" name="searchBar">
+                <div class="form-group">
+                    <div class="col-sm-3">
+                        <input type="button" class="btn btn-default"
+                               id="id_query"
+                               value="查询">
+                    </div>
+                </div>
+            </form>
+
+        </div>
+
+        <div class="col-md-offset-1 margin-top-1" id="table">
+            <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                   id="dataTables-sql">
+                <thead>
+                <tr>
+                    <th>时间</th>
+                    <th>IP</th>
+                    <th>request</th>
+                    <th>status</th>
+                    <th>userAgent</th>
+                    <th>refer</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for access_log in access_logs %}
+                    <tr class="gradeX">
+                        <td>{{ access_log.time|date:"Y-m-d H:i:s" }}</td>
+                        <td>{{ access_log.ip }}</td>
+                        <td>
+                            <div class="request-width">
+                                {{ access_log.request }}
+                            </div>
+                        </td>
+                        <td>{{ access_log.status }}</td>
+                        <td>
+                            <div class="refer-width">
+                                {{ access_log.userAgent }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="refer-width">
+                                {{ access_log.refer }}
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <table class="table table-fixed" width="100%" style=" bottom: 0px;">
+                <tr>
+                    <td>
+                        <div>
+                            <div class="pull-right">
+                                <div class="pagination-info">
+                                    <span id="summary">共有 {{ all_counts }} 条，</span>
+                                    <span>第</span>
+                                    <span id="id_page_index">{{ page_index }}</span>
+                                    <span>/</span>
+                                    <span id="id_page_count">{{ page_count }}</span>
+                                    <span>页，</span>
+                                                <span>每页显示：
+                                                    <select id="id_page_size" name="page_size"
+                                                            onchange="change_page_size()">
+                                                        {% for i in page_size_option %}
+                                                            {% if i == page_size %}
+                                                                <option value="{{ i }}"
+                                                                        selected="selected">{{ i }}</option>
+                                                            {% else %}
+                                                                <option value="{{ i }}">{{ i }}</option>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </select>条
+                                                </span>
+                                </div>
+
+                                <ul id="id_pagination" class="pagination">
+                                    <li id="first_page"><a>«</a></li>
+                                    <li id="previous_page"><a>‹</a></li>
+                                    <li id="next_page"><a>›</a></li>
+                                    <li id="last_page"><a>»</a></li>
+                                </ul>
+
+                                <span style="padding-left: 15px;padding-right: 15px">
+                                    <input type="text" id="id_page" name="page"
+                                           class="form-control"
+                                           style="width: 40px; display: inline-block;">
+                                    </input>
+                                    <input type="button" style="margin-left: 6px" class="btn btn-default"
+                                           id="page_query" disabled="disabled"
+                                           value="GO">
+                                    </input>
+                                </span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        var page_size = Number($("#id_page_size").val());
+        var page_count = Number($("#id_page_count").text());
+        var page_index = Number($("#id_page_index").text());
+        function change_page_size() {
+            var ip = $('#id_ip').val();
+            var status = $('#id_status').val();
+            var refer = $('#id_refer').val();
+            var request = $('#id_request').val();
+            var start_time = $('#id_start_time').val();
+            var end_time = $('#id_end_time').val();
+            var userAgent = $('#id_userAgent').val();
+            {#                $('#dataTables-sql').remove();#}
+            $("#dataTables-sql tbody tr").remove();
+            var page_index = 1;
+            var page_size = Number($("#id_page_size").val());
+            $.ajax({
+                type: "POST",
+                url: "{% url 'access_log' %}",
+                data: JSON.stringify({
+                    ip: ip,
+                    status: status,
+                    refer: refer,
+                    request: request,
+                    start_time: start_time,
+                    end_time: end_time,
+                    userAgent: userAgent,
+                    page_index: page_index,
+                    page_size: page_size
+                }),
+                success: function (result) {
+                    if (result.rtn == 01) {
+                        alert(result.msg);
+                    }
+                    if (typeof result == 'string') {
+                        result = JSON.parse(result);
+                    }
+                    var list = result.access_logs;
+                    var totalCount = result.all_counts;
+                    var page_count = result.page_count;
+                    {#                        $.each(result.access_logs, function (i,v) {#}
+                    {#                            alert(v.time);#}
+                    {#                            alert(v.refer);#}
+                    {#                        });#}
+                    if (list.length != 0) {
+                        for (var i = 0; i < list.length; i++) {
+                            var time = list[i].time;
+                            var ip = list[i].ip;
+                            var request = list[i].request;
+                            var status = list[i].status;
+                            var userAgent = list[i].userAgent;
+                            var refer = list[i].refer;
+                            appendData(time, ip, request, status, userAgent, refer);
+                            {#                                addEvent(alarm_id);#}
+                            {#                            $("#table").show();#}
+                            {#                            $("#footer").show();#}
+                            displayFooter(totalCount, page_count, page_index);
+                        }
+                    }
+                    else {
+                        {#                            $("#table").hide();#}
+                        {#                            $("#footer").hide();#}
+                    }
+                },
+                error: function (result) {
+                    alert('error');
+                },
+                dataType: "json",
+                contentType: "application/json"
+            });
+        }
+
+        $(document).ready(function () {
+            $('#id_query').click(function () {
+                var ip = $('#id_ip').val();
+                var status = $('#id_status').val();
+                var refer = $('#id_refer').val();
+                var request = $('#id_request').val();
+                var start_time = $('#id_start_time').val();
+                var end_time = $('#id_end_time').val();
+                var userAgent = $('#id_userAgent').val();
+                {#                $('#dataTables-sql').remove();#}
+                $("#dataTables-sql tbody tr").remove();
+                var page_index = 1;
+                var page_size = Number($("#id_page_size").val());
+                $.ajax({
+                    type: "POST",
+                    url: "/nova/access_log/",
+                    data: JSON.stringify({
+                        ip: ip,
+                        status: status,
+                        refer: refer,
+                        request: request,
+                        start_time: start_time,
+                        end_time: end_time,
+                        userAgent: userAgent,
+                        page_index: page_index,
+                        page_size: page_size
+                    }),
+                    success: function (result) {
+                        if (result.rtn == 01) {
+                            alert(result.msg);
+                        }
+                        if (typeof result == 'string') {
+                            result = JSON.parse(result);
+                        }
+                        var list = result.access_logs;
+                        var totalCount = result.all_counts;
+                        var page_count = result.page_count;
+                        {#                        $.each(result.access_logs, function (i,v) {#}
+                        {#                            alert(v.time);#}
+                        {#                            alert(v.refer);#}
+                        {#                        });#}
+                        if (list.length != 0) {
+                            for (var i = 0; i < list.length; i++) {
+                                var time = list[i].time;
+                                var ip = list[i].ip;
+                                var request = list[i].request;
+                                var status = list[i].status;
+                                var userAgent = list[i].userAgent;
+                                var refer = list[i].refer;
+                                appendData(time, ip, request, status, userAgent, refer);
+                                {#                                addEvent(alarm_id);#}
+                                {#                            $("#table").show();#}
+                                {#                            $("#footer").show();#}
+                                displayFooter(totalCount, page_count, page_index);
+                            }
+                        }
+                        else {
+                            {#                            $("#table").hide();#}
+                            {#                            $("#footer").hide();#}
+                        }
+                    },
+                    error: function (result) {
+                        alert('error');
+                    },
+                    dataType: "json",
+                    contentType: "application/json"
+                });
+            })
+        });
+
+        function appendData(time, ip, request, status, userAgent, refer) {
+            $("#dataTables-sql").append(
+                    "<tr class='gradeX'>"
+                    + "<td>" + time + "</td>"
+                    + "<td>" + ip + "</td>"
+                    + "<td><div class='request-width'>" + request + "</div></td>"
+                    + "<td>" + status + "</td>"
+                    + "<td><div class='refer-width'>" + userAgent + "</div></td>"
+                    + "<td><div class='refer-width'>" + refer + "</div></td>"
+                    + "</tr>");
+            {#            $("#table table").append(text);#}
+        }
+
+        function loadData(page_index, page_size) {
+            {#            $(".detail").remove();#}
+            var ip = $('#id_ip').val();
+            var status = $('#id_status').val();
+            var refer = $('#id_refer').val();
+            var request = $('#id_request').val();
+            var start_time = $('#id_start_time').val();
+            var end_time = $('#id_end_time').val();
+            var userAgent = $('#id_userAgent').val();
+            $("#dataTables-sql tbody tr").remove();
+            $.ajax({
+                type: "POST",
+                url: "/nova/access_log/",
+                data: JSON.stringify({
+                    ip: ip,
+                    status: status,
+                    refer: refer,
+                    request: request,
+                    start_time: start_time,
+                    end_time: end_time,
+                    userAgent: userAgent,
+                    page_index: page_index,
+                    page_size: page_size
+                }),
+                success: function (result) {
+                    if (typeof result == 'string') {
+                        result = JSON.parse(result);
+                    }
+                    var list = result.access_logs;
+                    var totalCount = result.all_counts;
+                    var page_count = result.page_count;
+                    {#                        $.each(result.access_logs, function (i,v) {#}
+                    {#                            alert(v.time);#}
+                    {#                            alert(v.refer);#}
+                    {#                        });#}
+                    if (list.length != 0) {
+                        for (var i = 0; i < list.length; i++) {
+                            var time = list[i].time;
+                            var ip = list[i].ip;
+                            var request = list[i].request;
+                            var status = list[i].status;
+                            var userAgent = list[i].userAgent;
+                            var refer = list[i].refer;
+                            appendData(time, ip, request, status, userAgent, refer);
+                            {#                                addEvent(alarm_id);#}
+                            {#                            $("#table").show();#}
+                            {#                            $("#footer").show();#}
+                            displayFooter(totalCount, page_count, page_index);
+                        }
+                    }
+                    else {
+                        {#                            $("#table").hide();#}
+                        {#                            $("#footer").hide();#}
+                    }
+                },
+                error: function (result) {
+                    alert('error');
+                },
+                dataType: "json",
+                contentType: "application/json"
+            });
+            $("#id_page_index").text(page_count);
+        }
+
+        function displayFooter(totalCount, page_count, page_index) {
+            {#            var newText = '共' + totalCount + '条，' + '第' + page_index + '/' + page_count + '页，';#}
+            var newText = '共有 ' + totalCount + ' 条，';
+            $("#summary").text(newText);
+            $("#id_page_index").text(page_index);
+            $("#id_page_count").text(page_count);
+        }
+
+        $("#id_page").keydown(function (e) {
+            if (e.keyCode) {
+                $("#page_query").attr("disabled", false)
+            }
+        });
+
+        $(document).ready(function () {
+            $('#page_query').click(function () {
+                var goPage = Number($("#id_page").val());
+                var page_index = Number($("#id_page_index").text());
+                var page_count = Number($("#id_page_count").text());
+                if (goPage >= 1 && goPage <= page_count && goPage != page_index) {
+                    page_index = goPage;
+                    var page_size = Number($("#id_page_size").val());
+                    loadData(page_index, page_size);
+                    $('#id_page').val("");
+                    $("#page_query").attr("disabled", true)
+                } else {
+                    return false;
+                }
+
+            });
+        });
+
+        $("#first_page").click(function () {
+            var page_index = Number($("#id_page_index").text());
+            var page_size = Number($("#id_page_size").val());
+            if (page_index == 1) {
+                return false;
+            } else {
+                page_index = 1;
+                loadData(page_index, page_size);
+            }
+
+        });
+
+        $("#last_page").click(function () {
+            var page_index = Number($("#id_page_index").text());
+            var page_size = Number($("#id_page_size").val());
+            var page_count = Number($("#id_page_count").text());
+            if (page_index == page_count) {
+                return false;
+            } else {
+                page_index = page_count;
+                loadData(page_index, page_size);
+            }
+        });
+
+        $("#previous_page").click(function () {
+            var page_index = Number($("#id_page_index").text());
+            var page_size = Number($("#id_page_size").val());
+            if (page_index == 1) {
+                return false;
+            } else {
+                page_index--;
+                loadData(page_index, page_size);
+            }
+        });
+
+        $("#next_page").click(function () {
+            var page_index = Number($("#id_page_index").text());
+            var page_count = Number($("#id_page_count").text());
+            var page_size = Number($("#id_page_size").val());
+            if (page_index == page_count) {
+                return false;
+            } else {
+                page_index++;
+                loadData(page_index, page_size);
+            }
+        });
+
+    </script>
+{% endblock %}

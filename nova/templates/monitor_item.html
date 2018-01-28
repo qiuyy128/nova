@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}消息{% endblock %}
+
+{% block content %}
+    <div class="container col-sm-8 col-md-12">
+        <div class="col-md-offset-1 console-instance-head clearfix">
+            <div class="pull-left">
+                <h3><span>监控</span></h3>
+            </div>
+        </div>
+        <div class="col-md-offset-1" id="container" style="height:400px;"></div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    {#    <script src="http://cdn.hcharts.cn/highstock/highstock.js"></script>#}
+    {#    <script src="http://cdn.hcharts.cn/highcharts/modules/exporting.js"></script>#}
+    <script type="text/javascript">
+        $(document).ready(function requestData() {
+            {#            $.getJSON('{% url 'http_data' %}', function (data) {#}
+            $.ajax({
+                url: "{% url 'http_data' %}?item_id=" + {{ item_id }},
+                type: 'GET',
+                success: function (data) {
+                    if (typeof data == 'string') {
+                        data = JSON.parse(data);
+                    }
+                    var last_time = data.last_time;
+                    var item_name = data.item_name;
+                    data = data.data;
+                    Highcharts.stockChart('container', {
+                        chart: {
+                            events: {
+                                load: function () {
+                                    var chart = $('#container').highcharts();
+                                    var series = chart.series[0];
+                                    setInterval(function () {
+                                        {#                                        $.getJSON('url: "{% url 'http_data' %}', function (res) {#}
+                                        $.ajax({
+                                            url: "{% url 'http_data' %}?item_id=" + {{ item_id }} +"&last_time=" + last_time,
+                                            type: 'GET',
+                                            success: function (res) {
+                                                $.each(res.data, function (i, v) {
+                                                    series.addPoint(v);
+                                                });
+                                            }
+                                        });
+                                    }, 10000);
+                                }
+                            }
+                        },
+{#                        credits: {#}
+{#                            text: "leshui365.com",#}
+{#                            href: "http://www.leshui365.com"#}
+{#                        },#}
+                        rangeSelector: {
+                            selected: 2
+                        },
+                        title: {
+                            text: item_name
+                        },
+                        plotOptions: {
+                            series: {
+                                showInLegend: true
+                            }
+                        },
+                        tooltip: {
+                            split: false,
+                            shared: true
+                        },
+                        series: [{
+                            // type: 'line',
+                            name: item_name,
+                            data: data
+                        }]
+                    });
+                    {#                    setTimeout(requestData, 60000);#}
+                },
+                error: function (data) {
+                    alert('ERROR');
+                },
+                dataType: "json",
+                contentType: "application/json"
+            });
+
+            {#            $.ajax({#}
+            {#                url: '{% url 'http_data' %}',#}
+            {#                type: 'GET',#}
+            {#                success: function (data) {#}
+            {#                    if (typeof data == 'string') {#}
+            {#                        data = JSON.parse(data);#}
+            {#                    }#}
+            {#                    data = data.data;#}
+            {#                    $('#container').highcharts('StockChart', {#}
+            {#                        credits: {#}
+            {#                            text: "leshui365.com",#}
+            {#                            href: "http://www.leshui365.com"#}
+            {#                        },#}
+            {#                        rangeSelector: {#}
+            {#                            selected: 1#}
+            {#                        },#}
+            {#                        title: {#}
+            {#                            text: '发票查验监控'#}
+            {#                        },#}
+            {#                        plotOptions: {#}
+            {#                            series: {#}
+            {#                                showInLegend: true#}
+            {#                            }#}
+            {#                        },#}
+            {#                        tooltip: {#}
+            {#                            split: false,#}
+            {#                            shared: true#}
+            {#                        },#}
+            {#                        series: [{#}
+            {#                            name: '发票查验',#}
+            {#                            data: data#}
+            {#                        }]#}
+            {#                    });#}
+            {#                    setTimeout(requestData, 10000);#}
+            {#                }#}
+            {#            });#}
+
+        });
+    </script>
+{% endblock %}

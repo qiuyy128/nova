@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}消息{% endblock %}
+
+{% block content %}
+    <div class="container col-sm-8 col-md-12">
+        <div class="col-md-offset-1 console-instance-head clearfix">
+            <div class="pull-left">
+                <h3><span>提示</span></h3>
+            </div>
+        </div>
+
+        <div class="col-md-offset-1 margin-top-1" id=toolbar>
+            <a>{{ msg }}</a>
+        </div>
+    </div>
+{% endblock %}

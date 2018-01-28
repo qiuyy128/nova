@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% block title %}SQL审核{% endblock %}
+{% block content %}
+    <div class="container col-sm-8 col-md-12">
+        <div class="col-md-offset-1 console-instance-head clearfix">
+            <div class="pull-left">
+                <h3><span>SQL审核</span></h3>
+            </div>
+        </div>
+        <div class="col-md-offset-1 margin-top-1">
+            <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                   id="dataTables-sql">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>数据库</th>
+                    <th>环境</th>
+                    <th>sql语句</th>
+                    <th>开始时间</th>
+                    <th>结束时间</th>
+                    <th>状态</th>
+                    <th>提交人</th>
+                    <th>执行人</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for sql in sql_commands %}
+                    <tr class="gradeX">
+                        <td>{{ sql.id }}</td>
+                        <td>{{ sql.db_name }}</td>
+                        <td>{{ sql.env }}</td>
+                        <td>
+                            <div style="width:650px;word-break:break-all;word-wrap:break-word;">
+                                {#                                <div>#}
+                                {{ sql.sql }}
+                            </div>
+                        </td>
+                        <td>{{ sql.start_time|date:"Y-m-d H:i:s" }}</td>
+                        <td>{{ sql.end_time|date:"Y-m-d H:i:s" }}</td>
+                        <td>
+                            {% if sql.result == '已提交' %}
+                                <input sql_id="{{ sql.id }}" db_name="{{ sql.db_name }}"
+                                       db_env="{{ sql.env }}"
+                                       type="button"
+                                       class="wait_run btn btn-sm btn-default"
+                                       value="待审核">
+                            {% else %}
+                                {{ sql.result }}
+                            {% endif %}
+                        </td>
+                        <td>{{ sql.submit_user }}</td>
+                        <td>{{ sql.execute_user }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {#            <table class="table table-fixed" width="100%" style="position: fixed; bottom: 0px;">#}
+            <table class="table table-fixed" width="100%">
+                <tr>
+                    <td>
+                        <div>
+                            <div class="pull-right">
+                                <div class="pagination-info">
+                                    <span class="ng-binding">共有 {{ all_count }} 条，</span>
+                                    <span>每页显示：
+                                        <select id="id_limit" name="limit" onchange="change_limit()">
+                                            {% for i in limit_option %}
+                                                {% if i == limit %}
+                                                    <option value="{{ i }}" selected="selected">{{ i }}</option>
+                                                {% else %}
+                                                    <option value="{{ i }}">{{ i }}</option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </select>条
+                                    </span>
+                                </div>
+                                <ul class="pagination">
+                                    {% if sql_commands.has_previous %}
+                                        <li><a href="?page=1&limit={{ limit }}">«</a></li>
+                                        <li>
+                                            <a href="?page={{ sql_commands.previous_page_number }}&limit={{ limit }}">‹</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="disabled"><a href="?page=1">«</a></li>
+                                        <li class="disabled"><a>‹</a></li>
+                                    {% endif %}
+                                    {% for pg in page_range %}
+                                        {% if sql_commands.number == pg %}
+                                            <li class="active"><a href="?page={{ pg }}">{{ pg }}</a></li>
+                                        {% else %}
+                                            <li><a href="?page={{ pg }}&limit={{ limit }}">{{ pg }}</a></li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if sql_commands.has_next %}
+                                        <li><a href="?page={{ sql_commands.next_page_number }}&limit={{ limit }}">›</a>
+                                        </li>
+                                        <li><a href="?page={{ all_pages }}&limit={{ limit }}">»</a></li>
+                                    {% else %}
+                                        <li class="disabled"><a>›</a></li>
+                                        <li class="disabled"><a href="?page={{ all_pages }}">»</a></li>
+                                    {% endif %}
+                                </ul>
+                                <span style="padding-left: 15px;padding-right: 15px">
+                                    <input type="text" id="id_page" name="page"
+                                           class="form-control"
+                                           style="width: 40px; display: inline-block;">
+                                    <input type="button" style="margin-left: 6px" class="btn btn-default"
+                                           id="page_query" disabled="disabled"
+                                           value="GO">
+                                    </input>
+                                </span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        function change_limit() {
+            var limit = $("#id_limit").val();
+            if (limit == 10) {
+                window.location.href = "{% url 'sql_list' %}";
+            }
+            else {
+                window.location.href = "{% url 'sql_list' %}?limit=" + limit;
+            }
+        }
+
+        $("#id_page").keydown(function (e) {
+            if (e.keyCode) {
+                $("#page_query").attr("disabled", false)
+            }
+        });
+
+        $(document).ready(function () {
+            $('#page_query').click(function () {
+                var page = $("#id_page").val();
+                var limit = $("#id_limit").val();
+                window.location.href = "{% url 'sql_list' %}?page=" + page + '&limit=' + limit;
+            });
+        });
+
+        $(document).ready(function () {
+            $('.wait_run').click(function () {
+                var db_name = $(this).attr('db_name');
+                var db_env = $(this).attr('db_env');
+                var sql_id = $(this).attr('sql_id');
+                var result = confirm("是否确定执行该sql?");
+                if (result == true) {
+                    alert("请稍后!");
+                    $.ajax({
+                        type: "POST",
+                        {#                        url: "/nova/sql_exec" + db_name + "/" + db_env + "/" + sql_id + "/",#}
+                        url: "/nova/sql_exec/",
+                        data: JSON.stringify({
+                            db_name: db_name,
+                            db_env: db_env,
+                            sql_id: sql_id
+                        }),
+                        success: function (response) {
+                            if (response['rtn'] == "00") {
+                                alert('执行sql成功！');
+                            }
+                            else if (response['rtn'] == "99") {
+                                alert(response['msg']);
+                            }
+                            else {
+                                alert(response['msg']);
+                            }
+                            parent.location.reload();
+                        },
+                        error: function (response) {
+                            if (response['msg']) {
+                                alert(response['msg']);
+                            }
+                            else {
+                                alert('执行sql失败，其他错误！');
+                            }
+                            parent.location.reload();
+                        },
+                        dataType: "json",
+                        contentType: "application/json",
+                    });
+                }
+            })
+        });
+    </script>
+
+    {#    <script>#}
+    {#        $(document).ready(function () {#}
+    {#            $('#dataTables-sql').DataTable(#}
+    {#                    {#}
+    {#                        responsive: true,#}
+    {#                        "aaSorting": [#}
+    {#                            [4, "desc"]#}
+    {#                        ],#}
+    {#                        language: {#}
+    {#                            "sProcessing": "处理中...",#}
+    {#                            "sLengthMenu": "显示 _MENU_ 项结果",#}
+    {#                            "sZeroRecords": "没有匹配结果",#}
+    {#                            "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",#}
+    {#                            "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",#}
+    {#                            "sInfoFiltered": "(由 _MAX_ 项结果过滤)",#}
+    {#                            "sInfoPostFix": "",#}
+    {#                            "sSearch": "搜索:",#}
+    {#                            "sUrl": "",#}
+    {#                            "sEmptyTable": "表中数据为空",#}
+    {#                            "sLoadingRecords": "载入中...",#}
+    {#                            "sInfoThousands": ",",#}
+    {#                            "oPaginate": {#}
+    {#                                "sFirst": "首页",#}
+    {#                                "sPrevious": "上页",#}
+    {#                                "sNext": "下页",#}
+    {#                                "sLast": "末页"#}
+    {#                            },#}
+    {#                            "oAria": {#}
+    {#                                "sSortAscending": ": 以升序排列此列",#}
+    {#                                "sSortDescending": ": 以降序排列此列"#}
+    {#                            }#}
+    {#                        }#}
+    {#                    }#}
+    {#            );#}
+    {#        });#}
+    {#    </script>#}
+{% endblock %}

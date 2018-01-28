@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+{% block title %}服务部署{% endblock %}
+{% block content %}
+    <!-- Container -->
+    {#    <div class="container col-sm-8 col-sm-offset-2 col-md-10 col-md-offset-2 main">#}
+    <div class="container col-sm-8 col-md-12">
+        <div class="col-md-offset-1 console-instance-head clearfix">
+            <div class="pull-left">
+                <h3><span>服务部署</span></h3>
+            </div>
+        </div>
+        <div class="col-md-offset-1 margin-top-1">
+            <form class="form-horizontal" action="" method="post" id="asset_form">
+{#                  onkeydown="if(event.keyCode==13){return false;}">#}
+                <fieldset>
+                    <div class=" form-group">
+                        <label class="col-sm-2 control-label">服务类型：</label>
+                        <div class="col-sm-4 row">
+                            <select class="form-control" id="id_type" name="app_type" required
+                                    onchange="change_type()">
+                                <option value="" selected="selected">请选择</option>
+                                <option value="nodejs">nodejs</option>
+                                <option value="tomcat">tomcat</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-4 row">
+                            <select class="form-control margin-left-1 " id="id_tomcat" name="tomcat_version" required
+                                    onchange="change_env()">
+                                <option value="" selected="selected">请选择</option>
+                                <option value="Tomcat7">Tomcat7</option>
+                                <option value="Tomcat6">Tomcat6</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">部署环境：</label>
+                        <div class="col-sm-4 row">
+                            <select class="form-control" id="id_env" name="app_env" required
+                                    onchange="change_env()">
+                                <option value="" selected="selected">请选择</option>
+                                <option value="test">test</option>
+                                <option value="staging">staging</option>
+                                <option value="product">product</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">服务svn地址：</label>
+                        <div class="col-sm-8 row">
+                            <textarea class="form-control" rows="10" id="id_svn_url" placeholder="单行输入，分号间隔"
+                                      name="svn_url"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">服务名称：</label>
+                        <div class="col-sm-4 row">
+                            <input class="form-control"
+                                   id="id_app_name" placeholder="fdp_*或者tomcat-*" name="app_name"
+                                   type="text"/>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">服务端口号:</label>
+                        <div class="col-sm-4 row">
+                            <input class="form-control" id="id_app_port"
+                                   name="app_port"
+                                   type="text"
+                                   value="{{ app_host.max_port }}"/>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">部署路径：</label>
+                        <div class="col-sm-4 row">
+                            <input class="form-control"
+                                   id="id_deploy_path" placeholder="/u01/appname/" name="deploy_path"
+                                   type="text"/>
+                        </div>
+                    </div>
+
+                    {#                    <div class="form-group">#}
+                    {#                        <label class="col-sm-2 control-label">部署服务器：</label>#}
+                    {#                        <div class="col-sm-4 row">#}
+                    {#                            <select class="form-control" multiple="multiple" id="id_app_assets"#}
+                    {#                                    name="app_assets"#}
+                    {#                                    required onclick="select_ip()">#}
+                    {#                                {% for asset in assets %}#}
+                    {#                                    <option value="{{ asset.ip }}">{{ asset.ip }}</option>#}
+                    {#                                {% endfor %}#}
+                    {#                            </select>#}
+                    {#                            <a href="/nova/asset/add/?_to_field=id&_popup=1" title="添加主机">#}
+                    {#                                <img src="/static/admin/img/icon-addlink.svg" alt="Add"/>#}
+                    {#                            </a>#}
+                    {#                        </div>#}
+                    {#                    </div>#}
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">
+                            <span class="text-danger">*</span>部署服务器：
+                        </label>
+                        <div class="col-sm-8 row">
+                            <div class="form-group ng-isolate-scope" style="overflow: hidden;overflow: hidden"
+                                 action-select="" current-group="groupData">
+                                <!-- 未选择 -->
+                                <div class="col-sm-4">
+                                    <div class="select-top">
+                                        <div class="select-lft ng-binding">全部服务器</div>
+                                        {#                                        <div class="select-right"><a>全选</a></div>#}
+                                    </div>
+                                    <div>
+                                        <input type="text" placeholder="输入服务器名称"
+                                               id="search_input" name="keyword" value="{{ keyword }}"
+                                               style="border-bottom-right-radius: 0; border-bottom-left-radius: 0; padding-left: 10px; padding-right: 24px"
+                                               class="form-control">
+                                        {#                                        <span class="glyphicon glyphicon-search input-search-icon"></span>#}
+                                    </div>
+                                    <select class="form-control" multiple="multiple" id="id_assets"
+                                            name="app_assets"
+                                            required onclick="select_asset()">
+                                        {% for asset in assets %}
+                                            <option value="{{ asset.ip }}">{{ asset.ip }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <!-- 移如或者移出按钮的行为 -->
+                                <div class="col-sm-2 clearfix" style="width: 40px">
+                                    <button type="button" class="btn btn-primary btn-sm"
+                                            style="position: absolute; left: 50%; margin-left: -19px; top: 55px"
+                                            id="moveRight" disabled="disabled">
+                                        <i class="glyphicon glyphicon-arrow-right"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-primary btn-sm"
+                                            style="position: absolute; left: 50%; margin-left: -19px; top: 90px"
+                                            id="moveLeft" disabled="disabled">
+                                        <i class="glyphicon glyphicon-arrow-left"></i>
+                                    </button>
+                                </div>
+                                <!-- 已经选择 -->
+                                <div class="col-sm-4">
+                                    <div class="select-top">
+                                        <div class="select-lft">已选服务器</div>
+                                        {#                                        <div class="select-right"><a>全选</a></div>#}
+                                    </div>
+                                    <div>
+                                        <input type="text" placeholder=""
+                                               id="search_input" name="keyword" value="{{ keyword }}"
+                                               style="border-bottom-right-radius: 0; border-bottom-left-radius: 0; padding-left: 10px; padding-right: 24px"
+                                               class="form-control">
+                                        {#                                        <span class="glyphicon glyphicon-search input-search-icon"></span>#}
+                                    </div>
+
+                                    <select class="form-control" multiple="multiple" id="id_assets_select"
+                                            name="app_asset_name"
+                                            required onclick="cancel_asset()">
+                                    </select>
+                                </div>
+                                {#                                <div class="inline-block" style="width:180px"> 已选择服务器#}
+                                {#                                    <div multi="true" class="selector">#}
+                                {#                                        <ul class="selector-list">#}
+                                {#                                            <li class="selector-item clearfix">#}
+                                {#                                                <p class="pull-left">wx_sys</p>#}
+                                {#                                            </li>#}
+                                {#                                        </ul>#}
+                                {#                                    </div>#}
+                                {#                                </div>#}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">集群部署：</label>
+                        <div class="col-sm-4 row">
+                            <input checked="checked" id="id_is_cluster" name="is_cluster"
+                                   type="checkbox"/>
+                        </div>
+                    </div>
+
+                </fieldset>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label"></label>
+                    <div class="col-sm-4 row ">
+                        <button type="button" class="deploy btn btn-primary">保存
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- END Content -->
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#id_tomcat").hide();
+        });
+
+        function change_type() {
+            {#            var args = $("#id_type").serialize();#}
+            var type = $("#id_type").val();
+            if (type == 'tomcat') {
+                $("#id_tomcat").show();
+            }
+            else {
+                $("#id_tomcat").hide();
+            }
+            $('#id_assets').empty();
+            $.ajax({
+                type: "GET",
+                url: "{% url 'get_free_asset' %}?type=" + type,
+                success: function (data) {
+                    $.each(data, function (i, item) {
+                        $('#id_assets').append("<option value='" + item.fields.ip + "'>" + item.fields.ip + "</option>");
+                    });
+                },
+                error: function () {
+                    alert('error');
+                },
+                dataType: "json",
+                contentType: "application/json"
+            });
+            $.ajax({
+                type: "GET",
+                url: "{% url 'get_max_port' %}?type=" + type,
+                success: function (data) {
+                    $('#id_app_port').val(data['max_port']);
+                },
+                error: function (data) {
+                    alert('未取到端口号！');
+                },
+                dataType: "json",
+                contentType: "application/json",
+            });
+        }
+        function change_env() {
+            var env = $("#id_env").val();
+            if (env == 'test' || env == 'staging') {
+                $("#id_is_cluster").prop("checked", false);
+            } else {
+                $("#id_is_cluster").prop("checked", true);
+            }
+        }
+        $(document).ready(function () {
+            $('#moveRight').click(function () {
+                var app_assets = [];
+                $("#id_assets option:selected").each(function () {
+                    app_assets.push($(this).val());
+                    $('#id_assets_select').append("<option value='" + $(this).val() + "'>"
+                            + $(this).val() + "</option>");
+                    $("#id_assets").find("option:selected").remove();
+                    $("#moveRight").attr("disabled", true);
+                });
+                {#                var db_select = $("#id_assets").val();#}
+                {#                var index = $("#id_assets").get(0).selectedIndex;#}
+                {#                var select_text = $("#id_assets").find("option:selected").text();#}
+                {#                document.getElementById("id_assets").options.remove(index);#}
+            });
+            $('#moveLeft').click(function () {
+                var app_assets = [];
+                $("#id_assets_select option:selected").each(function () {
+                    app_assets.push($(this).val());
+                    $('#id_assets').append("<option value='" + $(this).val() + "'>"
+                            + $(this).val() + "</option>");
+                    $("#id_assets_select").find("option:selected").remove();
+                    $("#moveLeft").attr("disabled", true);
+                });
+            });
+        });
+
+        function select_asset() {
+            var $obj = $("#id_assets option");
+            if ($obj.is(':selected')) {
+                $("#moveRight").attr("disabled", false);
+            }
+            else {
+                $("#moveRight").attr("disabled", true);
+            }
+        }
+        function cancel_asset() {
+            var $obj = $("#id_assets_select option");
+            if ($obj.is(':selected')) {
+                $("#moveLeft").attr("disabled", false);
+            }
+            else {
+                $("#moveLeft").attr("disabled", true);
+            }
+        }
+
+        function change_info() {
+            var type = $("#id_type").val();
+            var asset_ip = $("#search_input").val();
+            $('#id_assets').empty();
+            $.ajax({
+                type: "GET",
+                url: "{% url 'get_free_asset' %}?type=" + type + '&asset_ip=' + asset_ip,
+                success: function (data) {
+                    $.each(data, function (i, item) {
+                        $('#id_assets').append("<option value='" + item.fields.ip + "'>" + item.fields.ip + "</option>");
+                    });
+                },
+                error: function () {
+                    alert('error');
+                },
+                dataType: "json",
+                contentType: "application/json"
+            });
+        }
+
+        {#        $("#search_input").bind('input propertychange', function () {#}
+        {#            change_info();#}
+        {#        });#}
+        $("#search_input").keydown(function (e) {
+            if (e.keyCode == 13) {
+                change_info();
+                return false
+            }
+        });
+
+        $(document).ready(function () {
+            $('.deploy').click(function () {
+                var app_type = $("#id_type").val();
+                var app_env = $("#id_env").val();
+                var tomcat_version = $("#id_tomcat").val();
+                var app_name = $("#id_app_name").val();
+                var svn_url = $("#id_svn_url").val();
+                var app_port = $("#id_app_port").val();
+                var deploy_path = $("#id_deploy_path").val();
+                {#                var app_assets = $("#id_app_assets").val();#}
+                var app_assets = [];
+                $("#id_assets_select option").each(function () {
+                    app_assets.push($(this).val());
+                });
+
+                if (app_name == undefined || app_name == "" || app_name == null) {
+                    alert('服务名称不能为空');
+                }
+                else if (deploy_path == undefined || deploy_path == "" || deploy_path == null) {
+                    alert('部署路径不能为空');
+                }
+                else if (app_assets == undefined || app_assets == "" || app_assets == null) {
+                    alert('部署服务器不能为空');
+                }
+                else {
+                    var result = confirm("是否确定部署?");
+                    if (result == true) {
+                        alert('请稍后......');
+                        $.ajax({
+                            type: "POST",
+                            url: "{% url 'apps_deploy' %}",
+                            data: JSON.stringify({
+                                app_type: app_type,
+                                app_env: app_env,
+                                tomcat_version: tomcat_version,
+                                app_name: app_name,
+                                svn_url: svn_url,
+                                app_port: app_port,
+                                deploy_path: deploy_path,
+                                app_assets: app_assets
+                            }),
+                            dataType: "json",
+                            contentType: "application/json"
+                        });
+                        window.location.href="{% url 'task_list' %}";
+                    }
+                }
+            })
+        });
+    </script>
+{% endblock %}

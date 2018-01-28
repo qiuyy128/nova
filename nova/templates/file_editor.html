@@ -1,0 +1,15 @@
+{% load static %}
+<!DOCTYPE>
+<meta charset=utf-8>
+<title>Text Editor</title>
+
+<link href="{% static 'css/file_editor.css' %}" rel="stylesheet" type="text/css">
+<script src="{% static 'js/file_editor.js' %}"></script>
+
+<div id=toolbar>
+    <button id=open>&#x1f4c2;</button>
+    <button id=save>&#x1f4be;</button>
+    <output id=name></output>
+    <output id=type></output>
+</div>
+<textarea id=content></textarea>

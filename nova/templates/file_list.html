@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}文件列表{% endblock %}
+{% block content %}
+{#    <div class="container col-sm-8 col-sm-offset-2 col-md-10 col-md-offset-2 main">#}
+    <div class="container col-sm-8 col-md-12">
+        <div class="col-md-offset-1 console-instance-head clearfix">
+            <div class="pull-left">
+                <h3><span>文件列表</span></h3>
+            </div>
+        </div>
+        <div class="col-md-offset-1 margin-top-1">
+            <table width="100%" class="table table-striped table-bordered table-hover" id="dataTables-app">
+                <thead>
+                <tr>
+                    <th>名称</th>
+                    <th>svn路径</th>
+                    <th>文件</th>
+                    <th>环境</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for key,value in app_config_files.items %}
+                    <tr>
+                        {% for file in value %}
+                            <td>
+                                {{ app_name }}
+                            </td>
+                            <td>
+                                {{ key }}
+                            </td>
+                            <td>
+                                <a href="{% url 'view_config_file' app_name=app_name env=env file_path=key file_name=file %}">{{ file }}</a>
+                            </td>
+                            <td>
+                                {{ env }}
+                            </td>
+                            </tr>
+                        {% endfor %}
+                {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <!-- Page-Level Demo Scripts - Tables - Use for reference -->
+    <script>
+        $(document).ready(function () {
+            $('#dataTables-app').DataTable({
+                responsive: true,
+                language: {
+                    "sProcessing": "处理中...",
+                    "sLengthMenu": "显示 _MENU_ 项结果",
+                    "sZeroRecords": "没有匹配结果",
+                    "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+                    "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+                    "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+                    "sInfoPostFix": "",
+                    "sSearch": "搜索:",
+                    "sUrl": "",
+                    "sEmptyTable": "表中数据为空",
+                    "sLoadingRecords": "载入中...",
+                    "sInfoThousands": ",",
+                    "oPaginate": {
+                        "sFirst": "首页",
+                        "sPrevious": "上页",
+                        "sNext": "下页",
+                        "sLast": "末页"
+                    },
+                    "oAria": {
+                        "sSortAscending": ": 以升序排列此列",
+                        "sSortDescending": ": 以降序排列此列"
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

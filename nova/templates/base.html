@@ -1,0 +1,186 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="{% static 'favicon.ico' %}">
+
+    <title>{% block title %}运维平台{% endblock %}</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="{% static 'css/bootstrap.css' %}" rel="stylesheet" type="text/css">
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" type="text/css">
+
+    <!-- DataTables CSS -->
+    <link href="{% static 'css/dataTables.bootstrap.css' %}" rel="stylesheet">
+
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <link href="{% static 'assets/css/ie10-viewport-bug-workaround.css' %}" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="{% static 'css/dashboard.css' %}" rel="stylesheet">
+    <link href="{% static 'css/sticky-footer-navbar.css' %}" rel="stylesheet">
+    {#    <link rel="stylesheet" type="text/css" href="/static/admin/css/base.css"/>#}
+    {#    <link rel="stylesheet" type="text/css" href="/static/admin/css/forms.css"/>#}
+
+    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    <!--[if lt IE 9]><script src="{% static 'assets/js/ie8-responsive-file-warning.js' %}"></script><![endif]-->
+    <script src="{% static 'assets/js/ie-emulation-modes-warning.js' %}"></script>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <link href="{% static 'css/console1412.css' %}" rel="stylesheet">
+
+    {% block formcss %}
+    {% endblock %}
+</head>
+
+<body>
+{% block header %}
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                        aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="{% url 'apps_list' %}">自动化运维平台</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    {% if request.user.username %}
+                        <li><a href="{% url 'console' %}">{{ request.user.username }}</a></li>
+                        <li><a href="{% url 'logout' %}">登出</a></li>
+                    {% else %}
+                        <li><a href="{% url 'console' %}">登陆</a></li>
+                    {% endif %}
+                </ul>
+                {#                <form class="navbar-form navbar-right">#}
+                {#                    <input type="text" class="form-control" placeholder="Search...">#}
+                {#                </form>#}
+            </div>
+        </div>
+    </nav>
+{% endblock %}
+
+{% block sidebar %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-1 col-md-1 sidebar">
+                <ul class="nav nav-sidebar">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                           aria-expanded="false">资产管理<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li class="group"><a href="#">查看资产组</a></li>
+                            <li class="asset"><a href="{% url 'asset' %}">查看资产<span
+                                    class="label label-info pull-right"></span></a>
+                            </li>
+                            <li class="idc"><a href="{% url 'asset_add' %}">增加资产</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                           aria-expanded="false">系统管理<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{% url 'apps_list' %}">应用系统管理</a></li>
+                            <li><a href="{% url 'apps_deploy' %}">应用系统发布</a></li>
+                            <li><a href="{% url 'config_file' %}">应用系统配置</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                           aria-expanded="false">数据库管理 <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{% url 'sql_submit' %}">SQL提交</a></li>
+                            <li><a href="{% url 'sql_list' %}">SQL审核</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                           aria-expanded="false">监控管理<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{% url 'monitor' %}">网站监控</a></li>
+                            <li><a href="{% url 'fpcy_request_log' %}">发票查验错误请求监控</a></li>
+                            {#                            <li><a href="#">服务器监控</a></li>#}
+                            {#                            <li><a href="#">业务监控</a></li>#}
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                           aria-expanded="false">任务管理<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{% url 'task_list' %}">任务列表</a></li>
+                            <li><a href="{% url 'get_log' %}">任务日志</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                           aria-expanded="false">文件管理<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{% url 'upload' %}">文件上传</a></li>
+                            <li><a href="{% url 'upload_file_list' %}">文件列表</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                           aria-expanded="false">日志分析<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{% url 'access_log' %}">乐税访问日志</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            {% block content %}
+
+            {% endblock %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block footer %}
+    {#    <footer class="footer">#}
+    {#        <div class="container">#}
+    {#            <ul class="nav navbar-nav navbar-right">#}
+    {#                <p class="text-muted">Thanks for visiting nova.</p>#}
+    {#            </ul>#}
+    {#        </div>#}
+    {#    </footer>#}
+{% endblock %}
+
+<!-- Placed at the end of the document so the pages load faster -->
+<!-- jQuery -->
+<script src="{% static 'js/jquery-1.10.2.min.js' %}"></script>
+{#<script>window.jQuery || document.write('<script src="{% static 'js/jquery-1.10.2.min.js' %}"><\/script>')</script>#}
+<!-- Bootstrap Core JavaScript -->
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+<!-- Just to make our placeholder images work. Don't actually copy the next line! -->
+<script src="{% static 'assets/js/vendor/holder.min.js' %}"></script>
+<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+<script src="{% static 'assets/js/ie10-viewport-bug-workaround.js' %}"></script>
+
+<!-- DataTables JavaScript -->
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'js/dataTables.bootstrap.min.js' %}"></script>
+{#<script src="{% static 'js/dataTables.responsive.js' %}"></script>#}
+
+<!-- highcharts -->
+<script src="{% static 'js/highcharts/highstock.js' %}"></script>
+<script src="{% static 'js/highcharts/exporting.js' %}"></script>
+<script src="{% static 'js/highcharts/highcharts-zh_CN.js' %}"></script>
+
+{% block js %}
+{% endblock %}
+</body>
+</html>

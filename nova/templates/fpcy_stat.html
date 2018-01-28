@@ -1,0 +1,425 @@
+{% extends 'base_without_console.html' %}
+{% block title %}发票查验产品统计分析{% endblock %}
+{% block formcss %}
+    <style type="text/css">
+        {#        th, td {#}
+        {#            text-align: center; /** 设置水平方向居中 */#}
+        {#            vertical-align: middle !important; /** 设置垂直方向居中 */#}
+        {#        }#}
+        .table thead tr th {
+            font-weight: normal;
+            color: #000000;
+            background-color: #FF9600;
+        }
+
+        .table th, .table td {
+            text-align: center;
+            vertical-align: middle !important;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container col-xs-12 col-sm-12 col-md-12" xmlns="http://www.w3.org/1999/html">
+        <div class="console-instance-head clearfix">
+            <div class="pull-left">
+                <h3><span><a href="{% url 'fpcy_stat' %}">乐税发票查验产品统计分析表</a></span></h3>
+            </div>
+        </div>
+        <div class="margin-top-1">
+            <form class="form-inline" name="searchBar">
+                <div class="col-sm-3 form-group">
+                    <label class="control-label"><span>统计开始时间：</span></label>
+                    <span>{{ begin_time }}</span>
+                </div>
+                <div class="col-sm-3 form-group">
+                    <label class="control-label"><span>统计结束时间：</span></label>
+                    <span>{{ end_time }}</span>
+                </div>
+                <div class="col-sm-3 form-group">
+                    <label class="control-label">
+                        <span>
+                            <a href="{% url 'fpcy_stat' %}?stat_day={{ last_time }}">昨日统计数据</a>
+                        </span>
+                    </label>
+                </div>
+            </form>
+            <form class="form-inline" name="searchBar">
+                <div class="col-sm-3 form-group">
+                    <label class="control-label"><span>请输入统计日期：</span></label>
+                    <input type="text" id="id_start_time" name="start_time"
+                           class="form-control" placeholder="格式:2018-01-01">
+                    </input>
+                </div>
+                <div class="col-sm-3 form-group">
+                    <input type="button" class="btn btn-default"
+                           id="id_query"
+                           value="查询">
+                    </input>
+                </div>
+            </form>
+
+        </div>
+
+        <div class="margin-top-1" id="table">
+            <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                   id="dataTables-sql">
+                <thead>
+                <tr>
+                    <th colspan="7" style="background-color: lawngreen;font-size: 24px;">发票入库情况</th>
+                <tr>
+                    <th rowspan="2">发票入库总数</th>
+                    <th colspan="2">其中</th>
+                    <th rowspan="2">发票入库张数（今日）</th>
+                    <th colspan="2">其中</th>
+                    <th rowspan="2">增长率（今日）</th>
+                </tr>
+                <tr>
+                    <th>增值税发票</th>
+                    <th>其他发票</th>
+                    <th>增值税发票</th>
+                    <th>其他发票</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr class="gradeX">
+                    {% for i in data_sql_fprkqk %}
+                        <td>{{ i }}</td>
+                    {% endfor %}
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="margin-top-1" id="table">
+            <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                   id="dataTables-sql">
+                <thead>
+                <tr>
+                    <th colspan="8" style="background-color: lawngreen;font-size: 24px;">营收情况</th>
+                <tr>
+                    <th style="background-color: red">打码费用</th>
+                    <th style="background-color: red">每张入库成本</th>
+                    <th>计费次数</th>
+                    <th>消费点数（应扣）</th>
+                    <th>消费金额（应扣）</th>
+                    <th>消费点数（实扣）</th>
+                    <th>消费金额（实扣）</th>
+                    <th>充值金额</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr class="gradeX">
+                    {% for i in data_sql_ysqk %}
+                        <td>{{ i }}</td>
+                    {% endfor %}
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="margin-top-1" id="table">
+            <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                   id="dataTables-sql">
+                <thead>
+                <tr>
+                    <th colspan="10" style="background-color: lawngreen;font-size: 24px;">用户查验反馈情况表</th>
+                <tr>
+                    <th>用户查验请求次数</th>
+                    <th>有效请求次数</th>
+                    <th>有效反馈次数</th>
+                    <th>有效反馈成功率</th>
+                    <th>15秒内反馈成功次数（计费次数）</th>
+                    <th>15秒内反馈成功率</th>
+                    <th>反馈发票明细次数（<=15秒）</th>
+                    <th>反馈发票明细成功率（<=15秒）</th>
+                    <th>反馈发票明细张数</th>
+                    <th>向核心请求次数</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                <tr class="gradeX">
+                    {% for record in data_sql_yhcyfkqkb %}
+                        {% for i in record %}
+                            <td>{{ i }}</td>
+                        {% endfor %}
+                    {% endfor %}
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="margin-top-1" id="table">
+            <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                   id="dataTables-sql">
+                <thead>
+                <tr>
+                    <th colspan="12" style="background-color: lawngreen;font-size: 24px;">子产品查验情况</th>
+                <tr>
+                    <th>子产品</th>
+                    <th>用户查验请求次数</th>
+                    <th>有效请求次数</th>
+                    <th>有效反馈次数</th>
+                    <th>有效反馈成功率</th>
+                    <th>15秒内反馈成功次数（计费次数）</th>
+                    <th>15秒内反馈成功率</th>
+                    <th>反馈发票明细次数（<=15秒）</th>
+                    <th>反馈发票明细成功率（<=15秒）</th>
+                    <th>反馈发票明细张数</th>
+                    <th>消费点数（应扣）</th>
+                    <th>消费点数（实扣）</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for record in data_sql_zcpcyqks %}
+                    <tr class="gradeX">
+                        {% for i in record %}
+                            <td>{{ i }}</td>
+                        {% endfor %}
+                        <td>暂时无法统计</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="margin-top-1" id="table">
+            <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                   id="dataTables-sql">
+                <thead>
+                <tr>
+                    <th colspan="12" style="background-color: lawngreen;font-size: 24px;">企业接口查验情况</th>
+                <tr>
+                    <th>企业名称（手机号码）</th>
+                    <th>用户查验请求次数</th>
+                    <th>有效请求次数</th>
+                    <th>有效反馈次数</th>
+                    <th>有效反馈成功率</th>
+                    <th>15秒内反馈成功次数（计费次数）</th>
+                    <th>15秒内反馈成功率</th>
+                    <th>反馈发票明细次数（<=15秒）</th>
+                    <th>反馈发票明细成功率（<=15秒）</th>
+                    <th>反馈发票明细张数</th>
+                    <th>消费点数（应扣）</th>
+                    <th>消费点数（实扣）</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for i in data_sql_qyjkcyqks %}
+                    <tr class="gradeX">
+                        {% for data_sql_qyjkcyqk in i %}
+                            <td>{{ data_sql_qyjkcyqk }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="margin-top-1" id="table">
+            <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                   id="dataTables-sql">
+                <thead>
+                <tr>
+                    <th colspan="12" style="background-color: lawngreen;font-size: 24px;">核心服务状态表</th>
+                <tr>
+                    <th>税务局</th>
+                    <th>请求次数</th>
+                    <th>有效反馈次数（<=60秒）</th>
+                    <th>有效反馈成功率（<=60秒）</th>
+                    <th>10秒内反馈次数</th>
+                    <th>10秒内反馈成功率</th>
+                    <th>反馈发票明细次数（<=60秒）</th>
+                    <th>反馈发票明细成功率（<=60秒）</th>
+                    <th>10秒内反馈明细次数</th>
+                    <th>10秒内反馈明细成功率</th>
+                    <th>反馈发票明细张数</th>
+                    <th>查票请求次数</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for i in data_sql_hxfwztbs %}
+                    <tr class="gradeX">
+                        {% for data_sql_hxfwztb in i %}
+                            <td>{{ data_sql_hxfwztb }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="margin-top-1" id="table">
+            <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                   id="dataTables-sql">
+                <thead>
+                <tr>
+                    <th colspan="19" style="background-color: lawngreen;font-size: 24px;">税局查验服务状态表</th>
+                <tr>
+                    <th>税务局</th>
+                    <th>查票请求次数</th>
+                    <th>查票反馈成功次数（<=10秒）</th>
+                    <th>查票反馈成功率（<=10秒）</th>
+                    <th>1秒内反馈次数</th>
+                    <th>1秒内反馈成功率</th>
+                    <th>请求验证码次数</th>
+                    <th>请求验证码成功次数（<=5秒）</th>
+                    <th>请求验证码成功率（<=5秒）</th>
+                    <th>1秒内反馈次数</th>
+                    <th>1秒内反馈成功率</th>
+                    <th>打码次数</th>
+                    <th>打码成功响应次数（<=6秒）</th>
+                    <th>打码成功次数（已使用）</th>
+                    <th>打码成功次数（未使用）</th>
+                    <th>打码成功率</th>
+                    <th>打码利用率</th>
+                    <th>打码正确次数</th>
+                    <th>打码正确率</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for i in data_sql_sjcyfwztbs %}
+                    <tr class="gradeX">
+                        {% for data_sql_sjcyfwzt in i %}
+                            <td>{{ data_sql_sjcyfwzt }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="margin-top-1" id="table">
+            <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                   id="dataTables-sql">
+                <thead>
+                <tr>
+                    <th colspan="9" style="background-color: lawngreen;font-size: 24px;">打码情况</th>
+                <tr>
+                    <th>服务商</th>
+                    <th>打码次数</th>
+                    <th>打码成功响应次数（<=6秒）</th>
+                    <th>打码成功次数（已使用）</th>
+                    <th>打码成功次数（未使用）</th>
+                    <th>打码成功率</th>
+                    <th>打码利用率</th>
+                    <th>打码正确次数</th>
+                    <th>打码正确率</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for i in data_sql_dmqks %}
+                    <tr class="gradeX">
+                        {% for data_sql_dmqk in i %}
+                            <td>{{ data_sql_dmqk }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="margin-top-1" id="table">
+            <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                   id="dataTables-sql">
+                <thead>
+                <tr>
+                    <th colspan="12" style="background-color: lawngreen;font-size: 24px;">税局响应情况（>60秒）</th>
+                <tr>
+                    <th>地区</th>
+                    <th>请求验证码服务时间（秒）</th>
+                    <th>请求查票服务时间（秒）
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for i in data_sql_sjxyqks %}
+                    <tr class="gradeX">
+                        {% for data_sql_sjxyqks in i %}
+                            <td>{{ data_sql_sjxyqk }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="margin-top-1" id="table">
+            <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                   id="dataTables-sql">
+                <thead>
+                <tr>
+                    <th colspan="12" style="background-color: lawngreen;font-size: 24px;">用户查验请求详情</th>
+                <tr>
+                    <th>返回状态代码</th>
+                    <th>查验请求次数</th>
+                    <th>返回状态说明</th>
+                    <th>是否有效请求</th>
+                    <th>是否成功反馈</th>
+                    <th>是否计费</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for record in data_sql_yhcyqqxq %}
+                    <tr class="gradeX">
+                        {% for i in record %}
+                            <td>{{ i }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="margin-top-1" id="table">
+            <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                   id="dataTables-sql">
+                <thead>
+                <tr>
+                    <th colspan="12" style="background-color: lawngreen;font-size: 24px;">税局查验请求详情</th>
+                <tr>
+                    <th>返回状态代码</th>
+                    <th>查验请求次数</th>
+                    <th>返回状态说明</th>
+                    <th>是否有效请求</th>
+                    <th>是否成功反馈</th>
+                    <th>是否计费</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for record in data_sql_sjcyqqxq %}
+                    <tr class="gradeX">
+                        {% for i in record %}
+                            <td>{{ i }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script type="application/javascript">
+        $(document).ready(function () {
+            $('#id_query').click(function () {
+                var stat_day = $("#id_start_time").val();
+                if (stat_day == undefined || stat_day == "" || stat_day == null) {
+                    alert('请输入正确的查询日期，如2018-01-01');
+                }
+                else {
+                    {#                    $.ajax({#}
+                    {#                        type: "GET",#}
+                    {#                        url: "{% url 'fpcy_stat' %}?stat_day=" + stat_day,#}
+                    {#                        dataType: "json",#}
+                    {#                        contentType: "application/json"#}
+                    {#                    });#}
+                    window.location.href = "{% url 'fpcy_stat' %}?stat_day=" + stat_day;
+                }
+            })
+        });
+    </script>
+{% endblock %}

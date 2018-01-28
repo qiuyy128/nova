@@ -1,0 +1,611 @@
+{% extends 'base.html' %}
+{% block title %}应用列表{% endblock %}
+{% block content %}
+    <div class="container col-sm-8 col-md-12" xmlns="http://www.w3.org/1999/html">
+        {#        <div class="container col-sm-8 col-md-10 col-sm-offset-2  col-md-offset-2 main">#}
+        <div class="col-md-offset-1 console-instance-head clearfix">
+            <div class="pull-left">
+                <h3><span>应用列表</span></h3>
+            </div>
+        </div>
+
+        {#        <div class="col-md-offset-1 margin-top-1">#}
+        {#            <form class="form-inline" id="app_list">#}
+        {#                <div class="pull-left">#}
+        {#                    <div class="form-group">#}
+        {#                        <span>请选择：</span>#}
+        {#                        <select name="app_name"#}
+        {#                                class="form-control" id="app_name_select"#}
+        {#                                required onchange="change_info()">#}
+        {#                            <option value="">所有</option>#}
+        {#                            {% for app in apps %}#}
+        {#                                {% ifequal app.name app_name %}#}
+        {#                                    <option value="{{ app.name }}" selected>{{ app.name }}</option>#}
+        {#                                {% else %}#}
+        {#                                    <option value="{{ app.name }}">{{ app.name }}</option>#}
+        {#                                {% endifequal %}#}
+        {#                            {% endfor %}#}
+        {#                        </select>#}
+        {#                    </div>#}
+        {#                </div>#}
+        {#                <div class="pull-right">#}
+        {#                    <div class="form-inline">#}
+        {#                        <div class="form-group">#}
+        {#                            <input type="text"#}
+        {#                                   class="form-control"#}
+        {#                                   size="30" id="search_input" name="keyword"#}
+        {#                                   value="{{ keyword }}"#}
+        {#                                   placeholder="请输入关键字进行查询">#}
+        {#                        </div>#}
+        {#                    </div>#}
+        {#                </div>#}
+        {#            </form>#}
+        {#        </div>#}
+
+        <div class="col-md-offset-1 margin-top-1">
+            <div class="clearfix">
+            </div>
+            <table class="table table-striped table-bordered table-hover"
+                   id="dataTables-app">
+                <thead>
+                <tr>
+                    <th>
+                        <input id="checkAll" type="checkbox" onclick="checkAll(this.checked)">
+                    </th>
+                    <th>ID</th>
+                    <th>服务名称</th>
+                    <th>服务器</th>
+                    <th>端口</th>
+                    <th>操作</th>
+                    <th>部署路径</th>
+                    <th>运行状态</th>
+                    <th>环境</th>
+                    <th>说明</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for app in apps %}
+                    <tr>
+                        {% for apph in app.apphosts.all %}
+                            {#                            <td width="10" class="text-center" name="id" value={{ apph.id }} data-editable='false'>#}
+                            <td width="10">
+                                <input id="app_select_id" name="app_select_id" type="checkbox" value={{ apph.id }}>
+                            </td>
+                            <td>
+                                {{ apph.id }}
+                            </td>
+                            {% if  app.apphosts.count == 1 %}
+                                <td>
+                                    {#                                    <div style="width: 140px;word-wrap: break-word;overflow-y:hidden;">#}
+                                    <div>
+                                        <a href="{% url 'config_file' %}?app_name={{ apph.name }}&env={{ apph.env }}">{{ apph.name }}</a>
+                                    </div>
+                                </td>
+                            {% else %}
+                                {#                            {% if forloop.counter == 1 %}#}
+                                {#                                    <td rowspan={{ app.apphosts.count }}>#}
+                                <td rowspan=1>
+                                    {#                                    <div style="width: 140px;word-wrap: break-word;overflow-y:hidden;">#}
+                                    <div>
+                                        <a href="{% url 'config_file' %}?app_name={{ apph.name }}&env={{ apph.env }}">{{ apph.name }}</a>
+                                    </div>
+                                    {#                                {% endif %}#}
+                                </td>
+                            {% endif %}
+                            <td>
+                                {{ apph.ip }}
+                            </td>
+                            <td>
+                                {{ apph.port }}
+                            </td>
+                            <td>
+                                {% if apph.status == 'running' %}
+                                    <input app_id={{ apph.id }} app_env={{ apph.env }}
+                                           type="button"
+                                           class="stop_app btn btn-sm btn-default"
+                                           value="停止">
+                                    <input app_id={{ apph.id }} app_env={{ apph.env }}
+                                           type="button"
+                                           class="reload_app btn btn-sm btn-default"
+                                           value="重启">
+                                {% else %}
+                                    <input app_id={{ apph.id }} app_env={{ apph.env }}
+                                           type="button"
+                                           class="start_app btn btn-sm btn-default"
+                                           value="启动">
+                                {% endif %}
+                                <input app_name={{ apph.name }} app_id={{ apph.id }} app_env={{ apph.env }}
+                                        type="button"
+                                       class="update_app btn btn-sm btn-default"
+                                       value="更新">
+                            </td>
+                            <td>
+                                <div name="app_deploy_path">
+                                    {#                                <div style="width: 170px;word-wrap: break-word;overflow-y:hidden;">#}
+                                    {{ apph.deploy_path }}
+                                </div>
+                            </td>
+                            <td>
+                                {% if apph.status == 'running' %}
+                                    <label class="label label-success mr5">
+                                        {{ apph.status }}</label>
+                                {% else %}
+                                    <label class="label label-danger mr5">
+                                        {{ apph.status }}</label>
+                                {% endif %}
+                            </td>
+                            <td name="app_env">
+                                {{ apph.env }}
+                            </td>
+                            <td>
+                                {#                                <div style="width: 100px;word-wrap: break-word;overflow-y:hidden;">#}
+                                <div>
+                                    {{ apph.comment }}
+                                </div>
+                            </td>
+                            </tr>
+                        {% endfor %}
+                {% endfor %}
+                </tbody>
+            </table>
+
+            {#            <table class="table table-fixed" width="100%" style="position: fixed; bottom: 0px;">#}
+            <table class="table table-fixed" width="100%">
+                <tr>
+                    <td>
+                        <div class="pull-left">
+                            <div>
+                                <div>
+                                    <input id="checkAll" type="checkbox" onclick="checkAll(this.checked)">
+                                    </input>
+                                    <input type="button" class="start_apps btn btn-default"
+                                           value="批量启动">
+                                    </input>
+                                    <input type="button" class="stop_apps btn btn-default"
+                                           value="批量停止">
+                                    </input>
+                                    <input type="button" class="reload_apps btn btn-default"
+                                           value="批量重启">
+                                    </input>
+                                </div>
+                            </div>
+                        </div>
+                        {#                        <div>#}
+                        {#                            <div class="pull-right">#}
+                        {#                                <div class="pagination-info">#}
+                        {#                                    <span class="ng-binding">共有 {{ apps.number }} 条，</span>#}
+                        {#                                    <span>每页显示：#}
+                        {#                                        <select>#}
+                        {#                                        <option value="10" selected="selected">10</option>#}
+                        {#                                        <option value="20" selected="selected">20</option>#}
+                        {#                                        <option value="50" selected="selected">50</option>#}
+                        {#                                    </select>条#}
+                        {#                                    </span>#}
+                        {#                                </div>#}
+                        {#                                <ul class="pagination">#}
+                        {#                                    <li><a href="#">«</a></li>#}
+                        {#                                    {% if apps.has_previous %}#}
+                        {#                                        <li><a href="?page={{ apps.previous_page_number }}">‹</a></li>#}
+                        {#                                    {% else %}#}
+                        {#                                        <li class="disabled"><a>‹</a></li>#}
+                        {#                                    {% endif %}#}
+                        {#                                    <li><a>{{ apps.number }}</a></li>#}
+                        {#                                    {% if apps.has_next %}#}
+                        {#                                        <li><a href="?page={{ apps.next_page_number }}">›</a></li>#}
+                        {#                                    {% else %}#}
+                        {#                                        <li class="disabled"><a>›</a></li>#}
+                        {#                                    {% endif %}#}
+                        {#                                    <li class="disabled"><a href="#">»</a></li>#}
+                        {#                                </ul>#}
+                        {#                                <span#}
+                        {#                                        style="padding-left: 15px;padding-right: 15px" class="ng-hide">#}
+                        {#                                    <input type="text"#}
+                        {##}
+                        {#                                           class="form-control"#}
+                        {#                                           style="width: 40px; display: inline-block;">#}
+                        {#                                    <button#}
+                        {#                                            class="btn btn-default"#}
+                        {#                                            style="margin-left: 6px">GO#}
+                        {#                                    </button>#}
+                        {#                                </span>#}
+                        {#                            </div>#}
+                        {#                        </div>#}
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        function checkAll(c) {
+            var arr = document.getElementsByName('app_select_id');
+            if (c) {
+                for (var i = 0; i < arr.length; i++) {
+                    arr[i].checked = true;
+                }
+            }
+            else {
+                for (var i = 0; i < arr.length; i++) {
+                    arr[i].checked = false;
+                }
+            }
+        }
+
+        {#                jQuery取值#}
+        {#                var app_id = [];#}
+        {#                $('input[name="app_select_id"]:checked').each(function (i) {#}
+        {#                    app_id.push($(this).val());#}
+        {#                    app_id[i] = $(this).val();#}
+        {#                });#}
+        var obj = document.getElementsByName("app_select_id");
+        var env_list = document.getElementsByName("app_env");
+        var app_id = [];
+        var app_env = [];
+        for (var i in obj) {
+            if (obj[i].checked) {
+                app_id.push(obj[i].value);
+                if ($.inArray(env_list[i].innerText, app_env) == -1) {
+                    app_env[i] = env_list[i].innerText;
+                }
+            }
+        }
+
+        $(document).ready(function () {
+            $('.start_app').click(function () {
+                var app_id = new Array($(this).attr('app_id'));
+                var app_env = new Array($(this).attr('app_env'));
+                var result = confirm("是否确定启动应用?");
+                if (result == true) {
+                    $.ajax({
+                        type: "POST",
+                        url: "/nova/app/start/",
+                        data: JSON.stringify({
+                            app_id: app_id,
+                            app_env: app_env
+                        }),
+                        success: function (data) {
+                            if (data['rtn'] == "00") {
+                                {#                                alert(data['msg']);#}
+                                alert('请稍后，正在后台启动应用！');
+                                {#                                parent.location.reload();#}
+                            }
+                            else {
+                                alert(data['msg']);
+                            }
+                        },
+                        error: function (data) {
+                            alert(data['msg']);
+                        },
+                        dataType: "json",
+                        contentType: "application/json",
+                    });
+                }
+            })
+        });
+
+        $(document).ready(function () {
+            $('.stop_app').click(function () {
+                var app_id = new Array($(this).attr('app_id'));
+                var app_env = new Array($(this).attr('app_env'));
+                var result = confirm("是否确定停止应用?");
+                if (result == true) {
+                    $.ajax({
+                        type: "POST",
+                        url: "/nova/app/stop/",
+                        data: JSON.stringify({
+                            app_id: app_id,
+                            app_env: app_env
+                        }),
+                        success: function (data) {
+                            if (data['rtn'] == "00") {
+                                alert(data['msg']);
+                                {#                                parent.location.reload();#}
+                            }
+                            else {
+                                alert(data['msg']);
+                            }
+                        },
+                        error: function (data) {
+                            alert(data['msg']);
+                        },
+                        dataType: "json",
+                        contentType: "application/json",
+                    });
+                }
+            })
+        });
+
+        $(document).ready(function () {
+            $('.reload_app').click(function () {
+                var app_id = new Array($(this).attr('app_id'));
+                var app_env = new Array($(this).attr('app_env'));
+                var result = confirm("是否确定重启应用?");
+                if (result == true) {
+                    {#                    alert("请稍后!");#}
+                    $.ajax({
+                        type: "POST",
+                        url: "/nova/app/reload/",
+                        data: JSON.stringify({
+                            app_id: app_id,
+                            app_env: app_env
+                        }),
+                        success: function (data) {
+                            if (data['rtn'] == "00") {
+                                {#                                alert(data['msg']);#}
+                                alert('请稍后，正在后台重启应用！');
+                                {#                                parent.location.reload();#}
+                            }
+                            else {
+                                alert(data['msg']);
+                            }
+                        },
+                        error: function (data) {
+                            alert(data['msg']);
+                        },
+                        dataType: "json",
+                        contentType: "application/json",
+                    });
+                }
+            })
+        });
+
+        $(document).ready(function () {
+            $('.start_apps').click(function () {
+                var obj = document.getElementsByName("app_select_id");
+                var env_list = document.getElementsByName("app_env");
+                var app_id = [];
+                var app_env = [];
+                for (var i in obj) {
+                    if (obj[i].checked) {
+                        app_id.push(obj[i].value);
+                        if ($.inArray(env_list[i].innerText, app_env) == -1) {
+                            app_env[i] = env_list[i].innerText;
+                        }
+                    }
+                }
+                if (app_id.length == 0) {
+                    alert('你还没有选择任何应用！');
+                }
+                else {
+                    var result = confirm("是否确定启动多个应用?");
+                    if (result == true) {
+                        {#                    alert("请稍后!");#}
+                        $.ajax({
+                            type: "POST",
+                            url: "/nova/app/start/",
+                            data: JSON.stringify({
+                                app_id: app_id,
+                                app_env: app_env
+                            }),
+                            success: function (data) {
+                                if (data['rtn'] == "00") {
+                                    {#                                alert(data['msg']);#}
+                                    alert('请稍后，正在后台启动应用！');
+                                }
+                                else {
+                                    alert(data['msg']);
+                                }
+                            },
+                            error: function (data) {
+                                alert(data['msg']);
+                            },
+                            dataType: "json",
+                            contentType: "application/json",
+                        });
+                    }
+                }
+            })
+        });
+
+        $(document).ready(function () {
+            $('.stop_apps').click(function () {
+                var obj = document.getElementsByName("app_select_id");
+                var env_list = document.getElementsByName("app_env");
+                var app_id = [];
+                var app_env = [];
+                for (var i in obj) {
+                    if (obj[i].checked) {
+                        app_id.push(obj[i].value);
+                        if ($.inArray(env_list[i].innerText, app_env) == -1) {
+                            app_env[i] = env_list[i].innerText;
+                        }
+                    }
+                }
+                if (app_id.length == 0) {
+                    alert('你还没有选择任何应用！');
+                }
+                else {
+                    var result = confirm("是否确定停止多个应用?");
+                    if (result == true) {
+                        {#                    alert("请稍后!");#}
+                        $.ajax({
+                            type: "POST",
+                            url: "/nova/app/stop/",
+                            data: JSON.stringify({
+                                app_id: app_id,
+                                app_env: app_env
+                            }),
+                            success: function (data) {
+                                if (data['rtn'] == "00") {
+                                    {#                                alert(data['msg']);#}
+                                    alert('请稍后，正在后台停止应用！');
+                                }
+                                else {
+                                    alert(data['msg']);
+                                }
+                            },
+                            error: function (data) {
+                                alert(data['msg']);
+                            },
+                            dataType: "json",
+                            contentType: "application/json",
+                        });
+                    }
+                }
+            })
+        });
+
+        $(document).ready(function () {
+            $('.reload_apps').click(function () {
+                var obj = document.getElementsByName("app_select_id");
+                var env_list = document.getElementsByName("app_env");
+                var app_id = [];
+                var app_env = [];
+                for (var i in obj) {
+                    if (obj[i].checked) {
+                        app_id.push(obj[i].value);
+                        if ($.inArray(env_list[i].innerText, app_env) == -1) {
+                            app_env[i] = env_list[i].innerText;
+                        }
+                    }
+                }
+                if (app_id.length == 0) {
+                    alert('你还没有选择任何应用！');
+                }
+                else {
+                    var result = confirm("是否确定重启多个应用?");
+                    if (result == true) {
+                        {#                    alert("请稍后!");#}
+                        $.ajax({
+                            type: "POST",
+                            url: "/nova/app/reload/",
+                            data: JSON.stringify({
+                                app_id: app_id,
+                                app_env: app_env
+                            }),
+                            success: function (data) {
+                                if (data['rtn'] == "00") {
+                                    {#                                alert(data['msg']);#}
+                                    alert('请稍后，正在后台重启应用！');
+                                }
+                                else {
+                                    alert(data['msg']);
+                                }
+                            },
+                            error: function (data) {
+                                alert(data['msg']);
+                            },
+                            dataType: "json",
+                            contentType: "application/json",
+                        });
+                    }
+                }
+            })
+        });
+
+        $(document).ready(function () {
+            $('.update_app').click(function () {
+                var app_name = $(this).attr('app_name');
+                var app_id = new Array($(this).attr('app_id'));
+                var app_env = $(this).attr('app_env');
+                var result = confirm("是否确定更新应用?");
+                if (result == true) {
+                    {#                    alert("请稍后!");#}
+                    $.ajax({
+                        type: "POST",
+                        url: "/nova/app/update/",
+                        data: JSON.stringify({
+                            app_name: app_name,
+                            app_id: app_id,
+                            app_env: app_env
+                        }),
+                        success: function (response) {
+                            if (response['rtn'] == "00") {
+                                alert('请稍后，正在后台更新所有应用！');
+                                {#                                parent.location.reload();#}
+                            }
+                            else {
+                                alert(response['msg']);
+                            }
+                        },
+                        error: function (response) {
+                            alert('更新失败！');
+                        },
+                        dataType: "json",
+                        contentType: "application/json",
+                    });
+                }
+            })
+        });
+
+        {#        $(document).ready(function () {#}
+        {#            $('#app_name_select').change(function () {#}
+        {#                var app_name = $(this).children('option:selected').val();#}
+        {#                var obj = $("#app_name_select option:selected").text();#}
+        {#                alert(obj);#}
+        {#                $.ajax({#}
+        {#                        type: "GET",#}
+        {#                        url: "/nova/app/",#}
+        {#                        data: JSON.stringify({#}
+        {#                            app_name: app_name,#}
+        {#                            keyword: search_worlds,#}
+        {#                            page: 10#}
+        {#                        }),#}
+        {#                        success: function (response) {#}
+        {#                            if (response['rtn'] == "00") {#}
+        {#                                alert('666');#}
+        {#                                parent.location.reload();#}
+        {#                            }#}
+        {#                            else {#}
+        {#                                alert('999');#}
+        {#                            }#}
+        {#                        },#}
+        {#                        error: function (response) {#}
+        {#                            alert(response);#}
+        {#                            alert('err！');#}
+        {#                        },#}
+        {#                        dataType: "json",#}
+        {#                        contentType: "application/json",#}
+        {#                    });#}
+        {#            })#}
+        {#        });#}
+        {#    </script>#}
+
+        function change_info() {
+            var names = $(this).children('option:selected').val();
+            var args = $("#app_list").serialize();
+            window.location = "{% url 'apps_list' %}?" + args
+        }
+        $("#search_input").keydown(function (e) {
+            if (e.keyCode == 13) {
+                change_info()
+            }
+        });
+
+        $(document).ready(function () {
+            $('#dataTables-app').DataTable({
+                responsive: true,
+                "aaSorting": [
+                    [4, "desc"]
+                ],
+                language: {
+                    "sProcessing": "处理中...",
+                    "sLengthMenu": "显示 _MENU_ 项结果",
+                    "sZeroRecords": "没有匹配结果",
+                    "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+                    "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+                    "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+                    "sInfoPostFix": "",
+                    "sSearch": "搜索:",
+                    "sUrl": "",
+                    "sEmptyTable": "表中数据为空",
+                    "sLoadingRecords": "载入中...",
+                    "sInfoThousands": ",",
+                    "oPaginate": {
+                        "sFirst": "首页",
+                        "sPrevious": "上页",
+                        "sNext": "下页",
+                        "sLast": "末页"
+                    },
+                    "oAria": {
+                        "sSortAscending": ": 以升序排列此列",
+                        "sSortDescending": ": 以降序排列此列"
+                    }
+                }
+            });
+        });
+    </script>
+
+{% endblock %}

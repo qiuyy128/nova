@@ -1,0 +1,42 @@
+{% extends 'console.html' %}
+{% block title %}添加主机{% endblock %}
+{% block content %}
+    <div class="container col-sm-8 col-md-12">
+        <div class="col-md-offset-1 console-instance-head clearfix">
+            <div class="pull-left">
+                <h3><span>服务器修改</span></h3>
+            </div>
+        </div>
+        <form class="col-md-offset-1 margin-top-1 form-horizontal asset-add" action="/nova/asset/{{ asset_id }}/change/"
+              method="post">
+            {% csrf_token %}
+            {#                            {{ form.as_p }}#}
+            {#                        <table>#}
+            {#                            {% for field in form %}#}
+            {#                                <tr>#}
+            {#                                    <td>{{ field.label }}</td>#}
+            {#                                    <td>{{ field }}</td>#}
+            {#                                </tr>#}
+            {#                            {% endfor %}#}
+            {#                        </table>#}
+            {% for field in form %}
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">{{ field.label }}：</label>
+                    <div class="col-sm-4 row">
+                        {{ field }}
+                    </div>
+                </div>
+
+            {% endfor %}
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label"></label>
+                <div class="col-sm-4 row ">
+                    <button class="btn btn-primary">保存
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+{% endblock %}

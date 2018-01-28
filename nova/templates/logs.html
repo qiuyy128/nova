@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}log{% endblock %}
+
+{% block content %}
+    <div class="container col-sm-8 col-md-12">
+        <div class="col-md-offset-1 console-instance-head clearfix">
+            <div class="pull-left">
+                <h3><span>任务日志</span></h3>
+            </div>
+        </div>
+
+        <div class="col-md-offset-1 margin-top-1" id=toolbar>
+            {#        <div style="margin-top:10px;background: #000;color: #090;">#}
+            {#            <p id='log'></p>#}
+            {#        </div>#}
+            <pre id='log'
+                 style="height: 40em;background-color:black;color:white;font-family: Courier;width: 100%;"></pre>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        function errmsg() {
+            alert("请联系管理员！")
+        }
+
+        $(function () {
+            var line = {{ line }};
+            var total_line = line;
+            $.ajax({
+                url: "/nova/get_log_handle/" + line + '/' + total_line,
+                type: 'GET',
+                success: function (data) {
+                    if (data['lines'] != 0) {
+                        {#                        $('#log').append(data);#}
+                        var t = setInterval(function () {
+                            var start_line = line;
+                            var end_line = line + 20;
+                            var url = "/nova/get_log_handle/" + start_line + '/' + end_line;
+                            $.ajax({
+                                url: url,
+                                type: 'GET',
+                                success: function (data) {
+                                    if (data['lines'] != 0) {
+                                        $('#log').append(data['res']);
+                                        {#                                        window.scrollTo(0, document.body.scrollHeight);#}
+                                        line = line + data['lines'];
+                                    }
+                                    {#                                    else {#}
+                                    {#                                        clearInterval(t);#}
+                                    {#                                    }#}
+                                },
+                                error: function (data) {
+                                    errmsg();
+                                    clearInterval(t);
+                                    return false;
+                                },
+                                dataType: "json",
+                                contentType: "application/json",
+                            });
+                        }, 200);
+                    }
+                    else {
+                        errmsg();
+                    }
+                },
+                error: function (data) {
+                    errmsg();
+                    return false;
+                },
+                dataType: "json",
+                contentType: "application/json",
+            });
+        });
+    </script>
+{% endblock %}

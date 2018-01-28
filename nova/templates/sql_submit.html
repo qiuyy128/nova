@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% block title %}SQL提交{% endblock %}
+{% block content %}
+    <!-- Container -->
+    <div class="container col-sm-8 col-md-12">
+        <div class="col-md-offset-1 console-instance-head clearfix">
+            <div class="pull-left">
+                <h3><span>SQL提交</span></h3>
+            </div>
+        </div>
+        <div class="col-md-offset-1 margin-top-1">
+            <form class="form-horizontal" action="" method="post" id="sql_submit_form">
+                <fieldset>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label"><span class="text-danger">*</span>数据库环境：</label>
+                        <div class="col-sm-4 row">
+                            <select class="form-control" id="id_database_env" name="database_env" required
+                                    onchange="change_env()">
+                                <option value="" selected="selected">请选择</option>
+                                <option value="test">test</option>
+                                <option value="staging">staging</option>
+                                <option value="product">product</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label"><span class="text-danger">*</span>sql语句：</label>
+                        <div class="col-sm-8 row">
+                                <textarea class="form-control" rows="10"
+                                          id="id_sql" placeholder="分号间隔,可以多条一起输入" name="sql"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">
+                            <span class="text-danger">*</span>数据库名称：
+                        </label>
+                        <div class="col-sm-8 row">
+                            <div class="form-group ng-isolate-scope" style="overflow: hidden;overflow: hidden"
+                                 action-select="" current-group="groupData">
+                                <!-- 未选择 -->
+                                <div class="col-sm-4">
+                                    <div class="select-top">
+                                        <div class="select-lft ng-binding">全部数据库</div>
+                                        {#                                        <div class="select-right"><a>全选</a></div>#}
+                                    </div>
+                                    <div>
+                                        <input type="text" placeholder="输入数据库名称"
+                                               id="search_input" name="keyword"
+                                               style="border-bottom-right-radius: 0; border-bottom-left-radius: 0; padding-left: 10px; padding-right: 24px"
+                                               class="form-control">
+                                        {#                                        <span class="glyphicon glyphicon-search input-search-icon"></span>#}
+                                    </div>
+                                    <select class="form-control" multiple="multiple" id="id_database"
+                                            onclick="select_database()">
+                                    </select>
+                                </div>
+                                <!-- 移如或者移出按钮的行为 -->
+                                <div class="col-sm-2 clearfix" style="width: 40px">
+                                    <button type="button" class="btn btn-primary btn-sm"
+                                            style="position: absolute; left: 50%; margin-left: -19px; top: 55px"
+                                            id="moveRight" disabled="disabled">
+                                        <i class="glyphicon glyphicon-arrow-right"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-primary btn-sm"
+                                            style="position: absolute; left: 50%; margin-left: -19px; top: 90px"
+                                            id="moveLeft" disabled="disabled">
+                                        <i class="glyphicon glyphicon-arrow-left"></i>
+                                    </button>
+                                </div>
+                                <!-- 已经选择 -->
+                                <div class="col-sm-4">
+                                    <div class="select-top">
+                                        <div class="select-lft">已选数据库</div>
+                                        {#                                        <div class="select-right"><a>全选</a></div>#}
+                                    </div>
+                                    <div>
+                                        <input type="text" placeholder=""
+                                               id="search_input" name="keyword"
+                                               style="border-bottom-right-radius: 0; border-bottom-left-radius: 0; padding-left: 10px; padding-right: 24px"
+                                               class="form-control">
+                                        {#                                        <span class="glyphicon glyphicon-search input-search-icon"></span>#}
+                                    </div>
+
+                                    <select class="form-control" multiple="multiple" id="id_database_select"
+                                            name="database_name"
+                                            required onclick="cancel_database()">
+                                    </select>
+                                </div>
+                                {#                                <div class="inline-block" style="width:180px"> 已选择数据库#}
+                                {#                                    <div multi="true" class="selector">#}
+                                {#                                        <ul class="selector-list">#}
+                                {#                                            <li class="selector-item clearfix">#}
+                                {#                                                <p class="pull-left">wx_sys</p>#}
+                                {#                                            </li>#}
+                                {#                                        </ul>#}
+                                {#                                    </div>#}
+                                {#                                </div>#}
+                            </div>
+                        </div>
+                    </div>
+
+                </fieldset>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label"></label>
+                    <div class="col-sm-4 row ">
+                        <button type="button" class="sql_submit btn btn-primary">保存
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- END Content -->
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        function change_env() {
+            var env = $("#id_database_env").val();
+            $('#id_database').empty();
+            $.ajax({
+                type: "GET",
+                url: "{% url 'get_database' %}?env=" + env,
+                success: function (data) {
+                    $.each(data, function (i, item) {
+                        $('#id_database').append("<option value='" + item.fields.db_name + "'>"
+                                + item.fields.comment + ': ' + item.fields.db_name + "</option>");
+                    });
+                },
+                error: function () {
+                    alert('error');
+                },
+                dataType: "json",
+                contentType: "application/json"
+            });
+        }
+
+        $(document).ready(function () {
+            $('#moveRight').click(function () {
+                var app_assets = [];
+                $("#id_database option:selected").each(function () {
+                    app_assets.push($(this).val());
+                    $('#id_database_select').append("<option value='" + $(this).val() + "'>"
+                            + $(this).text() + "</option>");
+                    $("#id_database").find("option:selected").remove();
+                    $("#moveRight").attr("disabled", true);
+                });
+            });
+            $('#moveLeft').click(function (obj) {
+                var app_assets = [];
+                $("#id_database_select option:selected").each(function () {
+                    app_assets.push($(this).val());
+                    $('#id_database').append("<option value='" + $(this).val() + "'>"
+                            + $(this).text() + "</option>");
+                    $("#id_database_select").find("option:selected").remove();
+                    $("#moveLeft").attr("disabled", true);
+                });
+            });
+        });
+
+        function select_database() {
+            var $obj = $("#id_database option");
+            if ($obj.is(':selected')) {
+                $("#moveRight").attr("disabled", false);
+            }
+            else {
+                $("#moveRight").attr("disabled", true);
+            }
+        }
+        function cancel_database() {
+            var $obj = $("#id_database_select option");
+            if ($obj.is(':selected')) {
+                $("#moveLeft").attr("disabled", false);
+            }
+            else {
+                $("#moveLeft").attr("disabled", true);
+            }
+        }
+
+        function change_info() {
+            var env = $("#id_database_env").val();
+            var db_name = $("#search_input").val();
+            $('#id_database').empty();
+            $.ajax({
+                type: "GET",
+                url: "{% url 'get_database' %}?env=" + env + "&db_name=" + db_name,
+                success: function (data) {
+                    $.each(data, function (i, item) {
+                        $('#id_database').append("<option value='" + item.fields.db_name + "'>"
+                                + item.fields.comment + ': ' + item.fields.db_name + "</option>");
+                    });
+                },
+                error: function () {
+                    alert('error');
+                },
+                dataType: "json",
+                contentType: "application/json"
+            });
+        }
+
+        {#        $("#search_input").bind('input propertychange', function () {#}
+        {#            change_info();#}
+        {#        });#}
+        $("#search_input").keydown(function (e) {
+            if (e.keyCode == 13) {
+                change_info();
+                return false
+            }
+        });
+
+        $(document).ready(function () {
+            $('.sql_submit').click(function () {
+                var database_env = $("#id_database_env").val();
+                var sql = $("#id_sql").val();
+                {#                var database_name = $("#id_database_select").val();#}
+                var database_name = [];
+                $("#id_database_select option").each(function () {
+                    database_name.push($(this).val());
+                });
+                if (database_env == undefined || database_env == "" || database_env == null) {
+                    alert('数据库所属环境不能为空！');
+                }
+                else if (sql == undefined || sql == "" || sql == null) {
+                    alert('SQL不能为空！');
+                }
+                else if (database_name == undefined || database_name == "" || database_name == null) {
+                    alert('数据库不能为空！');
+                }
+                else {
+                    var result = confirm("是否确定提交?");
+                    if (result == true) {
+                        $.ajax({
+                            type: "POST",
+                            url: "{% url 'sql_submit' %}",
+                            data: JSON.stringify({
+                                database_env: database_env,
+                                sql: sql,
+                                database_name: database_name
+                            }),
+                            success: function (data) {
+                                alert('提交成功！');
+                                window.location.href = "{% url 'sql_list' %}";
+                            },
+                            error: function (data) {
+                                alert('提交失败！');
+                            },
+                            dataType: "json",
+                            contentType: "application/json"
+                        });
+                    }
+                }
+            })
+        });
+
+    </script>
+{% endblock %}

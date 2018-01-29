@@ -3,7 +3,7 @@
 `项目来源于各种环境版本的自动化发布；后来逐渐添加了堡垒机的部分功能如webssh自动连接服务器；数据库脚本的提交、审核；web监控与自定义服务监控；nginx日志的查询统计；`<br>
  `django 1.10 + Mysql + Celery + Mongodb + GateOne.`<br>
 集成GateOne, 服务器ssh连接，服务自动化部署，版本发布，任务管理与日志，数据库脚本执行，web监控，自定义服务监控，nginx日志查询统计。<br>
-用户的管理与权限分配使用了django的admin后台来创建与管理。<br>
+用户的管理使用了django的admin后台来创建与管理，用户权限通过用户组来分配权限。<br>
 # 部署
 安装依赖模块<br>
 `pip install -r requirements.txt`<br>

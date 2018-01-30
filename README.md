@@ -49,3 +49,9 @@ nginx访问日志查询统计<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获15.JPG)
 给用户赋权限<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获16.JPG)
+点击连接服务器<br>
+![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获17.JPG)
+跳转到该服务器的webssh界面（GateOne）<br>
+![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获18.JPG)
+自动登陆到该服务器<br>
+![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获19.JPG)

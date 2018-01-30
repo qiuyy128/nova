@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 
-from __future__ import absolute_import  # , unicode_literals
+from __future__ import absolute_import
 # from .celery import app
 from celery import shared_task, result
 import time
@@ -8,7 +8,8 @@ import datetime
 from django.utils import timezone
 import os
 import svn.remote
-import urllib2, json
+import urllib2
+import json
 from django.http import HttpResponseRedirect, HttpResponse
 from .run_script import RunCmd
 from nova.models import Task, AppHost, App, Asset, AppConfig, HttpStep, HttpTest, History, HttpToken, Mail, Database, \
@@ -16,15 +17,12 @@ from nova.models import Task, AppHost, App, Asset, AppConfig, HttpStep, HttpTest
 import logging
 from celery.utils.log import get_task_logger
 from celery.result import AsyncResult
-from fabric.api import *
-from fabric.colors import *
 import socket
 import shutil
 from script.mail import EMail
 from django.db.models import Q
 import string
 from script.conn_mysql import Mysql
-from script.conn_mssql import MsSQL
 from script.conn_mongodb import Mongodb
 import decimal
 
@@ -81,24 +79,6 @@ def create_path(path):
         pass
     else:
         os.makedirs('%s' % path)
-
-
-class UploadFile(object):
-    server_host = ""
-    env.password = ENV_PASSWORD
-    def __init__(self, host, port, username, password):
-        self.__host = host
-        self.__port = port
-        self.__username = username
-        self.__password = password
-    @hosts(server_host)
-    def upload_file(self, local_path='', remote_path=''):
-        """
-        上传文件包，参数:{本地文件名},{上传目标路径}
-        """
-        print red("upload %s from %s to remote %s:%s" % (local_path, APP_IP, self.server_host, remote_path))
-        with cd(remote_path):
-            put(local_path, remote_path)
 
 
 def edit_ant_build_conf(file_name, app_name):
@@ -241,9 +221,9 @@ def do_start_app(app_id):
                 app_source_asset = Asset.objects.get(ip=NODE_SOURCE_SERVER)
                 node_app_number = 2
             # 判断release命令
-            result = RunCmd(host=app_source_asset.ip, port=app_source_asset.port, username=app_source_asset.username,
-                            password=app_source_asset.password).file_exist(remote_path='%s' % app_conf_path)
-            if result == 'not exist':
+            results = RunCmd(host=app_source_asset.ip, port=app_source_asset.port, username=app_source_asset.username,
+                             password=app_source_asset.password).file_exist(remote_path='%s' % app_conf_path)
+            if results == 'not exist':
                 release_cmd = "fis3 release production -c"
             else:
                 if app_env == 'product':
@@ -470,9 +450,9 @@ def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_
             RunCmd(host=app_host_ip, port=host_port, username='root', password=password).file_exist(
                 remote_path='%s' % deploy_path)
             # 判断是否安装node
-            result = RunCmd(host=app_host_ip, port=host_port, username='root', password=password).file_exist(
+            results = RunCmd(host=app_host_ip, port=host_port, username='root', password=password).file_exist(
                 remote_path='/usr/local/node')
-            if result == 'not exist':
+            if results == 'not exist':
                 # 安装node
                 node_local_path = os.path.join(attachment_path, '%s') % NODE_NAME
                 node_remote_tar_path = os.path.join('/usr/local', '%s') % NODE_NAME
@@ -491,9 +471,9 @@ def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_
             fdp_receive_local_path = os.path.join(attachment_path, '%s') % fdp_receive_name
             fdp_receive_remote_path = os.path.join(remote_path, '%s') % FDP_RECEIVE_BASENAME
             fdp_receive_remote_tar_path = os.path.join(remote_path, '%s') % fdp_receive_name
-            result = RunCmd(host=app_host_ip, port=host_port, username='root', password=password).file_exist(
+            results = RunCmd(host=app_host_ip, port=host_port, username='root', password=password).file_exist(
                 remote_path='%s' % fdp_receive_remote_path)
-            if result == 'not exist':
+            if results == 'not exist':
                 print 'Install %s ...' % FDP_RECEIVE_BASENAME
                 RunCmd(host=host_ip, port=host_port, username='root', password=password).upload_file(
                     fdp_receive_local_path, fdp_receive_remote_tar_path)
@@ -520,9 +500,6 @@ def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_
             # 上传tomcat
             RunCmd(host=host_ip, port=host_port, username='root', password=password).upload_file(tomcat_local_path,
                                                                                                  tomcat_remote_path)
-            # 使用fabric上传
-            # remote_host = UploadFile(host=app_host_ip, port=host_port, username='root', password=password)
-            # execute(remote_host.upload_file, tomcat_local_path, remote_path)
             tomcat_app_port_1 = app_port.encode('utf-8').replace('8', '7', 1)
             tomcat_app_port_3 = app_port.encode('utf-8').replace('8', '9', 1)
             # 修改tomcat配置
@@ -547,9 +524,9 @@ def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_
             jdk_remote_path = os.path.join(remote_path, '%s') % jdk_base_name
             jdk_remote_tar_path = os.path.join(remote_path, '%s') % jdk_name
             # 判断jdk是否安装
-            result = RunCmd(host=app_host_ip, port=host_port, username='root', password=password).file_exist(
+            results = RunCmd(host=app_host_ip, port=host_port, username='root', password=password).file_exist(
                 remote_path='%s' % jdk_remote_path)
-            if result == 'not exist':
+            if results == 'not exist':
                 print 'Install %s ...' % jdk_base_name
                 RunCmd(host=host_ip, port=host_port, username='root', password=password).upload_file(jdk_local_path,
                                                                                                      jdk_remote_tar_path)

@@ -7,7 +7,6 @@ import time
 from datetime import datetime
 import os
 import configmodule
-from fabric.api import *
 import socket
 import logging
 

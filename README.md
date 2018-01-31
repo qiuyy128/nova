@@ -1,5 +1,5 @@
 # nova
-自动化运维管理平台，基于Django<br>
+自动化运维管理平台，基于Django1.10，python2.7版本.<br>
 `项目来源于各种环境版本的自动化发布；后来逐渐添加了堡垒机的部分功能如webssh自动连接服务器；数据库脚本的提交、审核；web监控与自定义服务监控；nginx日志的查询统计；`<br>
  `django 1.10 + Mysql + Celery + Mongodb + GateOne.`<br>
 
@@ -25,6 +25,7 @@
     修改代码签出的svn用户名与密码；
     ssh_key_password为'private_key'表示RunCmd使用公钥连接服务器；
     修改GATEONE服务器地址, API_KEY, SECRET（生产环境API_KEY与SECRET尽可能配置复杂）；
+    nodejs应用与tomcat应用暂时都统一安装到/u01目录下。
 
 配置GateOne：<br>
 修改20authentication.conf通过API接口调用GateOne:
@@ -62,14 +63,16 @@ Celery定时任务在setting中的CELERYBEAT_SCHEDULE进行配置<br>
 
 发送邮件的配置在表nova_mail中进行配置<br>
 
+附件目录attachment下的文件如jdk，tomcat，nodejs，ant等因为太大没有上传到github<br>
+
 # 效果图
 部署的应用列表<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获.JPG)
 服务器列表<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获2.JPG)
-应用从svn初始化部署<br>
+应用从svn初始化部署，目前是从svn直接部署<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获3.JPG)
-应用每个环境不同的配置文件添加与查看
+应用每个环境不同应用的配置文件添加与查看
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获4.JPG)
 SQL提交<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获5.JPG)
@@ -95,9 +98,9 @@ nginx访问日志查询统计<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获15.JPG)
 给用户赋权限<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获16.JPG)
-点击连接服务器<br>
+点击连接其他linux服务器<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获17.JPG)
-跳转到该服务器的webssh界面（GateOne）<br>
+跳转到该linux服务器的webssh界面（GateOne）<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获18.JPG)
-自动登陆到该服务器<br>
+自动登陆到该linux服务器<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获19.JPG)

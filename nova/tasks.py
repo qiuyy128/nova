@@ -322,19 +322,19 @@ def do_reload_app(app_id):
     for app_host in app_hosts:
         app_name = app_host.name
         deploy_path = app_host.deploy_path
-    if app_name == 'mysql':
-        cmd = 'service mysqld restart'
-    if app_name.find('fdp_') == 0:
-        cmd = 'pm2 reload %s' % app_name
-    if app_name.find('tomcat-') == 0:
-        cmd = "ps -ef|grep %s|grep -v grep|awk '{print $2}'|xargs kill -9;\
-            cd %slogs/;%sbin/catalina.sh start;sleep %d" % (
-            deploy_path, deploy_path, deploy_path, int(STARTUP_APP_SLEEP))
-    app_asset = Asset.objects.get(ip=app_host.ip)
-    print '重启 %s on %s:' % (app_name, app_asset.ip), cmd
-    out, error = RunCmd(host=app_asset.ip, port=app_asset.port, username=app_asset.username,
-                        password=app_asset.password).run_command(cmd)
-    logger.info(u'重启%s on %s, port: %s' % (app_host.name, app_host.ip, app_host.port))
+        if app_name == 'mysql':
+            cmd = 'service mysqld restart'
+        if app_name.find('fdp_') == 0:
+            cmd = 'pm2 reload %s' % app_name
+        if app_name.find('tomcat-') == 0:
+            cmd = "ps -ef|grep %s|grep -v grep|awk '{print $2}'|xargs kill -9;\
+                cd %slogs/;%sbin/catalina.sh start;sleep %d" % (
+                deploy_path, deploy_path, deploy_path, int(STARTUP_APP_SLEEP))
+        app_asset = Asset.objects.get(ip=app_host.ip)
+        print '重启 %s on %s:' % (app_name, app_asset.ip), cmd
+        out, error = RunCmd(host=app_asset.ip, port=app_asset.port, username=app_asset.username,
+                            password=app_asset.password).run_command(cmd)
+        logger.info(u'重启%s on %s, port: %s' % (app_host.name, app_host.ip, app_host.port))
     if error:
         # print 'error is:'
         # print error

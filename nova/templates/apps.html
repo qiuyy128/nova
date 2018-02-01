@@ -361,7 +361,7 @@
                     if (obj[i].checked) {
                         app_id.push(obj[i].value);
                         if ($.inArray(env_list[i].innerText, app_env) == -1) {
-                            app_env[i] = env_list[i].innerText;
+                            app_env.push(env_list[i].innerText);
                         }
                     }
                 }
@@ -409,7 +409,7 @@
                     if (obj[i].checked) {
                         app_id.push(obj[i].value);
                         if ($.inArray(env_list[i].innerText, app_env) == -1) {
-                            app_env[i] = env_list[i].innerText;
+                            app_env.push(env_list[i].innerText);
                         }
                     }
                 }
@@ -457,7 +457,7 @@
                     if (obj[i].checked) {
                         app_id.push(obj[i].value);
                         if ($.inArray(env_list[i].innerText, app_env) == -1) {
-                            app_env[i] = env_list[i].innerText;
+                            app_env.push(env_list[i].innerText);
                         }
                     }
                 }

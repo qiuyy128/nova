@@ -1106,17 +1106,70 @@ def sql_exec(request):
         return HttpResponse(json.dumps(data))
 
 
+@csrf_exempt
+@login_required
+def get_new_line(request):
+    if request.method == 'POST':
+        file_obj = json.loads(request.body)['file']
+        seek = json.loads(request.body)['seek']
+        with open(file_obj) as f:
+            # Go to the end of file
+            # f.seek(0, 2)
+            curr_position = seek
+            f.seek(curr_position)
+            line = f.readlines()
+            if not line:
+                f.seek(curr_position)
+                data = {'line': '', 'seek': seek}
+                # time.sleep(s)
+            else:
+                logger.info(line)
+                seek = f.tell()
+                data = {'line': line, 'seek': seek}
+            logger.info(data)
+            return HttpResponse(json.dumps(data))
+    else:
+        logger.info(request.method)
+        return HttpResponse(json.dumps({'line': 'ERR'}))
+
+
+@csrf_exempt
 @login_required
 def shell(request):
-    output = ''
     if request.method == 'POST':
-        command = request.POST.get('command')
-        p = subprocess.Popen(['bash', '-c', command], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        logger.info(request.POST)
+        # command = request.POST.get('command')
+        command = json.loads(request.body)['command']
+        p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         output = ''
-        for line in p.stdout.readlines():
-            output = output + line
-        logger.info('execute command %s :' % command + output)
-    return render(request, 'shell.html', {'output': output})
+        file_name = '.command.log'
+        log_file = os.path.join(base_path, 'logs', file_name)
+        logger.info(log_file)
+        # file_object = open(log_file, 'w')
+        while True:
+            stdout = p.stdout.readline()
+            if stdout == '' and p.poll() is not None:
+                break
+            if stdout != '':
+                logger.info(stdout.strip('\n'))
+                output = output + stdout
+                # file_object.write(stdout)
+                with open(log_file, 'a') as f:
+                    f.write(stdout)
+            else:
+                stderr = p.stderr.readline()
+                if stderr == '' and p.poll() is not None:
+                    break
+                if stderr != '':
+                    logger.info(stderr.strip('\n'))
+                    output = output + stderr
+                    # file_object.write(stderr)
+                    with open(log_file, 'a') as f:
+                        f.write(stderr)
+        # file_object.close()
+        data = {'rtn': '00', 'command': command}
+        return HttpResponse(json.dumps(data))
+    return render(request, 'shell.html')
 
 
 # @require_role('user')
@@ -1361,11 +1414,13 @@ def http_data(request):
         logger.info(e)
     data = []
     for i in history:
+        # 获取当前时间，数据库存的time.time()时间戳单位是秒，JS中则单位是毫秒，所以这里乘以1000
+        # 需要GMT时间+8小时
         data.append([(i.clock + 8 * 60 * 60) * 1000, i.value])
     if len(data) > 0:
         last_time = data[-1][0] / 1000 - 8 * 60 * 60
     content = {"item": item_id, "msg": u"操作成功！", "data": data, 'last_time': last_time, 'item_name': item_name}
-    logger.info(item_id)
+    # logger.info(item_id)
     return HttpResponse(json.dumps(content), content_type='application/json')
 
 
@@ -1671,3 +1726,66 @@ def fpcy_stat(request):
         data = {'rtn': 99, 'msg': u'查询错误:' + str(e)}
         logger.info(data)
     return render(request, 'fpcy_stat.html', locals())
+
+
+@login_required
+@csrf_exempt
+def get_fpcy_request_area(request):
+    # 业务库
+    db_env = 'slave'
+    # 连接数据库
+    try:
+        # fpcy库
+        db_info = Database.objects.get(db_name='fpcy', env=db_env)
+        conn = Mysql(host=db_info.ip, port=int(db_info.port), db=db_info.db_name, user=db_info.username,
+                     password=db_info.password, charset="utf8")
+    except Exception as e:
+        data = {'rtn': 99, 'msg': u'连接数据库错误:' + str(e)}
+        logger.info(json.dumps(data, encoding='utf-8', ensure_ascii=False))
+    if request.method == 'GET':
+        res = request.method
+        if 'stat_day' in res:
+            begin_day = request.GET['stat_day']
+            begin_time = datetime.datetime.strptime(str(begin_day), '%Y-%m-%d')
+        else:
+            # 默认当天年月日
+            begin_day = datetime.date.today()
+            begin_time = datetime.date.today()
+        end_time = begin_time + datetime.timedelta(days=string.atoi('1'))
+        begin_time = begin_time.strftime('%Y-%m-%d')
+        end_time = end_time.strftime('%Y-%m-%d')
+        try:
+            sql1 = """
+            SELECT SUBSTR(a.invoiceType,1,3) name,count(*) value from (
+                  SELECT invoiceType,count(*) cnt FROM fpcy_requeststatistics_log
+                  WHERE inputTime BETWEEN %s AND %s
+                  GROUP BY invoiceType order by invoiceType
+                  )a where a.invoiceType like %s
+                  GROUP BY SUBSTR(a.invoiceType,1,5) ORDER BY 2 desc
+            """
+            sql2 = """
+                  SELECT invoiceType,count(*) cnt FROM fpcy_requeststatistics_log
+                  WHERE inputTime BETWEEN %s AND %s AND invoiceType like %s
+                  GROUP BY invoiceType order by invoiceType
+                  """
+            args = (begin_time, end_time, '%增值税%')
+            cur_list, cur_desc, cur_rows, dict_list = conn.exec_select(sql1, args)
+            req_list = dict_list
+            cur_list, cur_desc, cur_rows, dict_list = conn.exec_select(sql2, args)
+            for i in req_list:
+                name = i['name']
+                detail = ''
+                for j in dict_list:
+                    if name in j['invoiceType']:
+                        detail += j['invoiceType'] + '：' + str(j['cnt'])+';'
+                i['detail'] = detail
+        except Exception as e:
+            logger.info(e)
+        data = {'req_list': req_list}
+        return HttpResponse(json.dumps(data))
+
+
+@login_required
+@csrf_exempt
+def fpcy_request_area(request):
+    return render(request, 'fpcy_request_area.html')

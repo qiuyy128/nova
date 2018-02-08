@@ -1111,6 +1111,10 @@ def query_fpcy_every_day():
         db_opendb = Database.objects.get(db_name='opendb', env=db_env)
         conn_opendb = Mysql(host=db_opendb.ip, port=int(db_opendb.port), db=db_opendb.db_name,
                             user=db_opendb.username, password=db_opendb.password, charset="utf8")
+        # ls库查询
+        db_ls = Database.objects.get(db_name='ls', env=db_env)
+        conn_ls = Mysql(host=db_ls.ip, port=int(db_ls.port), db=db_ls.db_name,
+                        user=db_ls.username, password=db_ls.password, charset="utf8")
         # 连接mongodb数据库
         info_mongo = Database.objects.get(db_name='stats', env=db_env)
         mongodb = Mongodb(host=info_mongo.ip, port=info_mongo.port, db=info_mongo.db_name, user=info_mongo.username,
@@ -1219,8 +1223,9 @@ def query_fpcy_every_day():
         data_sql_ysqk.append(data_sql_ysqk_xfds_sk)
         data_sql_ysqk_xfje = data_sql_ysqk_xfds_sk / 100
         data_sql_ysqk.append(data_sql_ysqk_xfje)
-        cur_list, cur_desc, cur_rows, dict_list = conn_charging.exec_select(fpcy_sql.sql_ysqk_czje, args)
-        data_sql_ysqk_czje = cur_list[0][0]
+        # # 营收情况 ->  充值金额（ls库）
+        cur_list, cur_desc, cur_rows, dict_list = conn_ls.exec_select(fpcy_sql.sql_ysqk_czje, args)
+        data_sql_ysqk_czje = str(cur_list[0][0])
         data_sql_ysqk.append(data_sql_ysqk_czje)
         try:
             collection = db_mongo['fpcy_ysqk']

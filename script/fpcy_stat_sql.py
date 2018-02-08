@@ -17,8 +17,9 @@ sql_ysqk_xfds_sk = """
 SELECT ifnull(SUM(expense),0) expense FROM charging_record_charging WHERE chargingTime BETWEEN %s AND %s and productId = 'vat'
 """
 sql_ysqk_czje = """
-SELECT ifnull(SUM(rechargeAmount)/100,0) rechargeAmount FROM charging_record_recharge WHERE rechargeTime BETWEEN %s AND %s
-    and (isFree is null or isFree ='0')
+select IFNULL(SUM(totalAmount),0) from order_information a, order_goods b where a.orderId = b.orderId and b.goodsId in 
+('sp1722874001', 'sp1722874002', 'sp1722874003', 'sp1722874004', 'sp1722874005', 'sp1722874006', 'sp1722874007', 'sp1722874008', 'sp1722874009', 'sp1722874010')
+and a.orderState = '90' and a.inputTime BETWEEN %s AND %s
 """
 
 ##用户反馈情况表

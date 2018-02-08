@@ -30,10 +30,14 @@
                         <td>{{ sql.db_name }}</td>
                         <td>{{ sql.env }}</td>
                         <td>
-                            <div style="width:650px;word-break:break-all;word-wrap:break-word;">
-                                {#                                <div>#}
-                                {{ sql.sql }}
+                            {#                                                        <div style="width:650px;word-break:break-all;word-wrap:break-word;">#}
+                            <div>
+                                <span name="sql_part">{{ sql.sql }}</span>
+                                <span name="sql_detail" style="display:none">{{ sql.sql }}</span>
+                                <a name="more_detail" style="display:none" type="button" class="bt_more_detail">显示全部</a>
+                                <a name="pack_detail" style="display:none" type="button" class="bt_pack_detail">收起</a>
                             </div>
+
                         </td>
                         <td>{{ sql.start_time|date:"Y-m-d H:i:s" }}</td>
                         <td>{{ sql.end_time|date:"Y-m-d H:i:s" }}</td>
@@ -120,6 +124,51 @@
 
 {% block js %}
     <script type="text/javascript">
+        var obj = document.getElementsByName("sql_part");
+        for (var i in obj) {
+            var max_width = 40;
+            if (String(obj[i].innerText).length > max_width) {
+                obj[i].innerText = obj[i].innerText.substring(0, max_width) + '...';
+                var obj2 = document.getElementsByName("more_detail");
+                obj2[i].style.display = "";
+            }
+        }
+        var obj2 = document.getElementsByClassName("bt_more_detail");
+        for (var j = 0; j < obj2.length; j++) {
+            obj2[j].index = j;
+            obj2[j].onclick = function () {
+                {#                var table = document.getElementById("dataTables-sql");#}
+                {#                /*获取选中的行 */#}
+                {#                var child = table.getElementsByTagName("tr")[this.index + 1];#}
+                {#                /*获取选择行的所有列*/#}
+                {#                var row_col = child.getElementsByTagName("td");#}
+                var row_index = this.index;
+                $(this).hide();
+
+                var obj3 = document.getElementsByName("sql_part");
+                obj3[row_index].style.display = "none";
+                var obj4 = document.getElementsByName("sql_detail");
+                obj4[row_index].style.display = "";
+                var obj5 = document.getElementsByName("pack_detail");
+                obj5[row_index].style.display = "";
+            }
+        }
+        var obj2 = document.getElementsByClassName("bt_pack_detail");
+        for (var j = 0; j < obj2.length; j++) {
+            obj2[j].index = j;
+            obj2[j].onclick = function () {
+                var row_index = this.index;
+                $(this).hide();
+
+                var obj3 = document.getElementsByName("sql_part");
+                obj3[row_index].style.display = "";
+                var obj4 = document.getElementsByName("sql_detail");
+                obj4[row_index].style.display = "none";
+                var obj5 = document.getElementsByName("more_detail");
+                obj5[row_index].style.display = "";
+            }
+        }
+
         function change_limit() {
             var limit = $("#id_limit").val();
             if (limit == 10) {

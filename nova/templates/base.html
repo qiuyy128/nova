@@ -113,6 +113,7 @@
                         <ul class="dropdown-menu">
                             <li><a href="{% url 'monitor' %}">网站监控</a></li>
                             <li><a href="{% url 'fpcy_request_log' %}">发票查验错误请求监控</a></li>
+                            <li><a href="{% url 'fpcy_request_area' %}">发票查验区域分布</a></li>
                             {#                            <li><a href="#">服务器监控</a></li>#}
                             {#                            <li><a href="#">业务监控</a></li>#}
                         </ul>
@@ -176,9 +177,9 @@
 {#<script src="{% static 'js/dataTables.responsive.js' %}"></script>#}
 
 <!-- highcharts -->
-<script src="{% static 'js/highcharts/highstock.js' %}"></script>
-<script src="{% static 'js/highcharts/exporting.js' %}"></script>
-<script src="{% static 'js/highcharts/highcharts-zh_CN.js' %}"></script>
+{#<script src="{% static 'js/highcharts/highstock.js' %}"></script>#}
+{#<script src="{% static 'js/highcharts/exporting.js' %}"></script>#}
+{#<script src="{% static 'js/highcharts/highcharts-zh_CN.js' %}"></script>#}
 
 {% block js %}
 {% endblock %}

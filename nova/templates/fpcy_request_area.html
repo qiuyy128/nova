@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}发票查验分布区域{% endblock %}
+{% block content %}
+    {#    <div class="container col-sm-8 col-sm-offset-2 col-md-10 col-md-offset-2 main">#}
+    <div class="container col-sm-8 col-md-12">
+        <div class="col-md-offset-1 console-instance-head clearfix">
+            <div class="pull-left">
+                <h3><span>今日增值税查验区域分布</span></h3>
+            </div>
+        </div>
+        <div class="col-md-offset-1 margin-top-1">
+            <span>该图展示为今日实时统计数据！</span>
+        </div>
+        <div class="col-md-offset-1 margin-top-1" id="map" style="width:800px;height: 500px;">
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    {#    <script src="https://img.hcharts.cn/highmaps/highmaps.js"></script>#}
+    {#    <script src="https://data.jianshukeji.com/geochina/china.js"></script>#}
+    {#    <script src="{% static 'js/highcharts/highmaps.js' %}"></script>#}
+    <script src="{% static 'js/highcharts/highcharts.js' %}"></script>
+    <script src="{% static 'js/highcharts/map.js' %}"></script>
+    <script src="{% static 'js/highcharts/china.js' %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function requestData() {
+            var map = null;
+            $.ajax({
+                url: "{% url 'get_fpcy_request_area' %}",
+                type: 'GET',
+                success: function (mapdata) {
+                    if (typeof mapdata == 'string') {
+                        mapdata = JSON.parse(mapdata);
+                    }
+                    var data = [];
+                    Highcharts.each(mapdata['req_list'], function (md, index) {
+                        var point_name = md.name.split('增')[0];
+                        var tmp = {
+                            {#                            name: md.name,#}
+                            name: point_name,
+                            value: md.value,
+                            detail: md.detail.replace(/;/g, '<br>')
+                        };
+                        if (md.value > 4) {
+                            tmp.color = 'green';
+                        }
+                        else if (md.value == 4) {
+                            tmp.color = 'yellow';
+                        }
+                        else {
+                            tmp.color = 'red';
+                        }
+                        data.push(tmp);
+                    });
+                    // 初始化图表
+                    map = new Highcharts.Map('map', {
+                        credits: {
+                            enabled: false,
+                            text: "",
+                            href: ""
+                        },
+                        title: {
+                            text: '发票查验各省市增值税查验分布统计'
+                        },
+                        mapNavigation: {
+                            enabled: true,
+                            buttonOptions: {
+                                verticalAlign: 'bottom'
+                            }
+                        },
+                        tooltip: {
+                            useHTML: true,
+                            headerFormat: '<table><tr><td>{point.name}</td></tr>',
+                            pointFormat: '<tr><td><b>{point.name}</b></td><td></td></tr>' +
+                            '<tr><td>增值税发票查验种类：{point.value}</td></tr>' +
+                            '<tr><td>{point.detail}</td></tr>',
+                            footerFormat: '</table>'
+                        },
+                        series: [{
+                            data: data,
+                            name: '增值税查验统计',
+                            mapData: Highcharts.maps['cn/china'],
+                            joinBy: 'name', // 根据 name 属性进行关联
+                            states: {
+                                hover: {
+                                    color: '#a4edba'
+                                }
+                            },
+                            dataLabels: {
+                                enabled: true,
+                                format: '{point.name}'
+                            }
+                        }]
+                    });
+                    setTimeout(requestData, 5000);
+                },
+                error: function (mapdata) {
+                    alert('ERROR');
+                },
+                dataType: "json",
+                contentType: "application/json"
+            });
+        });
+    </script>
+{% endblock %}

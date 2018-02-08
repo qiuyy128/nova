@@ -35,7 +35,7 @@
 
 
 <div class="container">
-    <form class="form-signin" action="/nova/login/" method="post">
+    <form class="form-signin" action="{% url 'login' %}" method="post">
         {% csrf_token %} <!--csrf_token：生成令牌-->
         <h2 class="form-signin-heading" align="center">自动化运维平台</h2>
         <input type="hidden" name="next" value="{{ next }}">

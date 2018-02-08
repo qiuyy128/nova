@@ -104,3 +104,5 @@ nginx访问日志查询统计<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获18.JPG)
 自动登陆到该linux服务器<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获19.JPG)
+地图数据实时展示<br>
+![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获20.JPG)

@@ -106,3 +106,10 @@ nginx访问日志查询统计<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获19.JPG)
 地图数据实时展示<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获20.jpg)
+
+# 沟通反馈
+有任何问题，欢迎用以下联系方式交流，谢谢。
+
+邮件：qiuyy_128@163.com
+
+QQ：9684439

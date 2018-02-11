@@ -25,7 +25,6 @@ class Config(object):
     NODE_NAME = 'node.tar.gz'
     FDP_RECEIVE_NAME = 'fdp-receiver.tar.gz'
     FDP_RECEIVE_BASENAME = 'fdp-receiver'
-    ENV_PASSWORD = 'szsmgcy'
     BROKER_TRANSPORT = 'redis'
     NODE_APP_NUMBER = 2
     NODE_ENV = 'test'

@@ -10,12 +10,62 @@
         </div>
 
         <div class="col-md-offset-1 margin-top-1" id=toolbar>
-            {#    <button id=open>&#x1f4c2;</button>#}
-            {#            <output id=name>{{ file }}</output>#}
-            <div style="font-family: Courier;font-weight: bold;">File: {{ file }}</div>
-            {#            <output id=type></output>#}
+            <div style="font-family: Courier;font-weight: bold;">File: <span id="filename">{{ file }}</span></div>
+            <textarea style="height: 40em;font-family: Courier;width: 100%;"
+                      id=orig_content>{{ file_content }}</textarea>
             <textarea style="height: 40em;font-family: Courier;font-weight: bold;width: 100%;"
                       id=content>{{ file_content }}</textarea>
+            <button class="btn btn-primary" disabled="disabled" id="save" env="{{ env }}">保存</button>
+            <button class="btn btn-default" id="cancel" onclick="go_back()">取消</button>
         </div>
     </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        $(document).ready(function () {
+            $("#orig_content").hide();
+            var filename = $('#filename').text();
+            var orig_content = $('#orig_content').val();
+            $("#content").keydown(function (e) {
+                if (e.keyCode) {
+                    $("#save").attr("disabled", false)
+                }
+            });
+            $('#save').click(function () {
+                var content = $('#content').val();
+                var env = $(this).attr('env');
+                var result = confirm("是否确定保存?");
+                if (result == true) {
+                    $.ajax({
+                        type: "POST",
+                        url: "/nova/save_config_file/",
+                        data: JSON.stringify({
+                            filename: filename,
+                            orig_content: orig_content,
+                            content: content,
+                            env: env
+                        }),
+                        success: function (response) {
+                            if (response['rtn'] == "00") {
+                                alert('保存成功！');
+                            }
+                            else {
+                                alert(response['msg']);
+                            }
+                            parent.location.reload();
+                        },
+                        error: function (response) {
+                            alert(response);
+                        },
+                        dataType: "json",
+                        contentType: "application/json"
+                    });
+                }
+            });
+        });
+        function go_back() {
+            window.history.go(-1);
+        }
+    </script>
 {% endblock %}

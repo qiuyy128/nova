@@ -6,7 +6,7 @@ from django.shortcuts import render
 
 # Create your views here.
 from nova.models import Asset, AssetGroup, App, AppHost, AppGroup, Task, AppConfig, Sql, Database, UploadFile, \
-    OssBucketApp, HttpStep, HttpTest, History, Config, ServiceStep, ServiceTest
+    OssBucketApp, HttpStep, HttpTest, History, Config, ServiceStep, ServiceTest, OperationLog
 from django.contrib.auth.models import User, Group
 from .forms import UserForm, AssetForm, UploadFileForm, AppConfigForm
 
@@ -664,6 +664,7 @@ def config_file_add(request):
 
 @login_required
 def config_file(request):
+    current_url = request.get_full_path()
     res = request.GET
     if 'app_name' in res and 'env' in res:
         app_name = request.GET.get('app_name')
@@ -692,7 +693,7 @@ def config_file(request):
                           }
         app_config_list.append(app_config_dic)
     # logger.info(app_config_list)
-    data = {'app_config_list': app_config_list}
+    data = {'app_config_list': app_config_list, 'current_url': current_url}
     return render(request, 'config_file.html', context=data)
 
 
@@ -734,6 +735,46 @@ def config_file_editor(request, app_name, env, file_path, file_name):
         return HttpResponseRedirect(reverse('deny'))
 
 
+@csrf_exempt
+@login_required()
+def save_config_file(request):
+    if request.method == 'POST':
+        user_groups = get_user_group(request)
+        user_group_name = []
+        for ug in user_groups:
+            # 获取user_group名称
+            user_group_name.append(ug.name.encode('utf-8'))
+        if 'EDIT_CONFIG' in user_group_name:
+            filename = json.loads(request.body)['filename']
+            orig_content = json.loads(request.body)['orig_content']
+            content = json.loads(request.body)['content']
+            env = json.loads(request.body)['env']
+            filename_bak = filename + '.bak'
+            if 'product' == env and 'EDIT_CONFIG_PRODUCT' not in user_group_name:
+                data = {'rtn': 98, 'msg': '没有生产环境修改权限，请联系管理员!'}
+                return HttpResponse(json.dumps(data))
+            log_info = u'修改' + env + ':' + filename
+            try:
+                # 备份
+                with open(filename_bak, 'wb') as f:
+                    f.write(orig_content)
+                # 保存
+                with open(filename, 'wb') as f:
+                    f.write(content)
+                rtn = '00'
+                msg = u'保存成功'
+            except Exception as e:
+                rtn = '99'
+                msg = str(e)
+                logger.info(e)
+            data = {'rtn': rtn, 'msg': msg}
+            OperationLog.objects.create(username=request.user.username, log_info=log_info, result=msg,
+                                        operation_time=timezone.now())
+        else:
+            data = {'rtn': '98', 'msg': u'无权限执行，请联系管理员！'}
+        return HttpResponse(json.dumps(data))
+
+
 @login_required
 def file_editor(request):
     return render(request, 'file_editor.html')
@@ -761,7 +802,7 @@ def get_database(request):
     try:
         data = serializers.serialize('json', databases, fields=('comment', 'db_name'))
     except Exception as e:
-        print e
+        logger.info(e)
     return HttpResponse(data, content_type='application/json')
 
 
@@ -1777,7 +1818,7 @@ def get_fpcy_request_area(request):
                 detail = ''
                 for j in dict_list:
                     if name in j['invoiceType']:
-                        detail += j['invoiceType'] + '：' + str(j['cnt'])+';'
+                        detail += j['invoiceType'] + '：' + str(j['cnt']) + ';'
                 i['detail'] = detail
         except Exception as e:
             logger.info(e)

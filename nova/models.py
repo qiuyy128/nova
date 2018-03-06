@@ -333,3 +333,13 @@ class ServiceTest(models.Model):
 
     def __unicode__(self):
         return self.name
+
+
+class OperationLog(models.Model):
+    username = models.CharField(max_length=50, blank=False, null=False, verbose_name=u"用户名称")
+    log_info = models.CharField(max_length=1000, blank=False, null=False, verbose_name=u"日志信息")
+    result = models.CharField(max_length=200, null=True, verbose_name=u"操作结果")
+    operation_time = models.DateTimeField(auto_now=True, null=True, verbose_name=u"操作时间")
+
+    def __unicode__(self):
+        return self.name

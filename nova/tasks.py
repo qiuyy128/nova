@@ -1288,7 +1288,8 @@ def query_fpcy_every_day():
             # 企业接口查验情况 -> 企业名称（opendb）
             args = (data_sql_qyjkcyqk[0])
             cur_list, cur_desc, cur_rows, dict_list = conn_opendb.exec_select(fpcy_sql.sql_qyjkcyqk_qymc, args)
-            data_sql_qyjkcyqk[0] = cur_list[0][0] + cur_list[0][1]
+            if len(cur_list) == 1:
+                data_sql_qyjkcyqk[0] = cur_list[0][0] + cur_list[0][1]
         try:
             collection = db_mongo['fpcy_qyjkcyqk']
             data_sql_qyjkcyqks = save_data_to_mongodb(data_sql_qyjkcyqks, begin_time, collection, with_sum='Y')
@@ -1331,7 +1332,9 @@ def query_fpcy_every_day():
             if type(data_sql_sjcyfwztbs[j]) != list:
                 data_sql_sjcyfwztbs[j] = list(data_sql_sjcyfwztbs[j])
             data_sql_sjcyfwztb = data_sql_sjcyfwztbs[j]
-            data_sql_sjcyfwztb[0] = data_sql_sjcyfwztb[0].split('（')[0]
+            # 可能出现invoiceName为空的情况，需要判断.
+            if data_sql_sjcyfwztb[0] is not None:
+                data_sql_sjcyfwztb[0] = data_sql_sjcyfwztb[0].split('（')[0]
         try:
             collection = db_mongo['fpcy_sjcyfwzt']
             data_sql_sjcyfwztbs = save_data_to_mongodb(data_sql_sjcyfwztbs, begin_time, collection, with_sum='Y')

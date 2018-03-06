@@ -53,14 +53,6 @@
                 {% endfor %}
                 </tbody>
             </table>
-            <script type="application/javascript">
-                var myVar = setInterval(function () {
-                    update_task();
-                }, 3000);
-                function update_task() {
-
-                }
-            </script>
         </div>
     </div>
 {% endblock %}
@@ -101,11 +93,11 @@
                             }
                         },
                         error: function (response) {
-                            alert(response['msg'])
+                            alert(response['msg']);
                             {#                            alert('更新文件失败，其他错误！');#}
                         },
                         dataType: "json",
-                        contentType: "application/json",
+                        contentType: "application/json"
                     });
                 }
             })

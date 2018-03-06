@@ -49,6 +49,7 @@ urlpatterns = [
     url(r'^sql_list/$', views.sql_list, name='sql_list'),
     url(r'^sql_exec/$', views.sql_exec, name='sql_exec'),
     url(r'^shell/$', views.shell, name='shell'),
+    url(r'^save_config_file/$', views.save_config_file, name='save_config_file'),
     url(r'^log/$', views.get_log, name='get_log'),
     url(r'^get_log_handle/(?P<start_line>[0-9]+)/(?P<end_line>[0-9]+)/$', views.get_log_handle, name='get_log_handle'),
 ]

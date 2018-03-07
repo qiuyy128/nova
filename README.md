@@ -13,10 +13,6 @@
 
     pip install -r requirements.txt
 
-创建admin用户：<br>
-
-    python manage.py createsuperuser
-
 修改配置文件configmodule.py：<br>
 
     通过配置NOVA_ENV环境变量来判断读取哪个环境对应的配置；
@@ -26,6 +22,20 @@
     ssh_key_password为'private_key'表示RunCmd使用公钥连接服务器；
     修改GATEONE服务器地址, API_KEY, SECRET（生产环境API_KEY与SECRET尽可能配置复杂）；
     nodejs应用与tomcat应用暂时都统一安装到/u01目录下。
+
+数据库迁移：<br>
+
+    python manage.py migrate
+    
+创建admin用户：<br>
+
+    python manage.py createsuperuser
+
+启动应用：<br>
+
+    python manage.py runserver 或者运行start_app.sh（linux）or start_app.bat(windows)
+
+登陆admin后台创建普通用户，用户组，并赋予用户用户组的权限<br>
 
 配置GateOne：<br>
 修改20authentication.conf通过API接口调用GateOne:
@@ -56,8 +66,6 @@ Django集成GateOne部分见views.py中host_connect与get_auth_obj<br>
 运行celery beat：<br>
 
     celery -A nova beat
-
-在admin后台创建普通用户，用户组，并赋予用户用户组的权限<br>
 
 Celery定时任务在setting中的CELERYBEAT_SCHEDULE进行配置<br>
 

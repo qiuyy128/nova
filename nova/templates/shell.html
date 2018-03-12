@@ -34,7 +34,7 @@
                 </div>
                 <div class="form-group">
                     <div class="col-sm-3">
-                        <input id="id_command_exec" class="btn btn-default" type="button" value="执行">
+                        <input id="id_command_exec" command_file="{{ command_file }}" class="btn btn-default" type="button" value="执行">
                         </input>
                     </div>
                 </div>
@@ -42,7 +42,7 @@
         </div>
         <div class="col-md-offset-1 margin-top-1">
             <pre id='log' style="height: 30em;background-color:black;color:white;font-family: Courier;width: 100%;">
-                {{ output }}
+{#                {{ output }}#}
             </pre>
         </div>
     </div>
@@ -57,6 +57,7 @@
         $(document).ready(function () {
             $("#id_command_exec").click(function () {
                 var command = $("#id_command").val();
+                var command_file = $(this).attr('command_file');
                 $.ajax({
                     url: "{% url 'shell' %}",
                     type: 'POST',
@@ -82,7 +83,7 @@
                         url: "{% url 'get_new_line' %}",
                         type: 'POST',
                         data: JSON.stringify({
-                            file: '/u01/projects/futhor/logs/command.log',
+                            file: command_file,
                             seek: seek
                         }),
                         success: function (data) {

@@ -9,7 +9,6 @@ import os
 import configmodule
 import socket
 import logging
-
 APP_IP = socket.gethostbyname(socket.gethostname())
 
 # Get an instance of a logger
@@ -133,3 +132,31 @@ class RunCmd(object):
                 t.close()
                 print '#########################################'
                 # return 'done'
+
+    def download_file(self, remote_path, local_path):
+        print "[%s@%s:%s] out:" % (self.__username, self.__host, self.__port)
+        if self.__username == 'root':
+            t = paramiko.Transport((self.__host, int(self.__port)))
+            if ssh_key_password == 'private_key':
+                t.connect(username=self.__username, pkey=self.__private_key)
+            else:
+                t.connect(username=self.__username, password=self.__password)
+            sftp = paramiko.SFTPClient.from_transport(t)
+            print '#########################################'
+            print 'Begin download file %s:%s to %s.' % (self.__host, remote_path, local_path)
+            local_file = os.path.split(remote_path)[1]
+            try:
+                sftp.stat(remote_path)
+            except IOError:
+                print("remote file %s not exist." % remote_path)
+            try:
+                sftp.get(remote_path, local_path)
+                print 'Download file %s:% to %s success.' % (self.__host, remote_path, local_path)
+                return u'下载成功!'
+            except Exception as e:
+                print u"下载失败!"
+                logger.info(e)
+                return u'下载失败!'
+            finally:
+                t.close()
+                print '#########################################'

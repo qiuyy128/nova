@@ -1177,16 +1177,18 @@ def get_new_line(request):
 @csrf_exempt
 @login_required
 def shell(request):
+    file_name = request.user.username + '.command.log'
+    command_file = os.path.join(base_path, 'logs', file_name)
     if request.method == 'POST':
         logger.info(request.POST)
         # command = request.POST.get('command')
         command = json.loads(request.body)['command']
         p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         output = ''
-        file_name = '.command.log'
-        log_file = os.path.join(base_path, 'logs', file_name)
-        logger.info(log_file)
-        # file_object = open(log_file, 'w')
+
+        logger.info(command_file)
+        with open(command_file, 'w') as f:
+            f.write('')
         while True:
             stdout = p.stdout.readline()
             if stdout == '' and p.poll() is not None:
@@ -1195,7 +1197,7 @@ def shell(request):
                 logger.info(stdout.strip('\n'))
                 output = output + stdout
                 # file_object.write(stdout)
-                with open(log_file, 'a') as f:
+                with open(command_file, 'a') as f:
                     f.write(stdout)
             else:
                 stderr = p.stderr.readline()
@@ -1205,12 +1207,15 @@ def shell(request):
                     logger.info(stderr.strip('\n'))
                     output = output + stderr
                     # file_object.write(stderr)
-                    with open(log_file, 'a') as f:
+                    with open(command_file, 'a') as f:
                         f.write(stderr)
         # file_object.close()
-        data = {'rtn': '00', 'command': command}
+        data = {'rtn': '00', 'command': command, 'command_file': command_file}
+        logger.info(data)
         return HttpResponse(json.dumps(data))
-    return render(request, 'shell.html')
+    else:
+        data = {'command_file': command_file}
+    return render(request, 'shell.html', data)
 
 
 # @require_role('user')
@@ -1644,7 +1649,7 @@ def fpcy_stat(request):
     res = request.GET
     if 'stat_day' in res:
         begin_day = request.GET['stat_day']
-        begin_time = datetime.datetime.strptime(str(begin_day), '%Y-%m-%d')
+        stat_day = datetime.datetime.strptime(str(begin_day), '%Y-%m-%d')
     else:
         # 默认当天年月日
         begin_day = datetime.date.today()
@@ -1654,18 +1659,23 @@ def fpcy_stat(request):
         begin_day_seconds = time.mktime(datetime.datetime.strptime(str(begin_day), '%Y-%m-%d').timetuple())
         # 当天22:00前取前一天
         if time.time() - begin_day_seconds < 22 * 60 * 60:
-            begin_time = begin_day - datetime.timedelta(days=string.atoi('1'))
+            stat_day = begin_day - datetime.timedelta(days=string.atoi('1'))
         else:
-            begin_time = datetime.date.today()
-    end_time = begin_time + datetime.timedelta(days=string.atoi('1'))
-    last_time = begin_time - datetime.timedelta(days=string.atoi('1'))
-    begin_time = begin_time.strftime('%Y-%m-%d')
+            stat_day = datetime.date.today()
+        # date转datetime
+        stat_day = datetime.datetime.strptime(str(stat_day), '%Y-%m-%d')
+    # 统计开始与统计结束时间均取22:00:00
+    begin_time = stat_day - datetime.timedelta(hours=string.atoi('2'))
+    end_time = begin_time + datetime.timedelta(hours=string.atoi('24'))
+    last_time = stat_day - datetime.timedelta(days=string.atoi('1'))
+    # 转字符串
+    begin_time = begin_time.strftime('%Y-%m-%d %H:%M:%S')
     last_time = last_time.strftime('%Y-%m-%d')
-    end_time = end_time.strftime('%Y-%m-%d')
+    end_time = end_time.strftime('%Y-%m-%d %H:%M:%S')
     # date转datetime
-    begin_day_datetime = datetime.datetime.strptime(begin_time, '%Y-%m-%d')
+    begin_day_datetime = datetime.datetime.strptime(begin_time, '%Y-%m-%d %H:%M:%S')
     last_day_datetime = datetime.datetime.strptime(last_time, '%Y-%m-%d')
-    end_day_datetime = datetime.datetime.strptime(end_time, '%Y-%m-%d')
+    end_day_datetime = datetime.datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')
     logger.info('begin_time is: %s' % begin_time)
     logger.info('end_time is: %s' % end_time)
     logger.info('begin_day_datetime is: %s' % begin_day_datetime)

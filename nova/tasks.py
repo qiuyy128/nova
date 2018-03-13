@@ -1076,26 +1076,28 @@ def query_fpcy_every_day():
     # 当天00:00:00转时间戳
     begin_day_seconds = time.mktime(datetime.datetime.strptime(str(begin_day), '%Y-%m-%d').timetuple())
     if time.time() - begin_day_seconds < 22 * 60 * 60:
-        begin_time = begin_day - datetime.timedelta(days=string.atoi('1'))
+        stat_day = begin_day - datetime.timedelta(days=string.atoi('1'))
     else:
-        begin_time = datetime.date.today()
-    # 统计开始与统计结束时间均取22:00:00
-    begin_time = datetime.datetime.strptime(str(begin_time), '%Y-%m-%d')
-    begin_time = begin_time - datetime.timedelta(hours=string.atoi('2'))
-    end_time = begin_time + datetime.timedelta(hours=string.atoi('24'))
-    # last_time = begin_time - datetime.timedelta(days=string.atoi('1'))
-    begin_time = begin_time.strftime('%Y-%m-%d %H:%M:%S')
-    # last_time = last_time.strftime('%Y-%m-%d')
-    end_time = end_time.strftime('%Y-%m-%d %H:%M:%S')
+        stat_day = datetime.date.today()
     # date转datetime
-    begin_day_datetime = datetime.datetime.strptime(begin_time, '%Y-%m-%d %H:%M:%S')
-    # last_day_datetime = datetime.datetime.strptime(last_time, '%Y-%m-%d')
-    end_day_datetime = datetime.datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')
+    stat_day = datetime.datetime.strptime(str(stat_day), '%Y-%m-%d')
+    # 统计开始与统计结束时间均取22:00:00
+    begin_time = stat_day - datetime.timedelta(hours=string.atoi('2'))
+    end_time = begin_time + datetime.timedelta(hours=string.atoi('24'))
+    last_time = stat_day - datetime.timedelta(days=string.atoi('1'))
+    # datetime转字符串用做sql查询变量
+    begin_time = begin_time.strftime('%Y-%m-%d %H:%M:%S')
+    last_time = last_time.strftime('%Y-%m-%d')
+    end_time = end_time.strftime('%Y-%m-%d %H:%M:%S')
+    stat_day = stat_day.strftime('%Y-%m-%d')
+    # date转datetime
+    # begin_day_datetime = datetime.datetime.strptime(begin_time, '%Y-%m-%d %H:%M:%S')
+    # last_time_datetime = datetime.datetime.strptime(last_time, '%Y-%m-%d')
+    # end_day_datetime = datetime.datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')
     logger.info('begin_time is: %s' % begin_time)
-    # logger.info('last_time is: %s' % last_time)
+    logger.info('last_time is: %s' % last_time)
     logger.info('end_time is: %s' % end_time)
-    logger.info('begin_day_datetime is: %s' % begin_day_datetime)
-    logger.info('end_day_datetime is: %s' % end_day_datetime)
+    logger.info('stat_day is: %s' % stat_day)
     zzs_name = "%增值税%"
     # 业务库
     db_env = 'slave'
@@ -1170,7 +1172,7 @@ def query_fpcy_every_day():
         data_sql_fprkqk.append(data_sql_fprkqk7)
         try:
             collection = db_mongo['fpcy_fprkqk']
-            data_sql_fprkqk = save_data_to_mongodb(data_sql_fprkqk, begin_time, collection)
+            data_sql_fprkqk = save_data_to_mongodb(data_sql_fprkqk, stat_day, collection)
         except Exception as e:
             logger.info(e)
 
@@ -1188,7 +1190,7 @@ def query_fpcy_every_day():
         except Exception as e:
             print e
         current_chaojiying_data = json.loads(get_invoice_verification_fee())
-        current_chaojiying_data['time'] = begin_time
+        current_chaojiying_data['time'] = stat_day
         logger.info(current_chaojiying_data)
         try:
             collection.insert(current_chaojiying_data)
@@ -1231,7 +1233,7 @@ def query_fpcy_every_day():
         data_sql_ysqk.append(data_sql_ysqk_czje)
         try:
             collection = db_mongo['fpcy_ysqk']
-            data_sql_ysqk = save_data_to_mongodb(data_sql_ysqk, begin_time, collection)
+            data_sql_ysqk = save_data_to_mongodb(data_sql_ysqk, stat_day, collection)
         except Exception as e:
             logger.info(e)
 
@@ -1246,7 +1248,7 @@ def query_fpcy_every_day():
         data_sql_yhcyfkqkb = cur_list
         try:
             collection = db_mongo['fpcy_yhcyfkqk']
-            data_sql_yhcyfkqkb = save_data_to_mongodb(data_sql_yhcyfkqkb, begin_time, collection)
+            data_sql_yhcyfkqkb = save_data_to_mongodb(data_sql_yhcyfkqkb, stat_day, collection)
         except Exception as e:
             logger.info(e)
         # logger.info(data_sql_yhcyfkqkb)
@@ -1266,7 +1268,7 @@ def query_fpcy_every_day():
             data_sql_zcpcyqk.append(data_sql_zcpcyqk[3] * CHARGE_POINT_FEE)
         try:
             collection = db_mongo['fpcy_zcpcyqk']
-            data_sql_zcpcyqks = save_data_to_mongodb(data_sql_zcpcyqks, begin_time, collection, with_sum='Y')
+            data_sql_zcpcyqks = save_data_to_mongodb(data_sql_zcpcyqks, stat_day, collection, with_sum='Y')
         except Exception as e:
             logger.info(e)
         # logger.info(data_sql_zcpcyqks)
@@ -1295,7 +1297,7 @@ def query_fpcy_every_day():
                 data_sql_qyjkcyqk[0] = cur_list[0][0] + cur_list[0][1]
         try:
             collection = db_mongo['fpcy_qyjkcyqk']
-            data_sql_qyjkcyqks = save_data_to_mongodb(data_sql_qyjkcyqks, begin_time, collection, with_sum='Y')
+            data_sql_qyjkcyqks = save_data_to_mongodb(data_sql_qyjkcyqks, stat_day, collection, with_sum='Y')
         except Exception as e:
             logger.info(e)
         # logger.info(data_sql_qyjkcyqks)
@@ -1316,7 +1318,7 @@ def query_fpcy_every_day():
             data_sql_hxfwztb[0] = data_sql_hxfwztb[0].split('（')[0]
         try:
             collection = db_mongo['fpcy_hxfwzt']
-            data_sql_hxfwztbs = save_data_to_mongodb(data_sql_hxfwztbs, begin_time, collection, with_sum='Y')
+            data_sql_hxfwztbs = save_data_to_mongodb(data_sql_hxfwztbs, stat_day, collection, with_sum='Y')
         except Exception as e:
             logger.info(e)
         # logger.info(data_sql_hxfwztbs)
@@ -1340,7 +1342,7 @@ def query_fpcy_every_day():
                 data_sql_sjcyfwztb[0] = data_sql_sjcyfwztb[0].split('（')[0]
         try:
             collection = db_mongo['fpcy_sjcyfwzt']
-            data_sql_sjcyfwztbs = save_data_to_mongodb(data_sql_sjcyfwztbs, begin_time, collection, with_sum='Y')
+            data_sql_sjcyfwztbs = save_data_to_mongodb(data_sql_sjcyfwztbs, stat_day, collection, with_sum='Y')
         except Exception as e:
             logger.info(e)
         # logger.info(data_sql_sjcyfwztbs)
@@ -1355,7 +1357,7 @@ def query_fpcy_every_day():
         data_sql_dmqks = cur_list
         try:
             collection = db_mongo['fpcy_dmqk']
-            data_sql_dmqks = save_data_to_mongodb(data_sql_dmqks, begin_time, collection, with_sum='Y')
+            data_sql_dmqks = save_data_to_mongodb(data_sql_dmqks, stat_day, collection, with_sum='Y')
         except Exception as e:
             logger.info(e)
         # logger.info(data_sql_dmqks)
@@ -1369,7 +1371,7 @@ def query_fpcy_every_day():
         data_sql_sjxyqks = cur_list
         try:
             collection = db_mongo['fpcy_sjxyqk']
-            data_sql_sjxyqks = save_data_to_mongodb(data_sql_sjxyqks, begin_time, collection)
+            data_sql_sjxyqks = save_data_to_mongodb(data_sql_sjxyqks, stat_day, collection)
         except Exception as e:
             logger.info(e)
         # logger.info(data_sql_sjxyqks)
@@ -1383,7 +1385,7 @@ def query_fpcy_every_day():
         data_sql_yhcyqqxq = cur_list
         try:
             collection = db_mongo['fpcy_yhcyqqxq']
-            data_sql_yhcyqqxq = save_data_to_mongodb(data_sql_yhcyqqxq, begin_time, collection)
+            data_sql_yhcyqqxq = save_data_to_mongodb(data_sql_yhcyqqxq, stat_day, collection)
         except Exception as e:
             logger.info(e)
         # logger.info(data_sql_yhcyqqxq)
@@ -1397,7 +1399,7 @@ def query_fpcy_every_day():
         data_sql_sjcyqqxq = cur_list
         try:
             collection = db_mongo['fpcy_sjcyqqxq']
-            data_sql_sjcyqqxq = save_data_to_mongodb(data_sql_sjcyqqxq, begin_time, collection)
+            data_sql_sjcyqqxq = save_data_to_mongodb(data_sql_sjcyqqxq, stat_day, collection)
         except Exception as e:
             logger.info(e)
         # logger.info(data_sql_sjcyqqxq)

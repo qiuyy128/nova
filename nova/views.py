@@ -1672,14 +1672,14 @@ def fpcy_stat(request):
     begin_time = begin_time.strftime('%Y-%m-%d %H:%M:%S')
     last_time = last_time.strftime('%Y-%m-%d')
     end_time = end_time.strftime('%Y-%m-%d %H:%M:%S')
-    # date转datetime
-    begin_day_datetime = datetime.datetime.strptime(begin_time, '%Y-%m-%d %H:%M:%S')
-    last_day_datetime = datetime.datetime.strptime(last_time, '%Y-%m-%d')
-    end_day_datetime = datetime.datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')
+    stat_day = stat_day.strftime('%Y-%m-%d')
+    # # date转datetime
+    # begin_day_datetime = datetime.datetime.strptime(begin_time, '%Y-%m-%d %H:%M:%S')
+    # last_day_datetime = datetime.datetime.strptime(last_time, '%Y-%m-%d')
+    # end_day_datetime = datetime.datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')
     logger.info('begin_time is: %s' % begin_time)
     logger.info('end_time is: %s' % end_time)
-    logger.info('begin_day_datetime is: %s' % begin_day_datetime)
-    logger.info('end_day_datetime is: %s' % end_day_datetime)
+    logger.info('stat_day is: %s' % stat_day)
     db_env = 'slave'
     try:
         # 连接mongodb数据库

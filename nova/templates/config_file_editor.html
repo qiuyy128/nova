@@ -39,7 +39,7 @@
                 if (result == true) {
                     $.ajax({
                         type: "POST",
-                        url: "/nova/save_config_file/",
+                        url: "{% url 'save_config_file' %}",
                         data: JSON.stringify({
                             filename: filename,
                             orig_content: orig_content,

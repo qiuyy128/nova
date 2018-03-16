@@ -94,10 +94,11 @@
             $('.asset_del').click(function () {
                 var asset_delete_id = $(this).attr('aid');
                 var result = confirm("请确认是否删除服务器" + asset_delete_id + "？");
+                var url = "{% url 'asset_delete' asset_id=123 %}".replace(/123/, asset_delete_id.toString());
                 if (result == true) {
                     $.ajax({
                         type: "POST",
-                        url: "/nova/asset/" + asset_delete_id + "/delete/",
+                        url: url,
                         success: function (response) {
                             if (response['rtn'] == "00") {
                                 alert(response['msg']);
@@ -108,7 +109,7 @@
                             alert(response['msg']);
                         },
                         dataType: 'json',
-                        contentType: 'application/json',
+                        contentType: 'application/json'
                     });
                 }
             })

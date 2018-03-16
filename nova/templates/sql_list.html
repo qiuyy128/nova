@@ -203,8 +203,7 @@
                     alert("请稍后!");
                     $.ajax({
                         type: "POST",
-                        {#                        url: "/nova/sql_exec" + db_name + "/" + db_env + "/" + sql_id + "/",#}
-                        url: "/nova/sql_exec/",
+                        url: "{% url 'sql_exec' %}",
                         data: JSON.stringify({
                             db_name: db_name,
                             db_env: db_env,

@@ -10,7 +10,7 @@
         </div>
 
         <div class="col-md-offset-1 margin-top-1">
-            <form class="form-horizontal asset-add" action="/nova/config_file/add/" method="post">
+            <form class="form-horizontal asset-add" action="{% url 'config_file_add' %}" method="post">
                 {% csrf_token %}
                 {#                                    {{ form.as_p }}#}
                 {#            使用form#}

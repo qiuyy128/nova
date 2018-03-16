@@ -25,7 +25,7 @@
                 {% for http_test in http_tests %}
                     <tr class="gradeX">
                         <td>
-                            <a href="{% url 'monitor' %}?item_id={{ http_test.item_id }}">
+                            <a href="{% url 'monitor_web' %}?item_id={{ http_test.item_id }}">
                                 {{ http_test.item_id }}
                             </a>
                         </td>

@@ -343,3 +343,23 @@ class OperationLog(models.Model):
 
     def __unicode__(self):
         return self.name
+
+
+class Permission(models.Model):
+    """
+    自定义权限，前面定义权限名字，后面是描述信息，描述信息是在django admin中显示权限用的
+    """
+    class Meta:
+        permissions = (
+            ('access_asset', '服务器管理 access_asset'),
+            ('access_app', '应用系统管理 access_app'),
+            ('access_database', '数据库管理 access_database'),
+            ('access_monitor', '监控管理 access_monitor'),
+            ('access_task', '任务管理 access_task'),
+            ('access_file', '文件管理 access_file'),
+            ('access_log', '日志管理 access_log'),
+            ('operate_product', '生产环境权限 operate_product'),
+            ('exec_sql', '执行SQL exec_sql'),
+            ('upload_oss_file', '考试报名OSS附件上传 upload_oss_file'),
+            ('exec_tax_agent_sql', '执行考试报名SQL exec_tax_agent_sql'),
+        )

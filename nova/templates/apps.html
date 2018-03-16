@@ -260,7 +260,7 @@
                 if (result == true) {
                     $.ajax({
                         type: "POST",
-                        url: "/nova/app/start/",
+                        url: "{% url 'start_app' %}",
                         data: JSON.stringify({
                             app_id: app_id,
                             app_env: app_env
@@ -293,7 +293,7 @@
                 if (result == true) {
                     $.ajax({
                         type: "POST",
-                        url: "/nova/app/stop/",
+                        url: "{% url 'stop_app' %}",
                         data: JSON.stringify({
                             app_id: app_id,
                             app_env: app_env
@@ -326,7 +326,7 @@
                     {#                    alert("请稍后!");#}
                     $.ajax({
                         type: "POST",
-                        url: "/nova/app/reload/",
+                        url: "{% url 'reload_app' %}",
                         data: JSON.stringify({
                             app_id: app_id,
                             app_env: app_env
@@ -374,7 +374,7 @@
                         {#                    alert("请稍后!");#}
                         $.ajax({
                             type: "POST",
-                            url: "/nova/app/start/",
+                            url: "{% url 'start_app' %}",
                             data: JSON.stringify({
                                 app_id: app_id,
                                 app_env: app_env
@@ -422,7 +422,7 @@
                         {#                    alert("请稍后!");#}
                         $.ajax({
                             type: "POST",
-                            url: "/nova/app/stop/",
+                            url: "{% url 'stop_app' %}",
                             data: JSON.stringify({
                                 app_id: app_id,
                                 app_env: app_env
@@ -470,7 +470,7 @@
                         {#                    alert("请稍后!");#}
                         $.ajax({
                             type: "POST",
-                            url: "/nova/app/reload/",
+                            url: "{% url 'reload_app' %}",
                             data: JSON.stringify({
                                 app_id: app_id,
                                 app_env: app_env
@@ -505,7 +505,7 @@
                     {#                    alert("请稍后!");#}
                     $.ajax({
                         type: "POST",
-                        url: "/nova/app/update/",
+                        url: "{% url 'update_app' %}",
                         data: JSON.stringify({
                             app_name: app_name,
                             app_id: app_id,
@@ -537,7 +537,7 @@
         {#                alert(obj);#}
         {#                $.ajax({#}
         {#                        type: "GET",#}
-        {#                        url: "/nova/app/",#}
+        {#                        url: "{% url 'apps_list' %}",#}
         {#                        data: JSON.stringify({#}
         {#                            app_name: app_name,#}
         {#                            keyword: search_worlds,#}

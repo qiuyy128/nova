@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}log{% endblock %}
+
+{% block content %}
+    <div class="container col-sm-8 col-md-12">
+        <div class="col-md-offset-1 console-instance-head clearfix">
+            <div class="pull-left">
+                <h3><span>任务日志</span></h3>
+            </div>
+        </div>
+        <div class="col-md-offset-1 margin-top-1" id=toolbar>
+            <span id="id_log_file" style="display: none">{{ log_file }}</span>
+            <span id="id_file_size" style="display: none">{{ file_size }}</span>
+            <pre id='log'
+                 style="height: 40em;background-color:black;color:white;font-family: Courier;width: 100%;"></pre>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        var seek = Number($("#id_file_size").text());
+        var log_file = $("#id_log_file").text();
+        console.log(seek);
+        function errmsg() {
+            alert("请联系管理员！");
+        }
+        $(function () {
+            var t = setInterval(function () {
+                $.ajax({
+                    url: "{% url 'get_new_line' %}",
+                    type: 'POST',
+                    data: JSON.stringify({
+                        file: log_file,
+                        seek: seek
+                    }),
+                    success: function (data) {
+                        seek = data['seek'];
+                        var list = data['lines'];
+                        if (list.length != 0) {
+                            var div = document.getElementById('log');
+                            for (var i = 0; i < list.length; i++) {
+                                var line = list[i];
+                                $("#log").append(line);
+                                div.scrollTop = div.scrollHeight;
+                            }
+                        }
+                    },
+                    error: function (data) {
+                        errmsg();
+                        clearInterval(t);
+                        return false;
+                    },
+                    dataType: "json",
+                    contentType: "application/json"
+                });
+            }, 1000);
+        });
+    </script>
+{% endblock %}

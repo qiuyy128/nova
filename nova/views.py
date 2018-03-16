@@ -7,11 +7,11 @@ from django.shortcuts import render
 # Create your views here.
 from nova.models import Asset, AssetGroup, App, AppHost, AppGroup, Task, AppConfig, Sql, Database, UploadFile, \
     OssBucketApp, HttpStep, HttpTest, History, Config, ServiceStep, ServiceTest, OperationLog
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, Permission
 from .forms import UserForm, AssetForm, UploadFileForm, AppConfigForm
 
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator, EmptyPage, InvalidPage, PageNotAnInteger
 from django.db.models import Avg, Max, Min, Count
@@ -94,7 +94,7 @@ def help(request):
 
 
 @csrf_exempt
-def log_in(request):
+def Login(request):
     if request.method == 'POST':
         forms = UserForm(request.POST)
         next_url = request.POST.get('next')
@@ -120,7 +120,7 @@ def log_in(request):
 
 
 @login_required
-def log_out(request):
+def Logout(request):
     logger.info(u'用户名%s登出.' % request.user.username)
     logout(request)
     return HttpResponseRedirect(reverse('index'))
@@ -188,14 +188,19 @@ def get_user_asset_id(request):
 
 
 @login_required()
+@permission_required('nova.access_asset')
 def console(request):
+    # 获取访问请求用户的所有权限
+    perms = User.get_all_permissions(request.user)
     assets_count = get_user_asset(request).count()
     apps_count = get_user_apps(request).count()
-    context = {'assets_count': assets_count, 'apps_count': apps_count}
+    context = {'perms': perms, 'assets_count': assets_count, 'apps_count': apps_count}
+    logger.info(context)
     return render(request, 'console.html', context)
 
 
 @login_required()
+@permission_required('nova.access_asset', raise_exception=True)
 def asset(request):
     username = request.user.username
     assets = get_user_asset(request)
@@ -299,15 +304,8 @@ def get_max_port(request):
 @csrf_exempt
 @login_required
 def app_deploy(request):
-    # POST 请求
-    # logger.info('request.method:', request.method)
-    user_groups = get_user_group(request)
-    user_group_name = []
-    for ug in user_groups:
-        # 获取user_group名称
-        user_group_name.append(ug.name.encode('utf-8'))
     logger.info("User is:%s;Request is:deploy app!" % request.user.username)
-    if 'DEPLOY' in user_group_name:
+    if User.has_perm(request.user, 'nova.access_app'):
         if request.method == 'POST':
             app_type = json.loads(request.body)['app_type']
             app_env = json.loads(request.body)['app_env']
@@ -395,6 +393,7 @@ def get_user_apps_id(request):
 
 @csrf_exempt
 @login_required
+@permission_required('nova.access_app', raise_exception=True)
 def apps(request):
     username = request.user.username
     if request.method == 'GET':
@@ -456,12 +455,8 @@ def exec_cmd(command):
 @login_required()
 @csrf_exempt
 def start_app(request):
-    user_groups = get_user_group(request)
-    user_group_name = []
-    for ug in user_groups:
-        # 获取user_group名称
-        user_group_name.append(ug.name.encode('utf-8'))
-    if 'DEPLOY' in user_group_name:
+    logger.info("User is:%s;Request is:start app!" % request.user.username)
+    if User.has_perm(request.user, 'nova.access_app'):
         if request.body:
             app_id = json.loads(request.body)['app_id']
             app_env = json.loads(request.body)['app_env']
@@ -470,7 +465,7 @@ def start_app(request):
             data = {'rtn': 98, 'msg': u'未提交必要参数!'}
             return HttpResponse(json.dumps(data))
         logger.info('Start app %s:,env:%s' % (app_id, app_env))
-        if 'product' in app_env and 'DEPLOY_PRODUCT' not in user_group_name:
+        if 'product' in app_env and not User.has_perm(request.user, 'nova.operate_product'):
             data = {'rtn': 98, 'msg': '没有生产环境操作权限，请联系管理员!'}
             return HttpResponse(json.dumps(data))
         logger.info(u'启动应用：')
@@ -495,12 +490,8 @@ def start_app(request):
 @login_required()
 @csrf_exempt
 def stop_app(request):
-    user_groups = get_user_group(request)
-    user_group_name = []
-    for ug in user_groups:
-        # 获取user_group名称
-        user_group_name.append(ug.name.encode('utf-8'))
-    if 'DEPLOY' in user_group_name:
+    logger.info("User is:%s;Request is:stop app!" % request.user.username)
+    if User.has_perm(request.user, 'nova.access_app'):
         if request.body:
             app_id = json.loads(request.body)['app_id']
             app_env = json.loads(request.body)['app_env']
@@ -509,7 +500,7 @@ def stop_app(request):
             data = {'rtn': 98, 'msg': u'未提交必要参数!'}
             return HttpResponse(json.dumps(data))
         logger.info('Stop app %s:,env:%s' % (app_id, app_env))
-        if 'product' in app_env and 'DEPLOY_PRODUCT' not in user_group_name:
+        if 'product' in app_env and not User.has_perm(request.user, 'nova.operate_product'):
             data = {'rtn': 98, 'msg': '没有生产环境操作权限，请联系管理员!'}
             return HttpResponse(json.dumps(data))
         logger.info(u'停止应用：')
@@ -534,12 +525,8 @@ def stop_app(request):
 @login_required()
 @csrf_exempt
 def reload_app(request):
-    user_groups = get_user_group(request)
-    user_group_name = []
-    for ug in user_groups:
-        # 获取user_group名称
-        user_group_name.append(ug.name.encode('utf-8'))
-    if 'DEPLOY' in user_group_name:
+    logger.info("User is:%s;Request is:reload app!" % request.user.username)
+    if User.has_perm(request.user, 'nova.access_app'):
         if request.body:
             app_id = json.loads(request.body)['app_id']
             app_env = json.loads(request.body)['app_env']
@@ -549,7 +536,7 @@ def reload_app(request):
             data = {'rtn': 98, 'msg': u'未提交必要参数!'}
             return HttpResponse(json.dumps(data))
         logger.info('Reload app %s:,env:%s' % (app_id, app_env))
-        if 'product' in app_env and 'DEPLOY_PRODUCT' not in user_group_name:
+        if 'product' in app_env and not User.has_perm(request.user, 'nova.operate_product'):
             data = {'rtn': 98, 'msg': '没有生产环境操作权限，请联系管理员!'}
             return HttpResponse(json.dumps(data))
         logger.info(u'重启应用：')
@@ -572,12 +559,8 @@ def reload_app(request):
 @csrf_exempt
 def update_app(request):
     # POST 请求
-    user_groups = get_user_group(request)
-    user_group_name = []
-    for ug in user_groups:
-        # 获取user_group名称
-        user_group_name.append(ug.name.encode('utf-8'))
-    if 'DEPLOY' in user_group_name:
+    logger.info("User is:%s;Request is:update app!" % request.user.username)
+    if User.has_perm(request.user, 'nova.access_app'):
         if request.body:
             app_name = json.loads(request.body)['app_name']
             app_id = json.loads(request.body)['app_id']
@@ -587,7 +570,7 @@ def update_app(request):
             data = {'rtn': 98, 'msg': u'未提交必要参数!'}
             return HttpResponse(json.dumps(data))
         logger.info('Upload app %s:,env:%s' % (app_name, app_env))
-        if app_env == 'product' and 'DEPLOY_PRODUCT' not in user_group_name:
+        if app_env == 'product' and not User.has_perm(request.user, 'nova.operate_product'):
             data = {'rtn': 98, 'msg': '没有生产环境操作权限，请联系管理员!'}
             return HttpResponse(json.dumps(data))
         logger.info(u'更新应用：')
@@ -608,6 +591,7 @@ def update_app(request):
 
 @csrf_exempt
 @login_required
+@permission_required('nova.access_file', raise_exception=True)
 def upload_file(request):
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
@@ -698,14 +682,12 @@ def config_file(request):
 
 
 @login_required
+@permission_required('nova.access_file', raise_exception=True)
 def config_file_editor(request, app_name, env, file_path, file_name):
-    user_groups = get_user_group(request)
-    user_group_name = []
-    for ug in user_groups:
-        # 获取user_group名称
-        user_group_name.append(ug.name.encode('utf-8'))
     logger.info('User is:%s; Request env is:%s' % (request.user.username, env.upper()))
-    if env.upper() in user_group_name:
+    if 'product' == env and not User.has_perm(request.user, 'nova.operate_product'):
+        return HttpResponseRedirect(reverse('deny'))
+    else:
         file_name = file_name.encode('utf-8')
         if app_name.find('tomcat-') == 0:
             app_config_files_path = os.path.join(config_files_path, env, '%s') % app_name.split('tomcat-')[-1]
@@ -718,8 +700,9 @@ def config_file_editor(request, app_name, env, file_path, file_name):
             file_name = 'spring-config-ieds.xml'
         app_config_file = os.path.join(app_config_files_path, urllib.url2pathname(file_path), file_name)
         logger.info("Edit app_config_file:%s" % app_config_file)
-        if file_name == 'config-oss.properties' or file_name == 'config-mysql.properties' \
-                or file_name == 'quartz.properties' or file_name == 'config-sqlserver.properties':
+        if (file_name == 'config-oss.properties' or file_name == 'config-mysql.properties' \
+            or file_name == 'quartz.properties' or file_name == 'config-sqlserver.properties' \
+            or file_name == 'config-ocr.properties') and env == 'product':
             data = {'msg': '暂不提供查看，请联系管理员查看，谢谢 ！'}
             return render(request, 'message.html', data)
         else:
@@ -731,26 +714,19 @@ def config_file_editor(request, app_name, env, file_path, file_name):
                 data = {'msg': msg}
                 return render(request, 'message.html', data)
         return render(request, 'config_file_editor.html', data)
-    else:
-        return HttpResponseRedirect(reverse('deny'))
 
 
 @csrf_exempt
 @login_required()
 def save_config_file(request):
     if request.method == 'POST':
-        user_groups = get_user_group(request)
-        user_group_name = []
-        for ug in user_groups:
-            # 获取user_group名称
-            user_group_name.append(ug.name.encode('utf-8'))
-        if 'EDIT_CONFIG' in user_group_name:
+        if User.has_perm(request.user, 'nova.access_app'):
             filename = json.loads(request.body)['filename']
             orig_content = json.loads(request.body)['orig_content']
             content = json.loads(request.body)['content']
             env = json.loads(request.body)['env']
             filename_bak = filename + '.bak'
-            if 'product' == env and 'EDIT_CONFIG_PRODUCT' not in user_group_name:
+            if 'product' == env and not User.has_perm(request.user, 'nova.operate_product'):
                 data = {'rtn': 98, 'msg': '没有生产环境修改权限，请联系管理员!'}
                 return HttpResponse(json.dumps(data))
             log_info = u'修改' + env + ':' + filename
@@ -808,15 +784,11 @@ def get_database(request):
 
 @csrf_exempt
 @login_required
+@permission_required('nova.access_database', raise_exception=True)
 def sql_submit(request):
     # POST 请求
-    user_groups = get_user_group(request)
-    user_group_name = []
-    for ug in user_groups:
-        # 获取user_group名称
-        user_group_name.append(ug.name.encode('utf-8'))
     logger.info('User is:%s;Request is: submit sql.' % request.user.username)
-    if 'SQL_SUBMIT' in user_group_name:
+    if User.has_perm(request.user, 'nova.access_database'):
         if request.method == 'POST':
             database_env = json.loads(request.body)['database_env']
             sql = json.loads(request.body)['sql']
@@ -839,6 +811,7 @@ def sql_submit(request):
 
 
 @login_required
+@permission_required('nova.access_database', raise_exception=True)
 def sql_list(request):
     res = request.GET
     if 'page' in res:
@@ -895,14 +868,11 @@ def sql_list(request):
 
 @csrf_exempt
 @login_required
+@permission_required('nova.access_database', raise_exception=True)
 def sql_exec(request):
-    user_groups = get_user_group(request)
-    user_group_name = []
-    for ug in user_groups:
-        # 获取user_group名称
-        user_group_name.append(ug.name.encode('utf-8'))
     logger.info('User is:%s;Request is: exec sql.' % request.user.username)
-    if 'SQL_EXEC' in user_group_name:
+    # 判断用户是否有执行SQL权限
+    if User.has_perm(request.user, 'nova.exec_sql'):
         if request.body:
             db_name = json.loads(request.body)['db_name']
             db_env = json.loads(request.body)['db_env']
@@ -910,10 +880,10 @@ def sql_exec(request):
         else:
             data = {'rtn': 98, 'msg': u'未提交必要参数!'}
             return HttpResponse(json.dumps(data))
-        if db_name == 'ksbm' and 'SQL_EXEC_KSBM' not in user_group_name:
+        if db_name == 'ksbm' and not User.has_perm(request.user, 'nova.exec_tax_agent_sql'):
             data = {'rtn': 98, 'msg': '没有考试报名数据库权限，请联系管理员!'}
             return HttpResponse(json.dumps(data))
-        if db_env == 'product' and 'SQL_EXEC_PRODUCT' not in user_group_name:
+        if db_env == 'product' and not User.has_perm(request.user, 'nova.operate_product'):
             data = {'rtn': 98, 'msg': '没有生产数据库权限，请联系管理员!'}
             return HttpResponse(json.dumps(data))
         try:
@@ -1143,7 +1113,7 @@ def sql_exec(request):
             data = {'rtn': 99, 'msg': '执行SQL错误:' + str(e)}
         return HttpResponse(json.dumps(data))
     else:
-        data = {'rtn': 99, 'msg': u'没有操作权限，请联系管理员!'}
+        data = {'rtn': 99, 'msg': u'没有操作权限，请联系管理员添加权限!'}
         return HttpResponse(json.dumps(data))
 
 
@@ -1151,24 +1121,26 @@ def sql_exec(request):
 @login_required
 def get_new_line(request):
     if request.method == 'POST':
-        file_obj = json.loads(request.body)['file']
-        seek = json.loads(request.body)['seek']
-        with open(file_obj) as f:
-            # Go to the end of file
-            # f.seek(0, 2)
-            curr_position = seek
-            f.seek(curr_position)
-            line = f.readlines()
-            if not line:
+        try:
+            file_obj = json.loads(request.body)['file']
+            seek = json.loads(request.body)['seek']
+            with open(file_obj) as f:
+                # Go to the end of file
+                # f.seek(0, 2)
+                curr_position = int(seek)
                 f.seek(curr_position)
-                data = {'line': '', 'seek': seek}
-                # time.sleep(s)
-            else:
-                logger.info(line)
-                seek = f.tell()
-                data = {'line': line, 'seek': seek}
-            logger.info(data)
-            return HttpResponse(json.dumps(data))
+                lines = f.readlines()
+                if not lines:
+                    f.seek(curr_position)
+                    data = {'lines': [], 'seek': seek}
+                    # time.sleep(s)
+                else:
+                    seek = f.tell()
+                    data = {'lines': lines, 'seek': seek}
+                # logger.info(data)
+                return HttpResponse(json.dumps(data))
+        except Exception as e:
+            logger.info(e)
     else:
         logger.info(request.method)
         return HttpResponse(json.dumps({'line': 'ERR'}))
@@ -1176,9 +1148,11 @@ def get_new_line(request):
 
 @csrf_exempt
 @login_required
+@permission_required('nova.access_command', raise_exception=True)
 def shell(request):
     file_name = request.user.username + '.command.log'
     command_file = os.path.join(base_path, 'logs', file_name)
+    file_size = os.path.getsize(command_file)
     if request.method == 'POST':
         logger.info(request.POST)
         # command = request.POST.get('command')
@@ -1187,8 +1161,6 @@ def shell(request):
         output = ''
 
         logger.info(command_file)
-        with open(command_file, 'w') as f:
-            f.write('')
         while True:
             stdout = p.stdout.readline()
             if stdout == '' and p.poll() is not None:
@@ -1210,11 +1182,11 @@ def shell(request):
                     with open(command_file, 'a') as f:
                         f.write(stderr)
         # file_object.close()
-        data = {'rtn': '00', 'command': command, 'command_file': command_file}
+        data = {'rtn': '00', 'command': command, 'command_file': command_file, 'file_size': file_size}
         logger.info(data)
         return HttpResponse(json.dumps(data))
     else:
-        data = {'command_file': command_file}
+        data = {'command_file': command_file, 'file_size': file_size}
     return render(request, 'shell.html', data)
 
 
@@ -1271,59 +1243,24 @@ def get_auth_obj(request):
 
 
 @login_required
-def get_log(request):
+def task_log(request):
     try:
         celery_log = Config.objects.get(name='log', config_key='celery_log').config_value
-        res = exec_cmd("wc -l %s|awk '{print $1}'" % celery_log)
-        total_line = int(res)
-        logger.info('total_line is:')
-        logger.info(total_line)
-        if total_line > 20:
-            line = total_line - 20
-        if total_line == 0:
-            line = 1
-        return render(request, 'logs.html', {'line': line, 'total_line': total_line})
+        file_size = os.path.getsize(celery_log)
+        data = {'log_file': celery_log, 'file_size': file_size}
+        return render(request, 'task_logs.html', context=data)
     except Exception as e:
         logger.info(e)
         data = json.dumps({'rtn': "99", 'msg': "无法打开日志文件，请联系管理员!!!"})
         return render(request, 'message.html', data)
 
 
-@login_required
-def get_log_handle(request, start_line, end_line):
-    celery_log = Config.objects.get(name='log', config_key='celery_log').config_value
-    res = exec_cmd("wc -l %s|awk '{print $1}'" % celery_log)
-    total_line = int(res)
-    if int(end_line) <= total_line:
-        command = 'sed -n %d,%dp %s' % (int(start_line), int(end_line), celery_log)
-        res = exec_cmd(command)
-        lines = int(end_line) - int(start_line) + 1
-        data = {'lines': lines, 'res': res}
-        return HttpResponse(json.dumps(data))
-    else:
-        if int(start_line) <= total_line:
-            command = 'sed -n %d,%dp %s' % (int(start_line), total_line, celery_log)
-            res = exec_cmd(command)
-            lines = total_line - int(start_line) + 1
-            data = {'lines': lines, 'res': res}
-            return HttpResponse(json.dumps(data))
-        else:
-            res = 'no more logs'
-            lines = 0
-            data = {'lines': lines, 'res': res}
-            return HttpResponse(json.dumps(data))
-
-
 @login_required()
 @csrf_exempt
-def ksbm_oss_file_update(request):
-    user_groups = get_user_group(request)
-    user_group_name = []
-    for ug in user_groups:
-        # 获取user_group名称
-        user_group_name.append(ug.name.encode('utf-8'))
+@permission_required('nova.access_file', raise_exception=True)
+def update_ksbm_oss_file(request):
     logger.info('User is:%s;Request is: upload file to oss.' % request.user.username)
-    if 'OSS_UPLOAD' in user_group_name:
+    if User.has_perm(request.user, 'nova.upload_oss_file'):
         if request.body:
             upload_file_id = json.loads(request.body)['upload_file_id']
             ksnd = json.loads(request.body)['ksnd']
@@ -1411,14 +1348,10 @@ def ksbm_oss_file_update(request):
 
 
 @login_required
+@permission_required('nova.access_file', raise_exception=True)
 def upload_file_list(request):
-    user_groups = get_user_group(request)
-    user_group_name = []
-    for ug in user_groups:
-        # 获取user_group名称
-        user_group_name.append(ug.name.encode('utf-8'))
     logger.info('User is%s;Request is: upload file.' % request.user.username)
-    if 'OSS_UPLOAD' in user_group_name:
+    if User.has_perm(request.user, 'nova.upload_oss_file'):
         res = request.GET
         if 'upload_file_id' in res:
             upload_file_id = request.GET['upload_file_id']
@@ -1471,7 +1404,8 @@ def http_data(request):
 
 
 @login_required
-def monitor(request):
+@permission_required('nova.access_monitor', raise_exception=True)
+def monitor_web(request):
     res = request.GET
     if 'item_id' in res:
         item_id = request.GET['item_id']
@@ -1491,6 +1425,7 @@ def monitor(request):
 
 @login_required
 @csrf_exempt
+@permission_required('nova.access_monitor', raise_exception=True)
 def fpcy_request_log(request):
     if request.method == 'GET':
         service_tests = ServiceTest.objects.order_by('-item_id').all()
@@ -1513,12 +1448,8 @@ def fpcy_request_log(request):
 
 @login_required()
 @csrf_exempt
+@permission_required('nova.access_log', raise_exception=True)
 def access_log(request):
-    user_groups = get_user_group(request)
-    user_group_name = []
-    for ug in user_groups:
-        # 获取user_group名称
-        user_group_name.append(ug.name.encode('utf-8'))
     logger.info('User is:%s;Request is: query access log.' % request.user.username)
     db_name = 'app_log'
     db_env = 'slave'
@@ -1645,6 +1576,7 @@ def query_fpcy_from_mongodb(data_time, end_time, collection):
 
 @login_required()
 @csrf_exempt
+@permission_required('nova.access_monitor', raise_exception=True)
 def fpcy_stat(request):
     res = request.GET
     if 'stat_day' in res:
@@ -1838,5 +1770,6 @@ def get_fpcy_request_area(request):
 
 @login_required
 @csrf_exempt
+@permission_required('nova.access_monitor', raise_exception=True)
 def fpcy_request_area(request):
     return render(request, 'fpcy_request_area.html')

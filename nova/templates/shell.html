@@ -24,6 +24,8 @@
         <div class="col-md-offset-1 margin-top-1">
             <form class="form-horizontal" action="{% url 'shell' %}" method="post" id="command_form">
                 {% csrf_token %}
+                <span id="id_file_size" style="display: none">{{ file_size }}</span>
+                <span id="id_command_file" style="display: none">{{ command_file }}</span>
                 <div class="form-group">
                     <label class="col-sm-3 control-label label-width"><span>Command：</span></label>
                     <div class="col-sm-3 row">
@@ -34,30 +36,61 @@
                 </div>
                 <div class="form-group">
                     <div class="col-sm-3">
-                        <input id="id_command_exec" command_file="{{ command_file }}" class="btn btn-default" type="button" value="执行">
+                        <input id="id_command_exec" class="btn btn-default" type="button" value="执行">
                         </input>
                     </div>
                 </div>
             </form>
         </div>
         <div class="col-md-offset-1 margin-top-1">
-            <pre id='log' style="height: 30em;background-color:black;color:white;font-family: Courier;width: 100%;">
-{#                {{ output }}#}
-            </pre>
+            <pre id='log'
+                 style="height: 30em;background-color:black;color:white;font-family: Courier;width: 100%;"></pre>
         </div>
     </div>
 {% endblock %}
 
 {% block js %}
     <script>
-        var seek = 0;
+        var seek = Number($("#id_file_size").text());
+        var command_file = $("#id_command_file").text();
         function errmsg() {
             alert("请联系管理员！")
         }
         $(document).ready(function () {
+            var t = setInterval(function () {
+                console.log(seek);
+                $.ajax({
+                    url: "{% url 'get_new_line' %}",
+                    type: 'POST',
+                    data: JSON.stringify({
+                        file: command_file,
+                        seek: seek
+                    }),
+                    success: function (data) {
+                        seek = data['seek'];
+                        var list = data['lines'];
+                        if (list.length != 0) {
+                            var div = document.getElementById('log');
+                            for (var i = 0; i < list.length; i++) {
+                                var line = list[i];
+                                console.log(line);
+                                $("#log").append(line);
+                                div.scrollTop = div.scrollHeight;
+                            }
+                        }
+                    },
+                    error: function (data) {
+                        {#                            errmsg();#}
+                        clearInterval(t);
+                        return false;
+                    },
+                    dataType: "json",
+                    contentType: "application/json"
+                });
+            }, 1000);
+
             $("#id_command_exec").click(function () {
                 var command = $("#id_command").val();
-                var command_file = $(this).attr('command_file');
                 $.ajax({
                     url: "{% url 'shell' %}",
                     type: 'POST',
@@ -65,10 +98,11 @@
                         command: command
                     }),
                     success: function (data) {
-                        if(data['rtn']=='00'){
+                        if (data['rtn'] == '00') {
+                            $("#log").append('command:\n        ');
                             $("#log").append(data['command']);
-                            $("#log").append('执行成功!\n');
-                            clearInterval(t);
+                            $("#log").append('\n执行成功!\n');
+                            {#                            clearInterval(t);#}
                         }
                     },
                     error: function (data) {
@@ -78,35 +112,6 @@
                     dataType: "json",
                     contentType: "application/json"
                 });
-                var t = setInterval(function () {
-                    $.ajax({
-                        url: "{% url 'get_new_line' %}",
-                        type: 'POST',
-                        data: JSON.stringify({
-                            file: command_file,
-                            seek: seek
-                        }),
-                        success: function (data) {
-                            seek = data['seek'];
-                            var list = data['line'];
-                            if (list.length != 0) {
-                                var div = document.getElementById('log');
-                                for (var i = 0; i < list.length; i++) {
-                                    var line = list[i];
-                                    $("#log").append(line);
-                                    div.scrollTop = div.scrollHeight;
-                                }
-                            }
-                        },
-                        error: function (data) {
-                            errmsg();
-                            clearInterval(t);
-                            return false;
-                        },
-                        dataType: "json",
-                        contentType: "application/json"
-                    });
-                }, 1000);
             })
         });
     </script>

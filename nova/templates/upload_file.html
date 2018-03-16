@@ -72,7 +72,7 @@
                     alert("请稍后!");
                     $.ajax({
                         type: "POST",
-                        url: "/nova/ksbm_oss_file_update/",
+                        url: "{% url 'ksbm_oss_file' %}",
                         data: JSON.stringify({
                             upload_file_id: upload_file_id,
                             db_name: db_name,

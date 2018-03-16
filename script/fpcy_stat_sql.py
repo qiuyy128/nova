@@ -106,6 +106,12 @@ select 0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,count(DISTINCT(CONCAT(fpdm,fphm))) cnt
 a
  GROUP BY a.comeFromCode order by a1 DESC
 """.encode('utf-8')
+sql_zcpcyqk_xfdssk = """
+SELECT serviceCode, IFNULL(SUM(expense),0) xfdssk
+FROM charging_record_charging
+WHERE productId = 'vat' AND chargingTime BETWEEN %s AND %s
+AND serviceCode = %s
+""".encode('utf-8')
 
 # 企业接口查验情况
 sql_qyjkcyqk_qymc = """

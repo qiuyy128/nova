@@ -7,7 +7,7 @@
                 <h3><span>服务器修改</span></h3>
             </div>
         </div>
-        <form class="col-md-offset-1 margin-top-1 form-horizontal asset-add" action="/nova/asset/{{ asset_id }}/change/"
+        <form class="col-md-offset-1 margin-top-1 form-horizontal asset-add" action="{% url 'asset_change' asset_id=asset_id %}"
               method="post">
             {% csrf_token %}
             {#                            {{ form.as_p }}#}

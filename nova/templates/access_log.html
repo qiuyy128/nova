@@ -294,7 +294,7 @@
                 var page_size = Number($("#id_page_size").val());
                 $.ajax({
                     type: "POST",
-                    url: "/nova/access_log/",
+                    url: "'{% url 'access_log' %}",
                     data: JSON.stringify({
                         ip: ip,
                         status: status,
@@ -374,7 +374,7 @@
             $("#dataTables-sql tbody tr").remove();
             $.ajax({
                 type: "POST",
-                url: "/nova/access_log/",
+                url: "{% url 'access_log' %}",
                 data: JSON.stringify({
                     ip: ip,
                     status: status,

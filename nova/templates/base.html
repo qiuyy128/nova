@@ -79,68 +79,89 @@
         <div class="row">
             <div class="col-sm-1 col-md-1 sidebar">
                 <ul class="nav nav-sidebar">
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-                           aria-expanded="false">资产管理<span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                            <li class="group"><a href="#">查看资产组</a></li>
-                            <li class="asset"><a href="{% url 'asset' %}">查看资产<span
-                                    class="label label-info pull-right"></span></a>
-                            </li>
-                            <li class="idc"><a href="{% url 'asset_add' %}">增加资产</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-                           aria-expanded="false">系统管理<span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="{% url 'apps_list' %}">应用系统管理</a></li>
-                            <li><a href="{% url 'apps_deploy' %}">应用系统发布</a></li>
-                            <li><a href="{% url 'config_file' %}">应用系统配置</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-                           aria-expanded="false">数据库管理 <span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="{% url 'sql_submit' %}">SQL提交</a></li>
-                            <li><a href="{% url 'sql_list' %}">SQL审核</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-                           aria-expanded="false">监控管理<span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="{% url 'monitor' %}">网站监控</a></li>
-                            <li><a href="{% url 'fpcy_request_log' %}">发票查验错误请求监控</a></li>
-                            <li><a href="{% url 'fpcy_request_area' %}">发票查验区域分布</a></li>
-                            {#                            <li><a href="#">服务器监控</a></li>#}
-                            {#                            <li><a href="#">业务监控</a></li>#}
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-                           aria-expanded="false">任务管理<span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="{% url 'task_list' %}">任务列表</a></li>
-                            <li><a href="{% url 'get_log' %}">任务日志</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-                           aria-expanded="false">文件管理<span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="{% url 'upload' %}">文件上传</a></li>
-                            <li><a href="{% url 'upload_file_list' %}">文件列表</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-                           aria-expanded="false">日志分析<span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="{% url 'access_log' %}">乐税访问日志</a></li>
-                        </ul>
-                    </li>
+                    {% if 'nova.access_asset' in perms %}
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                               aria-haspopup="true"
+                               aria-expanded="false">资产管理<span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li class="group"><a href="#">查看资产组</a></li>
+                                <li class="asset"><a href="{% url 'asset' %}">查看资产<span
+                                        class="label label-info pull-right"></span></a>
+                                </li>
+                                <li class="idc"><a href="{% url 'asset_add' %}">增加资产</a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                    {% if 'nova.access_app' in perms %}
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                               aria-haspopup="true"
+                               aria-expanded="false">系统管理<span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% url 'apps_list' %}">应用系统管理</a></li>
+                                <li><a href="{% url 'apps_deploy' %}">应用系统发布</a></li>
+                                <li><a href="{% url 'config_file' %}">应用系统配置</a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                    {% if 'nova.access_database' in perms %}
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                               aria-haspopup="true"
+                               aria-expanded="false">数据库管理 <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% url 'sql_submit' %}">SQL提交</a></li>
+                                <li><a href="{% url 'sql_list' %}">SQL审核</a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                    {% if 'nova.access_monitor' in perms %}
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                               aria-haspopup="true"
+                               aria-expanded="false">监控管理<span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% url 'monitor_web' %}">网站监控</a></li>
+                                <li><a href="{% url 'fpcy_request_log' %}">发票查验错误请求监控</a></li>
+                                <li><a href="{% url 'fpcy_request_area' %}">发票查验区域分布</a></li>
+                                {#                            <li><a href="#">服务器监控</a></li>#}
+                                {#                            <li><a href="#">业务监控</a></li>#}
+                            </ul>
+                        </li>
+                    {% endif %}
+                    {% if 'nova.access_task' in perms %}
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                               aria-haspopup="true"
+                               aria-expanded="false">任务管理<span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% url 'task_list' %}">任务列表</a></li>
+                                <li><a href="{% url 'task_log' %}">任务日志</a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                    {% if 'nova.access_file' in perms %}
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                               aria-haspopup="true"
+                               aria-expanded="false">文件管理<span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% url 'upload' %}">文件上传</a></li>
+                                <li><a href="{% url 'upload_file_list' %}">文件列表</a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                    {% if 'nova.access_log' in perms %}
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                               aria-haspopup="true"
+                               aria-expanded="false">日志分析<span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% url 'access_log' %}">乐税访问日志</a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
             {% block content %}

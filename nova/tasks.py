@@ -1265,7 +1265,24 @@ def query_fpcy_every_day():
             if type(data_sql_zcpcyqks[j]) != list:
                 data_sql_zcpcyqks[j] = list(data_sql_zcpcyqks[j])
             data_sql_zcpcyqk = data_sql_zcpcyqks[j]
-            data_sql_zcpcyqk.append(data_sql_zcpcyqk[3] * CHARGE_POINT_FEE)
+            data_sql_zcpcyqk.append(data_sql_zcpcyqk[5] * CHARGE_POINT_FEE)
+            # 子产品查验情况-消费点数（实扣） -> 来源计费系统（charging）
+            # args = (begin_time, end_time)
+            # cur_list, cur_desc, cur_rows, dict_list = conn_charging.exec_select(fpcy_sql.sql_zcpcyqk_xfdssk, args)
+            if data_sql_zcpcyqk[0] == '收费web端':
+                args = (begin_time, end_time, 'getInvoiceInfo')
+            elif data_sql_zcpcyqk[0] == '收费微信端':
+                args = (begin_time, end_time, 'getInvoiceInfoForWx')
+            elif data_sql_zcpcyqk[0] == '企业接口':
+                args = (begin_time, end_time, 'getInvoiceInfoForCom')
+            else:
+                args = ''
+            if args:
+                cur_list, cur_desc, cur_rows, dict_list = conn_charging.exec_select(fpcy_sql.sql_zcpcyqk_xfdssk, args)
+                data_sql_zcpcyqk_xfdssk = int(cur_list[0][1])
+            else:
+                data_sql_zcpcyqk_xfdssk = '暂时无法统计'
+            data_sql_zcpcyqk.append(data_sql_zcpcyqk_xfdssk)
         try:
             collection = db_mongo['fpcy_zcpcyqk']
             data_sql_zcpcyqks = save_data_to_mongodb(data_sql_zcpcyqks, stat_day, collection, with_sum='Y')
@@ -1285,7 +1302,7 @@ def query_fpcy_every_day():
             if type(data_sql_qyjkcyqks[j]) != list:
                 data_sql_qyjkcyqks[j] = list(data_sql_qyjkcyqks[j])
             data_sql_qyjkcyqk = data_sql_qyjkcyqks[j]
-            data_sql_qyjkcyqk.append(data_sql_qyjkcyqk[3] * CHARGE_POINT_FEE)
+            data_sql_qyjkcyqk.append(data_sql_qyjkcyqk[5] * CHARGE_POINT_FEE)
             # 企业接口查验情况 -> 来源计费系统（charging）
             args = (begin_time, end_time, data_sql_qyjkcyqk[0])
             cur_list, cur_desc, cur_rows, dict_list = conn_charging.exec_select(fpcy_sql.sql_qyjkcyqk_xfds_sk, args)
@@ -1293,7 +1310,7 @@ def query_fpcy_every_day():
             # 企业接口查验情况 -> 企业名称（opendb）
             args = (data_sql_qyjkcyqk[0])
             cur_list, cur_desc, cur_rows, dict_list = conn_opendb.exec_select(fpcy_sql.sql_qyjkcyqk_qymc, args)
-            if len(cur_list) == 1:
+            if len(cur_list) > 0:
                 data_sql_qyjkcyqk[0] = cur_list[0][0] + cur_list[0][1]
         try:
             collection = db_mongo['fpcy_qyjkcyqk']

@@ -11,7 +11,7 @@
         </div>
         <div class="col-md-offset-1 margin-top-1">
             <form class="form-horizontal" action="" method="post" id="asset_form">
-{#                  onkeydown="if(event.keyCode==13){return false;}">#}
+                {#                  onkeydown="if(event.keyCode==13){return false;}">#}
                 <fieldset>
                     <div class=" form-group">
                         <label class="col-sm-2 control-label">服务类型：</label>
@@ -92,7 +92,7 @@
                     {#                                    <option value="{{ asset.ip }}">{{ asset.ip }}</option>#}
                     {#                                {% endfor %}#}
                     {#                            </select>#}
-                    {#                            <a href="/nova/asset/add/?_to_field=id&_popup=1" title="添加主机">#}
+                    {#                            <a href="{% url 'asset_add' %}" title="添加主机">#}
                     {#                                <img src="/static/admin/img/icon-addlink.svg" alt="Add"/>#}
                     {#                            </a>#}
                     {#                        </div>#}
@@ -125,6 +125,9 @@
                                             <option value="{{ asset.ip }}">{{ asset.ip }}</option>
                                         {% endfor %}
                                     </select>
+                                    <a href="{% url 'asset_add' %}" title="添加主机">
+                                        <img src="/static/admin/img/icon-addlink.svg" alt="Add"/>
+                                    </a>
                                 </div>
                                 <!-- 移如或者移出按钮的行为 -->
                                 <div class="col-sm-2 clearfix" style="width: 40px">
@@ -364,7 +367,7 @@
                             dataType: "json",
                             contentType: "application/json"
                         });
-                        window.location.href="{% url 'task_list' %}";
+                        window.location.href = "{% url 'task_list' %}";
                     }
                 }
             })

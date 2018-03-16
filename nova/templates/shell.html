@@ -57,39 +57,37 @@
             alert("请联系管理员！")
         }
         $(document).ready(function () {
-            var t = setInterval(function () {
-                console.log(seek);
-                $.ajax({
-                    url: "{% url 'get_new_line' %}",
-                    type: 'POST',
-                    data: JSON.stringify({
-                        file: command_file,
-                        seek: seek
-                    }),
-                    success: function (data) {
-                        seek = data['seek'];
-                        var list = data['lines'];
-                        if (list.length != 0) {
-                            var div = document.getElementById('log');
-                            for (var i = 0; i < list.length; i++) {
-                                var line = list[i];
-                                console.log(line);
-                                $("#log").append(line);
-                                div.scrollTop = div.scrollHeight;
-                            }
-                        }
-                    },
-                    error: function (data) {
-                        {#                            errmsg();#}
-                        clearInterval(t);
-                        return false;
-                    },
-                    dataType: "json",
-                    contentType: "application/json"
-                });
-            }, 1000);
-
             $("#id_command_exec").click(function () {
+                var t = setInterval(function () {
+                    $.ajax({
+                        url: "{% url 'get_new_line' %}",
+                        type: 'POST',
+                        data: JSON.stringify({
+                            file: command_file,
+                            seek: seek
+                        }),
+                        success: function (data) {
+                            seek = data['seek'];
+                            var list = data['lines'];
+                            if (list.length != 0) {
+                                var div = document.getElementById('log');
+                                for (var i = 0; i < list.length; i++) {
+                                    var line = list[i];
+                                    $("#log").append(line);
+                                    div.scrollTop = div.scrollHeight;
+                                }
+                            }
+                        },
+                        error: function (data) {
+                            errmsg();
+                            clearInterval(t);
+                            return false;
+                        },
+                        dataType: "json",
+                        contentType: "application/json"
+                    });
+                }, 1000);
+
                 var command = $("#id_command").val();
                 $.ajax({
                     url: "{% url 'shell' %}",
@@ -102,11 +100,14 @@
                             $("#log").append('command:\n        ');
                             $("#log").append(data['command']);
                             $("#log").append('\n执行成功!\n');
-                            {#                            clearInterval(t);#}
+                            setTimeout(function () {
+                                clearInterval(t);
+                            }, 3000);
                         }
                     },
                     error: function (data) {
                         errmsg();
+                        clearInterval(t);
                         return false;
                     },
                     dataType: "json",

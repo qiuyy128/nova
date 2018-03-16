@@ -118,6 +118,46 @@
             </table>
         </div>
 
+    <div class="margin-top-1" id="table">
+            <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                   id="dataTables-sql">
+                <thead>
+                <tr>
+                    <th colspan="15" style="background-color: lawngreen;font-size: 24px;">用户充值、消费点数情况</th>
+                <tr>
+                    <th rowspan="2">充值点数（今日）</th>
+                    <th colspan="5">其中</th>
+                    <th rowspan="2">消费点数（今日）</th>
+                    <th rowspan="2">充值点数（总数）</th>
+                    <th colspan="5">其中</th>
+                    <th rowspan="2">消费点数（总数）</th>
+                    <th rowspan="2">剩余点数（总数）</th>
+                </tr>
+                <tr>
+                    <th>新用户赠送</th>
+                    <th>活动赠送</th>
+                    <th>手工充值（免费）</th>
+                    <th>订单充值</th>
+                    <th>手工充值（收费）</th>
+                    <th>新用户赠送</th>
+                    <th>活动赠送</th>
+                    <th>手工充值（免费）</th>
+                    <th>订单充值</th>
+                    <th>手工充值（收费）</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for record in data_sql_yhczxfdsqk %}
+                    <tr class="gradeX">
+                        {% for i in record %}
+                            <td>{{ i }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
         <div class="margin-top-1" id="table">
             <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
                    id="dataTables-sql">
@@ -410,12 +450,6 @@
                     alert('请输入正确的查询日期，如2018-01-01');
                 }
                 else {
-                    {#                    $.ajax({#}
-                    {#                        type: "GET",#}
-                    {#                        url: "{% url 'fpcy_stat' %}?stat_day=" + stat_day,#}
-                    {#                        dataType: "json",#}
-                    {#                        contentType: "application/json"#}
-                    {#                    });#}
                     window.location.href = "{% url 'fpcy_stat' %}?stat_day=" + stat_day;
                 }
             })

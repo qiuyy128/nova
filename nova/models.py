@@ -23,11 +23,12 @@ def _enc_(data=''):
         return cipher_text
 
 # Create your models here.
-
-ASSET_ENV = (
-    (1, U'生产环境'),
-    (2, U'准生产环境'),
-    (3, U'测试环境')
+# 定义所属的环境
+ENV = (
+    ('product', U'生产环境'),
+    ('staging', U'准生产环境'),
+    ('test', U'测试环境'),
+    ('dev', U'开发环境')
 )
 
 ASSET_STATUS = (
@@ -48,13 +49,9 @@ ASSET_TYPE = (
 
 
 class AssetGroup(models.Model):
-    GROUP_TYPE = (
-        ('P', 'PRIVATE'),
-        ('A', 'ASSET'),
-    )
-    name = models.CharField(max_length=80, unique=True)
-    comment = models.CharField(max_length=160, blank=True, null=True)
-    asset_groups = models.ManyToManyField(Group, blank=True, verbose_name=u"所属用户组")
+    name = models.CharField(max_length=80, unique=True, verbose_name=u"主机组名称")
+    comment = models.CharField(max_length=160, blank=True, null=True, verbose_name=u"备注")
+    user_groups = models.ManyToManyField(Group, blank=True, verbose_name=u"所属用户组")
 
     def __unicode__(self):
         return self.name
@@ -62,13 +59,13 @@ class AssetGroup(models.Model):
 
 class Asset(models.Model):
     """
-    asset modle
+    主机
     """
     ip = models.CharField(unique=True, max_length=32, blank=True, null=True, verbose_name=u"主机IP")
     other_ip = models.CharField(max_length=255, blank=True, null=True, verbose_name=u"其他IP")
     hostname = models.CharField(max_length=50, verbose_name=u"主机名")
     port = models.IntegerField(blank=True, null=True, verbose_name=u"端口号")
-    assetgroups = models.ManyToManyField(AssetGroup, blank=True, verbose_name=u"所属主机组")
+    asset_groups = models.ManyToManyField(AssetGroup, blank=True, verbose_name=u"所属主机组")
     username = models.CharField(max_length=16, blank=True, null=True, verbose_name=u"管理用户名")
     password = models.CharField(max_length=256, blank=True, null=True, verbose_name=u"密码")
     use_default_auth = models.BooleanField(default=True, verbose_name=u"使用默认管理账号")
@@ -86,9 +83,9 @@ class Asset(models.Model):
     number = models.CharField(max_length=32, blank=True, null=True, verbose_name=u'资产编号')
     status = models.IntegerField(choices=ASSET_STATUS, blank=True, null=True, default=1, verbose_name=u"机器状态")
     asset_type = models.IntegerField(choices=ASSET_TYPE, blank=True, null=True, verbose_name=u"主机类型")
-    env = models.IntegerField(choices=ASSET_ENV, blank=True, null=True, verbose_name=u"运行环境")
+    env = models.CharField(choices=ENV, max_length=25, blank=True, null=True, verbose_name=u"运行环境")
     sn = models.CharField(max_length=128, blank=True, null=True, verbose_name=u"SN编号")
-    date_added = models.DateTimeField(auto_now=True, null=True)
+    date_added = models.DateTimeField(auto_now=True, null=True, verbose_name=u"添加时间")
     is_active = models.BooleanField(default=True, verbose_name=u"是否激活")
     comment = models.CharField(max_length=300, blank=True, null=True, verbose_name=u"备注")
     configs = models.CharField(max_length=128, blank=True, null=True, verbose_name=u"部署的应用")
@@ -111,8 +108,8 @@ class AppHost(models.Model):
 
 
 class AppGroup(models.Model):
-    name = models.CharField(max_length=40, unique=True)
-    comment = models.CharField(max_length=160, blank=True, null=True)
+    name = models.CharField(max_length=40, unique=True, verbose_name=u"应用组名称")
+    comment = models.CharField(max_length=160, blank=True, null=True, verbose_name=u"备注")
     user_groups = models.ManyToManyField(Group, blank=True, verbose_name=u"所属用户组")
 
     def __unicode__(self):
@@ -120,14 +117,14 @@ class AppGroup(models.Model):
 
 
 class App(models.Model):
-    name = models.CharField(max_length=30, blank=False, null=False, verbose_name=u"服务名称")
+    name = models.CharField(max_length=30, blank=False, null=False, verbose_name=u"应用名称")
     port = models.IntegerField(blank=False, null=False, verbose_name=u"应用端口号")
-    apphosts = models.ManyToManyField(AppHost, blank=True, verbose_name=u"服务节点名称")
+    app_hosts = models.ManyToManyField(AppHost, blank=True, verbose_name=u"应用部署的服务器")
     status = models.CharField(max_length=20, blank=False, null=False, verbose_name=u"运行状态")
     comment = models.CharField(max_length=100, blank=True, null=True, verbose_name=u"备注")
     svn_url = models.TextField(blank=True, null=True, verbose_name=u'SVN路径')
     env = models.CharField(max_length=25, blank=False, null=False, verbose_name=u"部署环境")
-    appgroups = models.ManyToManyField(AppGroup, blank=True, verbose_name=u"所属应用组")
+    app_groups = models.ManyToManyField(AppGroup, blank=True, verbose_name=u"所属应用组")
 
     def __unicode__(self):
         return '%s:%s' % (self.env, self.name)

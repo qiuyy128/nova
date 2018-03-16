@@ -359,6 +359,7 @@ class Permission(models.Model):
             ('access_file', '文件管理 access_file'),
             ('access_log', '日志管理 access_log'),
             ('operate_product', '生产环境权限 operate_product'),
+            ('access_command', '执行命令权限 access_command'),
             ('exec_sql', '执行SQL exec_sql'),
             ('upload_oss_file', '考试报名OSS附件上传 upload_oss_file'),
             ('exec_tax_agent_sql', '执行考试报名SQL exec_tax_agent_sql'),

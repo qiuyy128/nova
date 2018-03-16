@@ -1152,6 +1152,8 @@ def get_new_line(request):
 def shell(request):
     file_name = request.user.username + '.command.log'
     command_file = os.path.join(base_path, 'logs', file_name)
+    if not os.path.exists(command_file):
+        os.mknod(command_file)
     file_size = os.path.getsize(command_file)
     if request.method == 'POST':
         logger.info(request.POST)

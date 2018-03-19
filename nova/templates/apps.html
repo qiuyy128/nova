@@ -66,55 +66,55 @@
                 <tbody>
                 {% for app in apps %}
                     <tr>
-                        {% for apph in app.apphosts.all %}
-                            {#                            <td width="10" class="text-center" name="id" value={{ apph.id }} data-editable='false'>#}
+                        {% for app_host in app.app_hosts.all %}
+                            {#                            <td width="10" class="text-center" name="id" value={{ app_host.id }} data-editable='false'>#}
                             <td width="10">
-                                <input id="app_select_id" name="app_select_id" type="checkbox" value={{ apph.id }}>
+                                <input id="app_select_id" name="app_select_id" type="checkbox" value={{ app_host.id }}>
                             </td>
                             <td>
-                                {{ apph.id }}
+                                {{ app_host.id }}
                             </td>
-                            {% if  app.apphosts.count == 1 %}
+                            {% if  app.app_hosts.count == 1 %}
                                 <td>
                                     {#                                    <div style="width: 140px;word-wrap: break-word;overflow-y:hidden;">#}
                                     <div>
-                                        <a href="{% url 'config_file' %}?app_name={{ apph.name }}&env={{ apph.env }}">{{ apph.name }}</a>
+                                        <a href="{% url 'config_file' %}?app_name={{ app_host.name }}&env={{ app_host.env }}">{{ app_host.name }}</a>
                                     </div>
                                 </td>
                             {% else %}
                                 {#                            {% if forloop.counter == 1 %}#}
-                                {#                                    <td rowspan={{ app.apphosts.count }}>#}
+                                {#                                    <td rowspan={{ app.app_hosts.count }}>#}
                                 <td rowspan=1>
                                     {#                                    <div style="width: 140px;word-wrap: break-word;overflow-y:hidden;">#}
                                     <div>
-                                        <a href="{% url 'config_file' %}?app_name={{ apph.name }}&env={{ apph.env }}">{{ apph.name }}</a>
+                                        <a href="{% url 'config_file' %}?app_name={{ app_host.name }}&env={{ app_host.env }}">{{ app_host.name }}</a>
                                     </div>
                                     {#                                {% endif %}#}
                                 </td>
                             {% endif %}
                             <td>
-                                {{ apph.ip }}
+                                {{ app_host.ip }}
                             </td>
                             <td>
-                                {{ apph.port }}
+                                {{ app_host.port }}
                             </td>
                             <td>
-                                {% if apph.status == 'running' %}
-                                    <input app_id={{ apph.id }} app_env={{ apph.env }}
+                                {% if app_host.status == 'running' %}
+                                    <input app_id={{ app_host.id }} app_env={{ app_host.env }}
                                            type="button"
                                            class="stop_app btn btn-sm btn-default"
                                            value="停止">
-                                    <input app_id={{ apph.id }} app_env={{ apph.env }}
+                                    <input app_id={{ app_host.id }} app_env={{ app_host.env }}
                                            type="button"
                                            class="reload_app btn btn-sm btn-default"
                                            value="重启">
                                 {% else %}
-                                    <input app_id={{ apph.id }} app_env={{ apph.env }}
+                                    <input app_id={{ app_host.id }} app_env={{ app_host.env }}
                                            type="button"
                                            class="start_app btn btn-sm btn-default"
                                            value="启动">
                                 {% endif %}
-                                <input app_name={{ apph.name }} app_id={{ apph.id }} app_env={{ apph.env }}
+                                <input app_name={{ app_host.name }} app_id={{ app_host.id }} app_env={{ app_host.env }}
                                         type="button"
                                        class="update_app btn btn-sm btn-default"
                                        value="更新">
@@ -122,25 +122,25 @@
                             <td>
                                 <div name="app_deploy_path">
                                     {#                                <div style="width: 170px;word-wrap: break-word;overflow-y:hidden;">#}
-                                    {{ apph.deploy_path }}
+                                    {{ app_host.deploy_path }}
                                 </div>
                             </td>
                             <td>
-                                {% if apph.status == 'running' %}
+                                {% if app_host.status == 'running' %}
                                     <label class="label label-success mr5">
-                                        {{ apph.status }}</label>
+                                        {{ app_host.status }}</label>
                                 {% else %}
                                     <label class="label label-danger mr5">
-                                        {{ apph.status }}</label>
+                                        {{ app_host.status }}</label>
                                 {% endif %}
                             </td>
                             <td name="app_env">
-                                {{ apph.env }}
+                                {{ app_host.env }}
                             </td>
                             <td>
                                 {#                                <div style="width: 100px;word-wrap: break-word;overflow-y:hidden;">#}
                                 <div>
-                                    {{ apph.comment }}
+                                    {{ app_host.comment }}
                                 </div>
                             </td>
                             </tr>

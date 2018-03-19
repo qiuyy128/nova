@@ -1645,6 +1645,14 @@ def fpcy_stat(request):
         except Exception as e:
             logger.info(e)
 
+        # 用户充值、消费点数情况
+        logger.info(u'用户充值、消费点数情况:')
+        try:
+            collection = db_mongo['fpcy_yhczxfdsqk']
+            data_sql_yhczxfdsqk = query_fpcy_from_mongodb(begin_time, end_time, collection)
+        except Exception as e:
+            logger.info(e)
+
         logger.info(u'用户查验反馈情况表:')
         try:
             collection = db_mongo['fpcy_yhcyfkqk']

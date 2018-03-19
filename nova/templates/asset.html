@@ -50,7 +50,7 @@
                         <td>{{ asset.hostname }}</td>
                         <td><a href="{% url 'asset_change' asset_id=asset.id %}">{{ asset.ip }}</a></td>
                         <td>
-                            {% for ag in asset.assetgroups.all %}
+                            {% for ag in asset.asset_groups.all %}
                                 {{ ag.name }}
                             {% endfor %}
                         </td>

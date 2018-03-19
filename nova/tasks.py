@@ -1008,7 +1008,7 @@ def save_data_to_mongodb(data, data_time, collection, with_sum='N'):
         for i in data:
             for j in range(len(i))[1:]:
                 try:
-                    if i[j] is not None and str(i[j]).find('%') == -1:
+                    if i[j] != '' and i[j] is not None and str(i[j]).find('%') == -1:
                         total[j] = total[j] + i[j]
                     if str(i[j]).find('%') != -1:
                         total[j] = '-'
@@ -1176,7 +1176,6 @@ def query_fpcy_every_day():
         except Exception as e:
             logger.info(e)
 
-
         # 营收情况
         logger.info(u'营收情况:')
         data_sql_ysqk = []
@@ -1197,7 +1196,6 @@ def query_fpcy_every_day():
         except Exception as e:
             logger.info(e)
         current_chaojiying_tifen = current_chaojiying_data['tifen']
-        logger.info(current_chaojiying_tifen)
         if last_chaojiying_tifen:
             data_sql_ysqk_dmfy = round(float(last_chaojiying_tifen - current_chaojiying_tifen) / 1000.00, 2)
         else:
@@ -1211,7 +1209,6 @@ def query_fpcy_every_day():
         data_sql_ysqk.append(data_sql_ysqk_mzrkcb)
 
         args = (begin_time, end_time)
-        logger.info(fpcy_sql.sql_ysqk_jfcs)
         logger.info(args)
         cur_list, cur_desc, cur_rows, dict_list = conn.exec_select(fpcy_sql.sql_ysqk_jfcs, args)
         data_sql_ysqk_jfcs = cur_list[0][0]
@@ -1236,6 +1233,36 @@ def query_fpcy_every_day():
             data_sql_ysqk = save_data_to_mongodb(data_sql_ysqk, stat_day, collection)
         except Exception as e:
             logger.info(e)
+
+        # 用户充值、消费点数情况
+        logger.info(u'用户充值、消费点数情况:')
+        # logger.info(fpcy_sql.sql_yhcyfkqkb)
+        data_sql_yhczxfdsqk = []
+        args = (begin_time, end_time, begin_time, end_time, begin_time, end_time, begin_time, end_time,
+                begin_time, end_time, begin_time, end_time, begin_time, end_time)
+        logger.info(args)
+        cur_list, cur_desc, cur_rows, dict_list = conn_charging.exec_select(fpcy_sql.sql_yhczxfdsqk_today, args)
+        logger.info(u'查询%d条记录！' % cur_rows)
+        sql_yhczxfdsqk_today = list(cur_list[0])
+        for i in range(len(sql_yhczxfdsqk_today)):
+            data_sql_yhczxfdsqk.append(int(sql_yhczxfdsqk_today[i]))
+        args = (end_time, end_time, end_time, end_time, end_time, end_time, end_time)
+        logger.info(args)
+        cur_list, cur_desc, cur_rows, dict_list = conn_charging.exec_select(fpcy_sql.sql_yhczxfdsqk_sum, args)
+        logger.info(u'查询%d条记录！' % cur_rows)
+        data_sql_yhczxfdsqk_sum = list(cur_list[0])
+        logger.info(data_sql_yhczxfdsqk_sum)
+        for j in range(len(data_sql_yhczxfdsqk_sum)):
+            data_sql_yhczxfdsqk.append(int(data_sql_yhczxfdsqk_sum[j]))
+        cur_list, cur_desc, cur_rows, dict_list = conn_charging.exec_select(fpcy_sql.sql_yhczxfdsqk_balance_sum)
+        logger.info(u'查询%d条记录！' % cur_rows)
+        data_sql_yhczxfdsqk.append(int(cur_list[0][0]))
+        try:
+            collection = db_mongo['fpcy_yhczxfdsqk']
+            data_sql_yhczxfdsqk = save_data_to_mongodb(data_sql_yhczxfdsqk, stat_day, collection)
+        except Exception as e:
+            logger.info(e)
+            # logger.info(data_sql_yhczxfdsqk)
 
 
         logger.info(u'用户查验反馈情况表:')
@@ -1308,7 +1335,7 @@ def query_fpcy_every_day():
             cur_list, cur_desc, cur_rows, dict_list = conn_charging.exec_select(fpcy_sql.sql_qyjkcyqk_xfds_sk, args)
             data_sql_qyjkcyqk.append(int(cur_list[0][1]))
             # 企业接口查验情况 -> 企业名称（opendb）
-            args = (data_sql_qyjkcyqk[0])
+            args = (data_sql_qyjkcyqk[0],)
             cur_list, cur_desc, cur_rows, dict_list = conn_opendb.exec_select(fpcy_sql.sql_qyjkcyqk_qymc, args)
             if len(cur_list) > 0:
                 data_sql_qyjkcyqk[0] = cur_list[0][0] + cur_list[0][1]

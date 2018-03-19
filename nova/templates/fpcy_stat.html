@@ -1,4 +1,4 @@
-{% extends 'base_without_console.html' %}
+{% extends 'base.html' %}
 {% block title %}发票查验产品统计分析{% endblock %}
 {% block formcss %}
     <style type="text/css">
@@ -20,7 +20,7 @@
 {% endblock %}
 
 {% block content %}
-    <div class="container col-xs-12 col-sm-12 col-md-12" xmlns="http://www.w3.org/1999/html">
+    <div class="col-md-offset-1 container col-xs-12 col-sm-12 col-md-12" xmlns="http://www.w3.org/1999/html">
         <div class="console-instance-head clearfix">
             <div class="pull-left">
                 <h3><span><a href="{% url 'fpcy_stat' %}">乐税发票查验产品统计分析表</a></span></h3>
@@ -118,7 +118,7 @@
             </table>
         </div>
 
-    <div class="margin-top-1" id="table">
+        <div class="margin-top-1" id="table">
             <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
                    id="dataTables-sql">
                 <thead>
@@ -147,13 +147,11 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for record in data_sql_yhczxfdsqk %}
-                    <tr class="gradeX">
-                        {% for i in record %}
-                            <td>{{ i }}</td>
-                        {% endfor %}
-                    </tr>
-                {% endfor %}
+                <tr class="gradeX">
+                    {% for i in data_sql_yhczxfdsqk %}
+                        <td>{{ i }}</td>
+                    {% endfor %}
+                </tr>
                 </tbody>
             </table>
         </div>

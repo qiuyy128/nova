@@ -22,6 +22,56 @@ select IFNULL(SUM(totalAmount),0) from order_information a, order_goods b where 
 and a.orderState = '90' and a.inputTime BETWEEN %s AND %s
 """
 
+## 用户充值、消费点数情况
+sql_yhczxfdsqk_today = """
+SELECT
+  sum(t1.cnt_total) '充值点数（今日）',sum(t1.cnt1) '新用户赠送',sum(t1.cnt2) '活动',sum(t1.cnt3) '手工充值（免费）',sum(t1.cnt4) '订单充值',sum(t1.cnt5) '手工充值（收费）',sum(t1.cnt_vat) '消费点数（今日）'
+FROM
+(
+  SELECT IFNULL(SUM(rechargeAmount),0) cnt_total,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt_vat FROM charging_record_recharge
+    WHERE isSuccess = '1' and rechargeTime BETWEEN %s AND %s
+  UNION
+    SELECT 0 cnt_total,IFNULL(SUM(rechargeAmount),0) cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt_vat FROM charging_record_recharge WHERE isSuccess = '1' and rechargeWayCode='8' and rechargeTime BETWEEN %s AND %s
+  UNION
+    SELECT 0 cnt_total,0 cnt1,IFNULL(SUM(rechargeAmount),0) cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt_vat FROM charging_record_recharge WHERE isSuccess = '1' and rechargeWayCode='7' and rechargeTime BETWEEN %s AND %s
+  UNION
+    SELECT 0 cnt_total,0 cnt1,0 cnt2,IFNULL(SUM(rechargeAmount),0) cnt3,0 cnt4,0 cnt5,0 cnt_vat FROM charging_record_recharge WHERE isSuccess = '1' and rechargeWayCode='5' AND isFree='1' and rechargeTime BETWEEN %s AND %s
+  UNION
+    SELECT 0 cnt_total,0 cnt1,0 cnt2,0 cnt3,IFNULL(SUM(rechargeAmount),0) cnt4,0 cnt5,0 cnt_vat FROM charging_record_recharge WHERE isSuccess = '1' and rechargeWayCode='6' and rechargeTime BETWEEN %s AND %s
+  UNION
+    SELECT 0 cnt_total,0 cnt1,0 cnt2,0 cnt3,0 cnt4,IFNULL(SUM(rechargeAmount),0) cnt5,0 cnt_vat FROM charging_record_recharge WHERE isSuccess = '1' and rechargeWayCode='5' AND isFree='0' and rechargeTime BETWEEN %s AND %s
+  UNION
+    SELECT 0 cnt_total,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,IFNULL(SUM(expense),0) cnt_vat
+    FROM charging_record_charging WHERE productId = 'vat' and chargingTime BETWEEN %s AND %s
+) t1
+""".encode('utf-8')
+
+sql_yhczxfdsqk_sum = """
+SELECT
+  sum(t1.cnt_total) '充值点数（总数）',sum(t1.cnt1) '新用户赠送',sum(t1.cnt2) '活动',sum(t1.cnt3) '手工充值（免费）',sum(t1.cnt4) '订单充值',sum(t1.cnt5) '手工充值（收费）',sum(t1.cnt_vat) '消费点数（总数）'
+FROM
+(
+  SELECT IFNULL(SUM(rechargeAmount),0) cnt_total,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt_vat FROM charging_record_recharge
+    WHERE isSuccess = '1' and rechargeTime <= %s
+  UNION
+    SELECT 0 cnt_total,IFNULL(SUM(rechargeAmount),0) cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt_vat FROM charging_record_recharge WHERE isSuccess = '1' and rechargeWayCode='8' and rechargeTime <= %s
+  UNION
+    SELECT 0 cnt_total,0 cnt1,IFNULL(SUM(rechargeAmount),0) cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt_vat FROM charging_record_recharge WHERE isSuccess = '1' and rechargeWayCode='7' and rechargeTime <= %s
+  UNION
+    SELECT 0 cnt_total,0 cnt1,0 cnt2,IFNULL(SUM(rechargeAmount),0) cnt3,0 cnt4,0 cnt5,0 cnt_vat FROM charging_record_recharge WHERE isSuccess = '1' and rechargeWayCode='5' AND isFree='1' and rechargeTime <= %s
+  UNION
+    SELECT 0 cnt_total,0 cnt1,0 cnt2,0 cnt3,IFNULL(SUM(rechargeAmount),0) cnt4,0 cnt5,0 cnt_vat FROM charging_record_recharge WHERE isSuccess = '1' and rechargeWayCode='6' and rechargeTime <= %s
+  UNION
+    SELECT 0 cnt_total,0 cnt1,0 cnt2,0 cnt3,0 cnt4,IFNULL(SUM(rechargeAmount),0) cnt5,0 cnt_vat FROM charging_record_recharge WHERE isSuccess = '1' and rechargeWayCode='5' AND isFree='0' and rechargeTime <= %s
+  UNION
+    SELECT 0 cnt_total,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,IFNULL(SUM(expense),0) cnt_vat
+    FROM charging_record_charging WHERE productId = 'vat' and chargingTime <= %s
+) t1
+""".encode('utf-8')
+sql_yhczxfdsqk_balance_sum = """
+select sum(balanceSum) from charging_account_info where balanceSum > 0
+"""
+
 ##用户反馈情况表
 sql_yhcyfkqkb = """
 SELECT sum(a.cnt1) a1,sum(a.cnt2) a2,sum(a.cnt3) a3,CONCAT(ROUND(sum(a.cnt3)/sum(a.cnt2)*100,2),'%%') a4,sum(a.cnt4) a5,CONCAT(ROUND(sum(a.cnt4)/sum(a.cnt2)*100,2),'%%') a6,sum(a.cnt5) a7,

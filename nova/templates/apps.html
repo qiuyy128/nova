@@ -65,10 +65,9 @@
                 </thead>
                 <tbody>
                 {% for app in apps %}
-                    <tr>
+                    <tr class="gradeX">
                         {% for app_host in app.app_hosts.all %}
-                            {#                            <td width="10" class="text-center" name="id" value={{ app_host.id }} data-editable='false'>#}
-                            <td width="10">
+                            <td width="10" class="text-center">
                                 <input id="app_select_id" name="app_select_id" type="checkbox" value={{ app_host.id }}>
                             </td>
                             <td>

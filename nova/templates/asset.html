@@ -30,12 +30,16 @@
                    id="dataTables-asset">
                 <thead>
                 <tr>
-                    <th>#</th>
+                    <th>
+                        <input id="id_checkAll" type="checkbox" onclick="checkAll(this.checked)">
+                    </th>
                     <th>ID</th>
                     <th>主机名</th>
                     <th>IP地址</th>
+                    <th>端口号</th>
                     <th>所属主机组</th>
                     <th>部署的应用</th>
+                    <th>环境</th>
                     <th>备注</th>
                     <th>操作</th>
                 </tr>
@@ -43,12 +47,13 @@
                 <tbody>
                 {% for asset in assets %}
                     <tr class="gradeX">
-                        <td class="text-center" name="id" value="{{ asset.id }}" data-editable='false'>
-                            <input id="asset_select_id" value="{{ asset.id }}" type="checkbox" class="i-checks">
+                        <td width="10" class="text-center" data-editable='false'>
+                            <input id="id_asset_select" name="asset_select" type="checkbox" value="{{ asset.id }}">
                         </td>
                         <td>{{ asset.id }}</td>
                         <td>{{ asset.hostname }}</td>
-                        <td><a href="{% url 'asset_change' asset_id=asset.id %}">{{ asset.ip }}</a></td>
+                        <td name="asset_ip"><a href="{% url 'asset_change' asset_id=asset.id %}">{{ asset.ip }}</a></td>
+                        <td name="asset_port">{{ asset.port }}</td>
                         <td>
                             {% for ag in asset.asset_groups.all %}
                                 {{ ag.name }}
@@ -60,16 +65,16 @@
                                        ng-repeat="tag in data.tags">{{ asset.configs }}</label>
                             {% endif %}
                         </td>
+                        <td name="app_env">{{ asset.env }} </td>
                         <td>
-                            <div style="width: 600px;word-wrap: break-word;overflow-y:hidden;white-space:nowrap">
-                                {#                            <div>#}
+                            <div style="width: 500px;word-wrap: break-word;overflow-y:hidden;white-space:nowrap">
                                 {{ asset.comment }}
                             </div>
                         </td>
                         <td class="text-center" data-editable='false'>
                             <a href="{% url 'host_connect' asset_id=asset.id %}" target="_blank"
                                class="btn btn-xs btn-warning">连接</a>
-                            {% if request.user.username == 'admin' %}
+                            {% if request.user.is_superuser %}
                                 <input type="button" class="asset_del btn btn-xs btn-danger" aid="{{ asset.id }}"
                                        value="删除"/>
                                 {#                                    <a href="{% url 'asset_delete' asset_id=asset.id %}" class="btn btn-xs btn-info">删除</a>#}
@@ -79,17 +84,60 @@
                 {% endfor %}
                 </tbody>
             </table>
-            {#            <div>#}
-            {#                <input type="button" id="asset_dels" class="btn btn-danger btn-sm" name="del_button" value="删除"/>#}
-            {#                <input type="button" id="asset_update" class="btn btn-info btn-sm" name="update_button" value="更新"/>#}
-            {#            </div>#}
+
+            <table class="table table-fixed" width="100%">
+                <tr>
+                    <td>
+                        <div class="pull-left">
+                            <div>
+                                <div>
+                                    <input id="id_checkAll" type="checkbox" onclick="checkAll(this.checked)">
+                                    </input>
+{#                                    <input type="button" id="id_asset_batch_del" class="start_apps btn btn-default"#}
+{#                                           value="批量删除">#}
+{#                                    </input>#}
+                                    <input type="button" id="id_batch_exec_cmd" class="reload_apps btn btn-default"
+                                           value="批量执行命令">
+                                    </input>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
         </div>
-        {#        <input type="button" id="exec_cmd" class="btn btn-sm btn-primary" value="执行命令"/>#}
     </div>
 {% endblock %}
 
 {% block js %}
     <script type="text/javascript">
+        function checkAll(c) {
+            var arr = document.getElementsByName('asset_select');
+            if (c) {
+                for (var i = 0; i < arr.length; i++) {
+                    arr[i].checked = true;
+                }
+            }
+            else {
+                for (var i = 0; i < arr.length; i++) {
+                    arr[i].checked = false;
+                }
+            }
+        }
+
+        var obj = document.getElementsByName("asset_select");
+        var env_list = document.getElementsByName("app_env");
+        var app_id = [];
+        var app_env = [];
+        for (var i in obj) {
+            if (obj[i].checked) {
+                app_id.push(obj[i].value);
+                if ($.inArray(env_list[i].innerText, app_env) == -1) {
+                    app_env[i] = env_list[i].innerText;
+                }
+            }
+        }
+
         $(document).ready(function () {
             $('.asset_del').click(function () {
                 var asset_delete_id = $(this).attr('aid');
@@ -114,12 +162,43 @@
                 }
             })
         });
-    </script>
 
-    <script>
+        $(document).ready(function () {
+            $('#id_batch_exec_cmd').click(function () {
+                var obj = document.getElementsByName("asset_select");
+                var asset_list = document.getElementsByName("asset_ip");
+                var port_list = document.getElementsByName("asset_port");
+                var env_list = document.getElementsByName("app_env");
+                var asset_id = [];
+                var asset_ip = [];
+                var asset_env = [];
+                for (var i in obj) {
+                    if (obj[i].checked) {
+                        asset_id.push(obj[i].value);
+                        asset_ip.push(asset_list[i].innerText + ':' + port_list[i].innerText);
+                        if ($.inArray(env_list[i].innerText, asset_env) == -1) {
+                            asset_env.push(env_list[i].innerText);
+                        }
+                    }
+                }
+                if (asset_ip.length == 0) {
+                    alert('你还没有选择任何服务器！');
+                }
+                else {
+                    var result = confirm("是否确定批量执行命令?");
+                    if (result == true) {
+                        window.location.href = "{% url 'shell' %}?asset_ip=" + asset_ip
+                    }
+                }
+            })
+        });
+
         $(document).ready(function () {
             $('#dataTables-asset').DataTable({
                 responsive: true,
+                "aaSorting": [
+                    [3, "desc"]
+                ],
                 language: {
                     "sProcessing": "处理中...",
                     "sLengthMenu": "显示 _MENU_ 项结果",

@@ -4,7 +4,7 @@
  `django 1.10 + Mysql + Celery + Mongodb + GateOne.`<br>
 
     集成GateOne, 服务器ssh连接，服务自动化部署，版本发布，任务管理与日志，数据库脚本执行，web监控，自定义服务监控，
-    nginx日志查询统计。
+    nginx日志查询统计, 集成ansible。
 
 用户的管理使用了django的admin后台来创建与管理，用户权限通过用户组来分配权限。
 
@@ -70,6 +70,8 @@ Django集成GateOne部分见views.py中host_connect与get_auth_obj<br>
 Celery定时任务在setting中的CELERYBEAT_SCHEDULE进行配置<br>
 
 发送邮件的配置在表nova_mail中进行配置<br>
+
+shell命令集成ansible.<br>
 
 附件目录attachment下的文件如jdk，tomcat，nodejs，ant等因为太大没有上传到github<br>
 

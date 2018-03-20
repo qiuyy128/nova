@@ -1159,6 +1159,9 @@ def shell(request):
         logger.info(request.POST)
         # command = request.POST.get('command')
         command = json.loads(request.body)['command']
+        asset_ip = json.loads(request.body)['asset_ip']
+        command = '''ansible all -i "%s," -m shell -a "%s"''' % (asset_ip, command)
+        logger.info(command)
         p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         output = ''
 
@@ -1168,7 +1171,7 @@ def shell(request):
             if stdout == '' and p.poll() is not None:
                 break
             if stdout != '':
-                logger.info(stdout.strip('\n'))
+                # logger.info(stdout.strip('\n'))
                 output = output + stdout
                 # file_object.write(stdout)
                 with open(command_file, 'a') as f:
@@ -1178,6 +1181,7 @@ def shell(request):
                 if stderr == '' and p.poll() is not None:
                     break
                 if stderr != '':
+                    logger.info(u'执行命令出错了！')
                     logger.info(stderr.strip('\n'))
                     output = output + stderr
                     # file_object.write(stderr)
@@ -1188,7 +1192,9 @@ def shell(request):
         logger.info(data)
         return HttpResponse(json.dumps(data))
     else:
-        data = {'command_file': command_file, 'file_size': file_size}
+        asset_ip = request.GET.get('asset_ip')
+        data = {'asset_ip': asset_ip, 'command_file': command_file, 'file_size': file_size}
+        # logger.info(data)
     return render(request, 'shell.html', data)
 
 

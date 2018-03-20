@@ -35,6 +35,13 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="col-sm-3 control-label label-width"><span>服务器IP：</span></label>
+                    <div class="col-sm-3 row">
+                        <textarea class="form-control" rows="2" id="id_asset_ip"
+                                  name="command" style="width: 1000px;">{{ asset_ip }}</textarea>
+                    </div>
+                </div>
+                <div class="form-group">
                     <div class="col-sm-3">
                         <input id="id_command_exec" class="btn btn-default" type="button" value="执行">
                         </input>
@@ -89,17 +96,19 @@
                 }, 1000);
 
                 var command = $("#id_command").val();
+                var asset_ip = $("#id_asset_ip").val();
                 $.ajax({
                     url: "{% url 'shell' %}",
                     type: 'POST',
                     data: JSON.stringify({
-                        command: command
+                        command: command,
+                        asset_ip: asset_ip
                     }),
                     success: function (data) {
                         if (data['rtn'] == '00') {
-                            $("#log").append('command:\n        ');
-                            $("#log").append(data['command']);
-                            $("#log").append('\n执行成功!\n');
+{#                            $("#log").append('command:\n        ');#}
+{#                            $("#log").append(data['command']);#}
+{#                            $("#log").append('\n执行成功!\n');#}
                             setTimeout(function () {
                                 clearInterval(t);
                             }, 3000);

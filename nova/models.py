@@ -176,7 +176,7 @@ class Database(models.Model):
     type = models.CharField(max_length=20, blank=False, null=False, verbose_name=u"数据库类型")
     ip = models.CharField(max_length=80, blank=False, null=False, verbose_name=u"ip")
     port = models.CharField(max_length=20, blank=False, null=False, verbose_name=u"端口")
-    db_name = models.CharField(max_length=20, blank=False, null=False, verbose_name=u"数据库名称")
+    db_name = models.CharField(max_length=30, blank=False, null=False, verbose_name=u"数据库名称")
     username = models.CharField(max_length=30, blank=False, null=False, verbose_name=u"用户名")
     password = models.CharField(max_length=40, blank=False, null=False, verbose_name=u"密码")
     comment = models.CharField(max_length=40, blank=True, null=True, verbose_name=u"说明")

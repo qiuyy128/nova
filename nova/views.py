@@ -342,7 +342,7 @@ def app_deploy(request):
             assets = Asset.objects.all().values('ip')
             return render(request, 'app_deploy.html', locals())
     else:
-        data = {'rtn': 99, 'msg': '没有操作权限，请联系管理员!'}
+        data = {'rtn': '99', 'msg': '没有操作权限，请联系管理员!'}
     # return HttpResponse(json.dumps(data))
     return HttpResponseRedirect(reverse('deny'))
 
@@ -462,11 +462,11 @@ def start_app(request):
             app_env = json.loads(request.body)['app_env']
             logger.info('User is:%s;Request is:start app id: %s' % (request.user.username, app_id))
         else:
-            data = {'rtn': 98, 'msg': u'未提交必要参数!'}
+            data = {'rtn': '98', 'msg': u'未提交必要参数!'}
             return HttpResponse(json.dumps(data))
         logger.info('Start app %s:,env:%s' % (app_id, app_env))
         if 'product' in app_env and not User.has_perm(request.user, 'nova.operate_product'):
-            data = {'rtn': 98, 'msg': '没有生产环境操作权限，请联系管理员!'}
+            data = {'rtn': '98', 'msg': '没有生产环境操作权限，请联系管理员!'}
             return HttpResponse(json.dumps(data))
         logger.info(u'启动应用：')
         logger.info(AppHost.objects.filter(id__in=app_id))
@@ -481,9 +481,9 @@ def start_app(request):
                             # start_time=timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
                             start_time=timezone.now(), result=result.result, app_id=app_ids,
                             execute_user=request.user.username)
-        data = {'rtn': 00, 'msg': '启动成功!'}
+        data = {'rtn': '00', 'msg': '启动成功!'}
     else:
-        data = {'rtn': 99, 'msg': '没有操作权限，请联系管理员!'}
+        data = {'rtn': '99', 'msg': '没有操作权限，请联系管理员!'}
     return HttpResponse(json.dumps(data))
 
 
@@ -497,11 +497,11 @@ def stop_app(request):
             app_env = json.loads(request.body)['app_env']
             logger.info('User is:%s;Request is:stop app id: %s' % (request.user.username, app_id))
         else:
-            data = {'rtn': 98, 'msg': u'未提交必要参数!'}
+            data = {'rtn': '98', 'msg': u'未提交必要参数!'}
             return HttpResponse(json.dumps(data))
         logger.info('Stop app %s:,env:%s' % (app_id, app_env))
         if 'product' in app_env and not User.has_perm(request.user, 'nova.operate_product'):
-            data = {'rtn': 98, 'msg': '没有生产环境操作权限，请联系管理员!'}
+            data = {'rtn': '98', 'msg': '没有生产环境操作权限，请联系管理员!'}
             return HttpResponse(json.dumps(data))
         logger.info(u'停止应用：')
         logger.info(AppHost.objects.filter(id__in=app_id))
@@ -515,10 +515,10 @@ def stop_app(request):
                             # start_time=timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
                             start_time=timezone.now(), result=result.result, app_id=app_ids,
                             execute_user=request.user.username)
-        data = {'rtn': 00, 'msg': '停止成功！'}
+        data = {'rtn': '00', 'msg': '停止成功！'}
         return HttpResponse(json.dumps(data))
     else:
-        data = {'rtn': 99, 'msg': '没有操作权限，请联系管理员!'}
+        data = {'rtn': '99', 'msg': '没有操作权限，请联系管理员!'}
     return HttpResponse(json.dumps(data))
 
 
@@ -533,11 +533,11 @@ def reload_app(request):
             print 'app_env is:', app_env
             logger.info('User is:%s;Request is:reload app id: %s' % (request.user.username, app_id))
         else:
-            data = {'rtn': 98, 'msg': u'未提交必要参数!'}
+            data = {'rtn': '98', 'msg': u'未提交必要参数!'}
             return HttpResponse(json.dumps(data))
         logger.info('Reload app %s:,env:%s' % (app_id, app_env))
         if 'product' in app_env and not User.has_perm(request.user, 'nova.operate_product'):
-            data = {'rtn': 98, 'msg': '没有生产环境操作权限，请联系管理员!'}
+            data = {'rtn': '98', 'msg': '没有生产环境操作权限，请联系管理员!'}
             return HttpResponse(json.dumps(data))
         logger.info(u'重启应用：')
         logger.info(AppHost.objects.filter(id__in=app_id))
@@ -549,9 +549,9 @@ def reload_app(request):
         Task.objects.create(task_id=result.task_id, name=task_name, status=result.status,
                             start_time=timezone.now(), result=result.result, app_id=app_ids,
                             execute_user=request.user.username)
-        data = {'rtn': 00, 'msg': '重启成功！'}
+        data = {'rtn': '00', 'msg': '重启成功！'}
     else:
-        data = {'rtn': 99, 'msg': '没有操作权限，请联系管理员!'}
+        data = {'rtn': '99', 'msg': '没有操作权限，请联系管理员!'}
     return HttpResponse(json.dumps(data))
 
 
@@ -567,11 +567,11 @@ def update_app(request):
             app_env = json.loads(request.body)['app_env']
             logger.info('User is:%s;Request upload app: %s,env: %s' % (request.user.username, app_name, app_env))
         else:
-            data = {'rtn': 98, 'msg': u'未提交必要参数!'}
+            data = {'rtn': '98', 'msg': u'未提交必要参数!'}
             return HttpResponse(json.dumps(data))
         logger.info('Upload app %s:,env:%s' % (app_name, app_env))
         if app_env == 'product' and not User.has_perm(request.user, 'nova.operate_product'):
-            data = {'rtn': 98, 'msg': '没有生产环境操作权限，请联系管理员!'}
+            data = {'rtn': '98', 'msg': '没有生产环境操作权限，请联系管理员!'}
             return HttpResponse(json.dumps(data))
         logger.info(u'更新应用：')
         logger.info(AppHost.objects.filter(name=app_name, env=app_env))
@@ -582,10 +582,10 @@ def update_app(request):
         Task.objects.create(task_id=result.task_id, name=task_name, status=result.status,
                             start_time=timezone.now(), result=result.result, app_id=app_ids,
                             execute_user=request.user.username)
-        data = {'rtn': 00, 'msg': '更新成功！'}
+        data = {'rtn': '00', 'msg': '更新成功！'}
     else:
         # logger.info(u'没有操作权限，请联系管理员!')
-        data = {'rtn': 99, 'msg': '没有操作权限，请联系管理员!'}
+        data = {'rtn': '99', 'msg': '没有操作权限，请联系管理员!'}
     return HttpResponse(json.dumps(data))
 
 
@@ -701,8 +701,8 @@ def config_file_editor(request, app_name, env, file_path, file_name):
         app_config_file = os.path.join(app_config_files_path, urllib.url2pathname(file_path), file_name)
         logger.info("Edit app_config_file:%s" % app_config_file)
         if (file_name == 'config-oss.properties' or file_name == 'config-mysql.properties' \
-            or file_name == 'quartz.properties' or file_name == 'config-sqlserver.properties' \
-            or file_name == 'config-ocr.properties') and env == 'product':
+                    or file_name == 'quartz.properties' or file_name == 'config-sqlserver.properties' \
+                    or file_name == 'config-ocr.properties') and env == 'product':
             data = {'msg': '暂不提供查看，请联系管理员查看，谢谢 ！'}
             return render(request, 'message.html', data)
         else:
@@ -727,7 +727,7 @@ def save_config_file(request):
             env = json.loads(request.body)['env']
             filename_bak = filename + '.bak'
             if 'product' == env and not User.has_perm(request.user, 'nova.operate_product'):
-                data = {'rtn': 98, 'msg': '没有生产环境修改权限，请联系管理员!'}
+                data = {'rtn': '98', 'msg': '没有生产环境修改权限，请联系管理员!'}
                 return HttpResponse(json.dumps(data))
             log_info = u'修改' + env + ':' + filename
             try:
@@ -806,7 +806,7 @@ def sql_submit(request):
         if request.method == 'GET':
             return render(request, 'sql_submit.html')
     else:
-        data = {'rtn': 99, 'msg': '没有操作权限，请联系管理员!'}
+        data = {'rtn': '99', 'msg': '没有操作权限，请联系管理员!'}
         return HttpResponseRedirect(reverse('deny'))
 
 
@@ -878,18 +878,18 @@ def sql_exec(request):
             db_env = json.loads(request.body)['db_env']
             sql_id = json.loads(request.body)['sql_id']
         else:
-            data = {'rtn': 98, 'msg': u'未提交必要参数!'}
+            data = {'rtn': '98', 'msg': u'未提交必要参数!'}
             return HttpResponse(json.dumps(data))
         if db_name == 'ksbm' and not User.has_perm(request.user, 'nova.exec_tax_agent_sql'):
-            data = {'rtn': 98, 'msg': '没有考试报名数据库权限，请联系管理员!'}
+            data = {'rtn': '98', 'msg': '没有考试报名数据库权限，请联系管理员!'}
             return HttpResponse(json.dumps(data))
         if db_env == 'product' and not User.has_perm(request.user, 'nova.operate_product'):
-            data = {'rtn': 98, 'msg': '没有生产数据库权限，请联系管理员!'}
+            data = {'rtn': '98', 'msg': '没有生产数据库权限，请联系管理员!'}
             return HttpResponse(json.dumps(data))
         try:
             db_info = Database.objects.get(db_name=db_name, env=db_env)
         except Database.DoesNotExist:
-            data = {'rtn': 99, 'msg': u'未找到该数据库配置！'}
+            data = {'rtn': '99', 'msg': u'未找到该数据库配置！'}
         logger.info(db_info)
         # 取SQL语句
         sql_commands = Sql.objects.get(id=sql_id).sql
@@ -903,7 +903,7 @@ def sql_exec(request):
                 conn = Mysql(host=db_info.ip, port=int(db_info.port), db=db_info.db_name, user=db_info.username,
                              password=db_info.password, charset="utf8")
         except Exception as e:
-            data = {'rtn': 99, 'msg': '连接数据库错误:' + str(e)}
+            data = {'rtn': '99', 'msg': '连接数据库错误:' + str(e)}
             return HttpResponse(json.dumps(data))
         # 分号分割预处理SQL
         logger.info(u'分号分割sql为:')
@@ -923,7 +923,7 @@ def sql_exec(request):
                 # 不能包含UNION非法字符
                 if len(re.findall(r'( |\n)(?i)union( |\n)', sql_command, re.S)) > 0:
                     logger.info(u'该SQL包含UNION关键字.')
-                    data = {'rtn': 98, 'msg': u'该SQL有包含UNION非法字符，无法执行，请联系管理员!'}
+                    data = {'rtn': '98', 'msg': u'该SQL有包含UNION非法字符，无法执行，请联系管理员!'}
                     return HttpResponse(json.dumps(data))
                 # 新增操作不限制
                 if len(re.findall(r'(| |\n|\r\n)(?i)insert( |\n|\r\n)', sql_command, re.S)) > 0:
@@ -932,7 +932,7 @@ def sql_exec(request):
                     sql_recovery = sql_recovery + sql_recovery_tmp + ";\n"
                 elif len(re.findall(r'( |\n|\r\n)(?i)where( |\n|\r\n)', sql_command, re.S)) == 0:
                     logger.info(u'该SQL存在未包含WHERE的过滤条件!')
-                    data = {'rtn': 98, 'msg': u'该SQL存在未包含WHERE的过滤条件，无法执行，请联系管理员!'}
+                    data = {'rtn': '98', 'msg': u'该SQL存在未包含WHERE的过滤条件，无法执行，请联系管理员!'}
                     return HttpResponse(json.dumps(data))
                 # 删除与更新必须有where条件
                 else:
@@ -981,7 +981,7 @@ def sql_exec(request):
                                 logger.info('sql_select of update is:%s' % sql_select)
                             except Exception as e:
                                 logger.info(u"产生异常的sql id为:%s，sql语句为:%s" % (sql_id, repr(sql_command)))
-                                data = {'rtn': 99, 'msg': '生成回滚sql前的查询语句错误:' + str(e)}
+                                data = {'rtn': '99', 'msg': '生成回滚sql前的查询语句错误:' + str(e)}
                                 return HttpResponse(json.dumps(data))
                             # 生成回滚sql
                             try:
@@ -995,7 +995,7 @@ def sql_exec(request):
                                     logger.info(columns)
                                 except Exception as e:
                                     logger.info(u'更新前查询错误;id:' + sql_id + ',sql:' + sql_command + 'ERROR:' + str(e))
-                                    data = {'rtn': 99, 'msg': '查询原值错误:' + str(e)}
+                                    data = {'rtn': '99', 'msg': '查询原值错误:' + str(e)}
                                     return HttpResponse(json.dumps(data))
                                 sql_find_list = re.findall(r'=(.+?)(?i)(,|where)', sql_set, re.S)
                                 sql_find_list_temp = []
@@ -1038,7 +1038,7 @@ def sql_exec(request):
                                         sql_recovery += sql_recovery_line
                             except Exception as e:
                                 logger.info(u'生成回滚SQL错误;id:' + sql_id + ',sql:' + sql_command + ',ERROR:' + str(e))
-                                data = {'rtn': 99, 'msg': '生成回滚SQL错误:' + str(e)}
+                                data = {'rtn': '99', 'msg': '生成回滚SQL错误:' + str(e)}
                                 return HttpResponse(json.dumps(data))
                     elif len(re.findall(r'[ |\n|\r\n]?(?i)delete[ |\n|\r\n]+', sql_command, re.S)) > 0:
                         if sql_command != '' and sql_command != '\n' and sql_command != '\r\n':
@@ -1051,7 +1051,7 @@ def sql_exec(request):
                                     sql_command, re.S).group(2)
                             except Exception as e:
                                 logger.info(u"产生异常的sql语句为：%s,sql长度为%d!" % (repr(sql_command), len(sql_command)))
-                                data = {'rtn': 99, 'msg': '生成回滚sql前的查询语句错误:' + str(e)}
+                                data = {'rtn': '99', 'msg': '生成回滚sql前的查询语句错误:' + str(e)}
                                 return HttpResponse(json.dumps(data))
                             # 生产回滚sql
                             try:
@@ -1078,7 +1078,7 @@ def sql_exec(request):
                                     sql_recovery = sql_recovery_tmp
                             except Exception as e:
                                 logger.info(u'生成回滚SQL错误;id:' + sql_id + ',sql:' + sql_command + ',ERROR:' + str(e))
-                                data = {'rtn': 99, 'msg': '生成回滚SQL错误:' + str(e)}
+                                data = {'rtn': '99', 'msg': '生成回滚SQL错误:' + str(e)}
                                 return HttpResponse(json.dumps(data))
                     else:
                         logger.info(u'该SQL不是DML:%s' % sql_command)
@@ -1098,22 +1098,22 @@ def sql_exec(request):
         try:
             cur_rows = conn.exec_non_select(sql_commands, args=())
             logger.info(u'影响%d行！' % cur_rows)
-            data = {'rtn': 00, 'msg': u'执行成功'}
+            data = {'rtn': '00', 'msg': u'执行成功'}
             try:
                 sql = Sql.objects.filter(id=sql_id)
                 sql.update(result='执行成功', end_time=timezone.now(), execute_user=request.user.username,
                            recovery_file=sql_recovery_file)
             except Exception as e:
                 logger.info(u'执行sql id:' + sql_id + u' 成功,但更新sql执行结果错误:' + str(e))
-                data = {'rtn': 98, 'msg': '执行sql成功，但更新sql执行结果错误:' + str(e)}
+                data = {'rtn': '98', 'msg': '执行sql成功，但更新sql执行结果错误:' + str(e)}
         except Exception as e:
             sql = Sql.objects.filter(id=sql_id)
             sql.update(result='执行失败', end_time=timezone.now(), execute_user=request.user.username)
             logger.info(u'执行sql错误;id:' + sql_id + ',sql:' + sql_commands + ',ERROR:' + str(e))
-            data = {'rtn': 99, 'msg': '执行SQL错误:' + str(e)}
+            data = {'rtn': '99', 'msg': '执行SQL错误:' + str(e)}
         return HttpResponse(json.dumps(data))
     else:
-        data = {'rtn': 99, 'msg': u'没有操作权限，请联系管理员添加权限!'}
+        data = {'rtn': '99', 'msg': u'没有操作权限，请联系管理员添加权限!'}
         return HttpResponse(json.dumps(data))
 
 
@@ -1156,34 +1156,33 @@ def shell(request):
         os.mknod(command_file)
     file_size = os.path.getsize(command_file)
     if request.method == 'POST':
-        logger.info(request.POST)
-        # command = request.POST.get('command')
         command = json.loads(request.body)['command']
         asset_ip = json.loads(request.body)['asset_ip']
         command = '''ansible all -i "%s," -m shell -a "%s"''' % (asset_ip, command)
         logger.info(command)
         p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         output = ''
-
+        errors = ''
         logger.info(command_file)
         while True:
-            stdout = p.stdout.readline()
-            if stdout == '' and p.poll() is not None:
-                break
-            if stdout != '':
-                # logger.info(stdout.strip('\n'))
-                output = output + stdout
-                # file_object.write(stdout)
-                with open(command_file, 'a') as f:
-                    f.write(stdout)
-            else:
+            if p.stdout:
+                stdout = p.stdout.readline()
+                if stdout == '' and p.poll() is not None:
+                    break
+                if stdout != '':
+                    # logger.info(stdout.strip('\n'))
+                    output = output + stdout
+                    # file_object.write(stdout)
+                    with open(command_file, 'a') as f:
+                        f.write(stdout)
+            if p.stderr:
                 stderr = p.stderr.readline()
                 if stderr == '' and p.poll() is not None:
                     break
                 if stderr != '':
                     logger.info(u'执行命令出错了！')
                     logger.info(stderr.strip('\n'))
-                    output = output + stderr
+                    errors = errors + stderr
                     # file_object.write(stderr)
                     with open(command_file, 'a') as f:
                         f.write(stderr)
@@ -1194,7 +1193,6 @@ def shell(request):
     else:
         asset_ip = request.GET.get('asset_ip')
         data = {'asset_ip': asset_ip, 'command_file': command_file, 'file_size': file_size}
-        # logger.info(data)
     return render(request, 'shell.html', data)
 
 
@@ -1276,12 +1274,12 @@ def update_ksbm_oss_file(request):
             db_name = json.loads(request.body)['db_name']
             db_env = json.loads(request.body)['db_env']
         else:
-            data = {'rtn': 98, 'msg': u'未提交必要参数!'}
+            data = {'rtn': '98', 'msg': u'未提交必要参数!'}
             return HttpResponse(json.dumps(data))
         try:
             db_info = Database.objects.get(db_name=db_name, env=db_env)
         except Database.DoesNotExist:
-            data = {'rtn': 99, 'msg': u'未找到该数据库配置！'}
+            data = {'rtn': '99', 'msg': u'未找到该数据库配置！'}
         logger.info('db_info is:%s' % db_info)
         endpoint = ENDPOINT
         # 连接数据库
@@ -1293,7 +1291,7 @@ def update_ksbm_oss_file(request):
                 conn = Mysql(host=db_info.ip, port=int(db_info.port), db=db_info.db_name, user=db_info.username,
                              password=db_info.password, charset="utf8")
         except Exception as e:
-            data = {'rtn': 99, 'msg': '连接数据库错误:' + str(e)}
+            data = {'rtn': '99', 'msg': '连接数据库错误:' + str(e)}
             return HttpResponse(json.dumps(data))
         upload_file = UploadFile.objects.get(id=upload_file_id)
         logger.info('upload file:%s' % upload_file.file_name)
@@ -1304,7 +1302,7 @@ def update_ksbm_oss_file(request):
             endpoint = 'http://oss-cn-beijing.aliyuncs.com'
         except Exception as e:
             logger.info(e)
-            data = {'rtn': 97, 'msg': 'OSS认证失败:' + str(e)}
+            data = {'rtn': '97', 'msg': 'OSS认证失败:' + str(e)}
             return HttpResponse(json.dumps(data))
         # 判断使用cname访问
         if len(accessKey.cname) > 1:
@@ -1344,7 +1342,7 @@ def update_ksbm_oss_file(request):
                 try:
                     UploadFile.objects.filter(id=upload_file_id).update(result='更新成功', upload_time=timezone.now())
                 except Exception as e:
-                    data = {'rtn': 98, 'msg': '更新文件成功，但更新该执行结果错误:' + str(e)}
+                    data = {'rtn': '98', 'msg': '更新文件成功，但更新该执行结果错误:' + str(e)}
                 return HttpResponse(json.dumps(data))
         except Exception as e:
             logger.info(e)
@@ -1450,7 +1448,7 @@ def fpcy_request_log(request):
             print e
         return HttpResponse(json.dumps(data), content_type='application/json')
     else:
-        data = {'rtn': 99, 'msg': u'请求非法，未提交必要参数!'}
+        data = {'rtn': '99', 'msg': u'请求非法，未提交必要参数!'}
         return HttpResponse(json.dumps(data, encoding='utf-8', ensure_ascii=False))
 
 
@@ -1464,7 +1462,7 @@ def access_log(request):
     try:
         db_info = Database.objects.get(db_name=db_name, env=db_env)
     except Database.DoesNotExist:
-        data = {'rtn': 99, 'msg': u'未找到该数据库配置！'}
+        data = {'rtn': '99', 'msg': u'未找到该数据库配置！'}
     logger.info('db_info is:%s' % db_info)
     # 连接数据库
     try:
@@ -1472,7 +1470,7 @@ def access_log(request):
             mongodb = Mongodb(host=db_info.ip, port=db_info.port, db=db_info.db_name, user=db_info.username,
                               password=db_info.password)
     except Exception as e:
-        data = {'rtn': 99, 'msg': '连接数据库错误:' + str(e)}
+        data = {'rtn': '99', 'msg': '连接数据库错误:' + str(e)}
         return HttpResponse(json.dumps(data))
     db = mongodb.get_database()
     collection = db['nginx_ls']
@@ -1540,7 +1538,7 @@ def access_log(request):
             except Exception as e:
                 logger.info(e)
             if all_counts == 0:
-                data = {'rtn': 01, 'msg': u'查询不到数据!'}
+                data = {'rtn': '01', 'msg': u'查询不到数据!'}
                 logger.info(data)
                 return HttpResponse(json.dumps(data))
             else:
@@ -1561,12 +1559,12 @@ def access_log(request):
                 else:
                     page_count = (all_counts / page_size)
                 page_size_option = [10, 20, 50, 100]
-                data = {'rtn': 00, 'access_logs': access_logs, 'all_counts': all_counts,
+                data = {'rtn': '00', 'access_logs': access_logs, 'all_counts': all_counts,
                         'page_index': page_index, 'page_count': page_count, 'page_size': page_size,
                         'page_size_option': page_size_option}
                 return HttpResponse(json.dumps(data), content_type='application/json')
         else:
-            data = {'rtn': 99, 'msg': u'请求非法，未提交必要参数!'}
+            data = {'rtn': '99', 'msg': u'请求非法，未提交必要参数!'}
             return HttpResponse(json.dumps(data))
 
 
@@ -1628,7 +1626,7 @@ def fpcy_stat(request):
                           password=info_mongo.password)
         db_mongo = mongodb.get_database()
     except Exception as e:
-        data = {'rtn': 99, 'msg': u'连接数据库错误:' + str(e)}
+        data = {'rtn': '99', 'msg': u'连接数据库错误:' + str(e)}
         logger.info(data)
     try:
         # 发票入库情况
@@ -1722,7 +1720,7 @@ def fpcy_stat(request):
         except Exception as e:
             logger.info(e)
     except Exception as e:
-        data = {'rtn': 99, 'msg': u'查询错误:' + str(e)}
+        data = {'rtn': '99', 'msg': u'查询错误:' + str(e)}
         logger.info(data)
     return render(request, 'fpcy_stat.html', locals())
 
@@ -1739,7 +1737,7 @@ def get_fpcy_request_area(request):
         conn = Mysql(host=db_info.ip, port=int(db_info.port), db=db_info.db_name, user=db_info.username,
                      password=db_info.password, charset="utf8")
     except Exception as e:
-        data = {'rtn': 99, 'msg': u'连接数据库错误:' + str(e)}
+        data = {'rtn': '99', 'msg': u'连接数据库错误:' + str(e)}
         logger.info(json.dumps(data, encoding='utf-8', ensure_ascii=False))
     if request.method == 'GET':
         res = request.method
@@ -1755,7 +1753,7 @@ def get_fpcy_request_area(request):
         end_time = end_time.strftime('%Y-%m-%d')
         try:
             sql1 = """
-            SELECT SUBSTR(a.invoiceType,1,3) name,count(*) value from (
+                  SELECT SUBSTR(a.invoiceType,1,3) name,count(*) value from (
                   SELECT invoiceType,count(*) cnt FROM fpcy_requeststatistics_log
                   WHERE inputTime BETWEEN %s AND %s
                   GROUP BY invoiceType order by invoiceType
@@ -1789,3 +1787,4 @@ def get_fpcy_request_area(request):
 @permission_required('nova.access_monitor', raise_exception=True)
 def fpcy_request_area(request):
     return render(request, 'fpcy_request_area.html')
+

@@ -51,13 +51,13 @@
         </div>
         <div class="col-md-offset-1 margin-top-1">
             <pre id='log'
-                 style="height: 30em;background-color:black;color:white;font-family: Courier;width: 100%;"></pre>
+                 style="height: 40em;background-color:black;color:white;font-family: Courier;width: 100%;"></pre>
         </div>
     </div>
 {% endblock %}
 
 {% block js %}
-    <script>
+    <script type="text/javascript">
         var seek = Number($("#id_file_size").text());
         var command_file = $("#id_command_file").text();
         function errmsg() {

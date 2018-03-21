@@ -181,6 +181,10 @@ CELERYBEAT_SCHEDULE = {
         'task': 'nova.tasks.get_service_mon_data',
         'schedule': timedelta(seconds=60),
      },
+    'stat-ecai-every-day': {
+        'task': 'nova.tasks.ecai_stat',
+        'schedule': crontab(minute=1, hour=0),
+    },
 }
 
 # 2017-10-19:

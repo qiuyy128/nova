@@ -23,6 +23,7 @@ from script.mail import EMail
 from django.db.models import Q
 import string
 from script.conn_mysql import Mysql
+from script.conn_mssql import MsSQL
 from script.conn_mongodb import Mongodb
 import decimal
 
@@ -1472,3 +1473,108 @@ Deal all,
     except Exception as e:
         data = {'rtn': 99, 'msg': u'查询错误:' + str(e)}
         logger.info(json.dumps(data, encoding='utf-8', ensure_ascii=False))
+
+
+@shared_task
+def ecai_stat():
+    logger.info('*' * 100)
+    logger.info(u'易财统计原始数据任务，开始时间：%s' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    import script.ecai_stat_sql as ecai_stat_sql
+    try:
+        # 连接查询库
+        db_env = 'slave'
+        # lemonacc库
+        db_info = Database.objects.get(db_name='lemonacc', env=db_env)
+        conn_lemonacc = MsSQL(host=db_info.ip, port=db_info.port, db=db_info.db_name, user=db_info.username,
+                              password=db_info.password)
+        # ecai库
+        db_info = Database.objects.get(db_name='taxagency', env=db_env)
+        conn_ecai = Mysql(host=db_info.ip, port=int(db_info.port), db=db_info.db_name, user=db_info.username,
+                          password=db_info.password, charset="utf8")
+        # 连接业务主库，写入统计原始数据，需要连接写入权限的数据库
+        db_env = 'product'
+        # ecai库
+        db_info = Database.objects.get(db_name='taxagency', env=db_env)
+        conn_ecai_prod = Mysql(host=db_info.ip, port=int(db_info.port), db=db_info.db_name, user=db_info.username,
+                               password=db_info.password, charset="utf8")
+    except Exception as e:
+        data = {'rtn': '99', 'msg': u'连接数据库错误:' + str(e)}
+        logger.info(json.dumps(data, encoding='utf-8', ensure_ascii=False))
+    try:
+        sql1 = ecai_stat_sql.sql_ecai_stat1
+        # logger.info(sql1)
+        args = ('xx%', '12%', '00%', '%测试%', '11%', '22%', '23%', '24%', '一般%', '小规模%')
+        cur_list, cur_desc, cur_rows, dict_list = conn_ecai.exec_select(sql1, args)
+        logger.info(u'查询%d条记录！' % cur_rows)
+        for i in dict_list:
+            if i['accountSetId'] is not None:
+                account_set_id = i['accountSetId']
+                args = (account_set_id,)
+                sql4 = ecai_stat_sql.sql_ecai_stat4
+                cur_list, cur_desc, cur_rows, dict_list = conn_ecai_prod.exec_select(sql4, args)
+                if dict_list:
+                    # logger.info(u'存在AS_ID：%s 的记录！' % account_set_id)
+                    stat_inputFirstVouTime = dict_list[0]['inputFirstVouTime']
+                    stat_updateLastVouTime = dict_list[0]['updateLastVouTime']
+                    # 修改统计原始数据
+                    args = (account_set_id,)
+                    # 柠檬云库获取某账套最早新增凭证时间
+                    sql2 = ecai_stat_sql.sql_ecai_stat2
+                    cur_list, cur_desc, cur_rows, dict_list = conn_lemonacc.exec_select(sql2, args)
+                    # logger.info(u'查询%d条记录！' % cur_rows)
+                    if dict_list and dict_list[0]['CREATED_DATE'] != stat_inputFirstVouTime:
+                        args = (dict_list[0]['CREATED_DATE'], account_set_id)
+                        update_sql = 'UPDATE stat_customer_detail SET inputFirstVouTime = %s WHERE accountSetId=%s'
+                        cur_rows = conn_ecai_prod.exec_non_select(update_sql, args)
+                        logger.info(u'修改%d行统计原始数据inputFirstVouTime of AS_ID: %s！' % (cur_rows, account_set_id))
+
+                    # 柠檬云库获取某账套最后动账时间
+                    sql3 = ecai_stat_sql.sql_ecai_stat3
+                    args = (account_set_id,)
+                    cur_list, cur_desc, cur_rows, dict_list = conn_lemonacc.exec_select(sql3, args)
+                    # logger.info(u'查询%d条记录！' % cur_rows)
+                    if dict_list and dict_list[0]['MODIFIED_DATE'] != stat_updateLastVouTime:
+                        args = (dict_list[0]['MODIFIED_DATE'], account_set_id)
+                        update_sql = 'UPDATE stat_customer_detail SET updateLastVouTime = %s WHERE accountSetId=%s'
+                        cur_rows = conn_ecai_prod.exec_non_select(update_sql, args)
+                        logger.info(u'修改%d行统计原始数据updateLastVouTime of AS_ID: %s！' % (cur_rows, account_set_id))
+                else:
+                    # 插入统计原始数据
+                    # 柠檬云库获取某账套最早新增凭证时间
+                    sql2 = ecai_stat_sql.sql_ecai_stat2
+                    cur_list, cur_desc, cur_rows, dict_list = conn_lemonacc.exec_select(sql2, args)
+                    # logger.info(u'查询%d条记录！' % cur_rows)
+                    if dict_list:
+                        i['inputFirstVouTime'] = dict_list[0]['CREATED_DATE']
+                    # 柠檬云库获取某账套最后动账时间
+                    sql3 = ecai_stat_sql.sql_ecai_stat3
+                    cur_list, cur_desc, cur_rows, dict_list = conn_lemonacc.exec_select(sql3, args)
+                    # logger.info(u'查询%d条记录！' % cur_rows)
+                    if dict_list:
+                        i['updateLastVouTime'] = dict_list[0]['MODIFIED_DATE']
+                    # 生成insert sql
+                    columns = i.keys()
+                    insert_sql_part = "INSERT INTO %s (%s) VALUES (" % ('stat_customer_detail', ', '.join(columns))
+                    for j in range(len(columns)):
+                        if j == len(columns) - 1:
+                            if i[columns[j]] is None:
+                                insert_sql_line_tmp = insert_sql_part + "NULL"
+                            else:
+                                insert_sql_line_tmp = insert_sql_part + "'%s'" % i[columns[j]]
+                        else:
+                            if i[columns[j]] is None:
+                                insert_sql_line_tmp = insert_sql_part + "NULL, "
+                            else:
+                                insert_sql_line_tmp = insert_sql_part + "'%s', " % i[columns[j]]
+                        insert_sql_part = insert_sql_line_tmp
+                    insert_sql = insert_sql_part + ");\n"
+                    # 插入统计原始数据
+                    cur_rows = conn_ecai_prod.exec_non_select(insert_sql, args=())
+                    logger.info(u'新增%d行统计原始数据！AS_ID:%s' % (cur_rows, account_set_id))
+            else:
+                pass
+        data = {'rtn': "00", 'msg': "统计易财原始数据成功"}
+    except Exception as e:
+        logger.info(e)
+        data = {'rtn': '99', 'msg': u'统计易财原始数据失败:' + str(e)}
+    logger.info(json.dumps(data, encoding='utf-8', ensure_ascii=False))

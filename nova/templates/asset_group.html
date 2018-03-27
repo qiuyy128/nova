@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}服务器组列表{% endblock %}
+{% block content %}
+    {#    <div class="container col-sm-8 col-sm-offset-2 col-md-10 col-md-offset-2 main">#}
+    <div class="container col-sm-8 col-md-12">
+        <div class="col-md-offset-1 console-instance-head clearfix">
+            <div class="pull-left">
+                <h3><span>服务器组</span></h3>
+            </div>
+        </div>
+
+        <div class="col-md-offset-1 margin-top-1">
+            <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                   id="dataTables-asset">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>主机组</th>
+                    <th>备注</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for asset_group in asset_groups %}
+                    <tr class="gradeX">
+                        <td>{{ asset_group.id }}</td>
+                        <td>{{ asset_group.name }}</td>
+                        <td>
+                            <div style="width: 200px;word-wrap: break-word;overflow-y:hidden;white-space:nowrap">
+                                {{ asset_group.comment }}
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#dataTables-asset').DataTable({
+                responsive: true,
+                "aaSorting": [
+                    [1, "desc"]
+                ],
+                language: {
+                    "sProcessing": "处理中...",
+                    "sLengthMenu": "显示 _MENU_ 项结果",
+                    "sZeroRecords": "没有匹配结果",
+                    "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+                    "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+                    "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+                    "sInfoPostFix": "",
+                    "sSearch": "搜索:",
+                    "sUrl": "",
+                    "sEmptyTable": "表中数据为空",
+                    "sLoadingRecords": "载入中...",
+                    "sInfoThousands": ",",
+                    "oPaginate": {
+                        "sFirst": "首页",
+                        "sPrevious": "上页",
+                        "sNext": "下页",
+                        "sLast": "末页"
+                    },
+                    "oAria": {
+                        "sSortAscending": ": 以升序排列此列",
+                        "sSortDescending": ": 以降序排列此列"
+                    }
+                }
+            });
+        });
+    </script>
+
+{% endblock %}

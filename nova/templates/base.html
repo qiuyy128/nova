@@ -85,7 +85,7 @@
                                aria-haspopup="true"
                                aria-expanded="false">资产管理<span class="caret"></span></a>
                             <ul class="dropdown-menu">
-                                <li class="group"><a href="#">查看资产组</a></li>
+                                <li class="group"><a href="{% url 'asset_group' %}">查看资产组</a></li>
                                 <li class="asset"><a href="{% url 'asset' %}">查看资产<span
                                         class="label label-info pull-right"></span></a>
                                 </li>
@@ -149,6 +149,7 @@
                                aria-expanded="false">文件管理<span class="caret"></span></a>
                             <ul class="dropdown-menu">
                                 <li><a href="{% url 'upload' %}">文件上传</a></li>
+                                <li><a href="{% url 'download' %}">文件下载</a></li>
                                 <li><a href="{% url 'upload_file_list' %}">文件列表</a></li>
                             </ul>
                         </li>

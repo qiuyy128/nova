@@ -40,6 +40,11 @@ import urllib2, json
 from bson import json_util
 import string
 import decimal
+from .run_script import RunCmd
+from django.http import StreamingHttpResponse
+from django.http import FileResponse
+import zipfile
+import shutil
 
 import sys
 import configmodule
@@ -201,6 +206,15 @@ def console(request):
 
 @login_required()
 @permission_required('nova.access_asset', raise_exception=True)
+def asset_group(request):
+    username = request.user.username
+    asset_groups = AssetGroup.objects.all()
+    context = {'username': username, 'asset_groups': asset_groups}
+    return render(request, 'asset_group.html', context)
+
+
+@login_required()
+@permission_required('nova.access_asset', raise_exception=True)
 def asset(request):
     username = request.user.username
     assets = get_user_asset(request)
@@ -299,6 +313,23 @@ def get_max_port(request):
     app_host = AppHost.objects.filter(name__icontains=app_type).aggregate(max_port=Max('port'))
     app_host['max_port'] = int(app_host['max_port']) + 1
     return HttpResponse(json.dumps(app_host), content_type='application/json')
+
+
+@login_required
+def get_asset(request):
+    env = request.GET['env']
+    asset_ip = request.GET.get('asset_ip')
+    # asset = get_object_or_404(Asset, configs=configs)
+    if asset_ip:
+        assets = Asset.objects.filter(env__icontains=env, ip__icontains=asset_ip)
+    else:
+        assets = Asset.objects.filter(env__icontains=env)
+    try:
+        data = serializers.serialize('json', assets, fields='ip')
+    except Exception as e:
+        print e
+    # logger.info(data)
+    return HttpResponse(data, content_type='application/json')
 
 
 @csrf_exempt
@@ -1788,3 +1819,65 @@ def get_fpcy_request_area(request):
 def fpcy_request_area(request):
     return render(request, 'fpcy_request_area.html')
 
+
+def file_iterator(file_name, chunk_size=1024):
+    with open(file_name) as f:
+        while True:
+            c = f.read(chunk_size)
+            if c:
+                yield c
+            else:
+                break
+
+
+@login_required
+@csrf_exempt
+@permission_required('nova.access_file', raise_exception=True)
+def download(request):
+    logger.info("User is:%s;Request is:download file!" % request.user.username)
+    if User.has_perm(request.user, 'nova.access_file'):
+        if request.method == 'POST':
+            assets = request.POST.getlist('assets_name', '')
+            file_path = request.POST.get('file_path')
+            if 'webapps' in file_path:
+                data = {'msg': u'下载文件包含敏感文件，请联系管理员！'}
+                return render(request, 'message.html', data)
+            local_base_path = '/tmp'
+            time_now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            download_path = os.path.join(local_base_path, time_now)
+            if os.path.exists(download_path):
+                pass
+            else:
+                os.makedirs('%s' % download_path)
+            for i in assets:
+                asset = Asset.objects.get(ip=i)
+                local_path = os.path.join(download_path, asset.ip)
+                os.makedirs('%s' % local_path)
+                # 下载文件
+                try:
+                    RunCmd(host=asset.ip, port=asset.port, username=asset.username,
+                           password=asset.password).download_file(file_path, local_path)
+                except Exception as e:
+                    logger.info(e)
+            tmp_dir_name = os.path.basename(download_path)
+            file_zip = local_base_path + '/' + tmp_dir_name + '.zip'
+            zf = zipfile.ZipFile(file_zip, "w", zipfile.ZIP_DEFLATED)
+            for dirname, subdirs, files in os.walk(download_path):
+                zf.write(dirname)
+                for filename in files:
+                    zf.write(os.path.join(dirname, filename))
+            zf.close()
+            shutil.rmtree(download_path)
+            file_size = os.path.getsize(file_zip)
+            if file_size >= 200 * 1024 * 1024:
+                data = {'msg': u'压缩文件大小超过200MB, 请联系管理员！'}
+                return render(request, 'message.html', data)
+            else:
+                response = StreamingHttpResponse(file_iterator(file_zip))
+                response['Content-Type'] = 'application/octet-stream'
+                response['Content-Disposition'] = 'attachment;filename="%s.zip"' % tmp_dir_name
+                return response
+        if request.method == 'GET':
+            return render(request, 'download.html')
+    else:
+        return HttpResponseRedirect(reverse('deny'))

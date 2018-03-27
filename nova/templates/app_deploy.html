@@ -119,7 +119,7 @@
                                         {#                                        <span class="glyphicon glyphicon-search input-search-icon"></span>#}
                                     </div>
                                     <select class="form-control" multiple="multiple" id="id_assets"
-                                            name="app_assets"
+                                            name="app_assets" style="height: 15em;"
                                             required onclick="select_asset()">
                                         {% for asset in assets %}
                                             <option value="{{ asset.ip }}">{{ asset.ip }}</option>
@@ -132,12 +132,12 @@
                                 <!-- 移如或者移出按钮的行为 -->
                                 <div class="col-sm-2 clearfix" style="width: 40px">
                                     <button type="button" class="btn btn-primary btn-sm"
-                                            style="position: absolute; left: 50%; margin-left: -19px; top: 55px"
+                                            style="position: absolute; left: 50%; margin-left: -19px; top: 95px"
                                             id="moveRight" disabled="disabled">
                                         <i class="glyphicon glyphicon-arrow-right"></i>
                                     </button>
                                     <button type="button" class="btn btn-primary btn-sm"
-                                            style="position: absolute; left: 50%; margin-left: -19px; top: 90px"
+                                            style="position: absolute; left: 50%; margin-left: -19px; top: 130px"
                                             id="moveLeft" disabled="disabled">
                                         <i class="glyphicon glyphicon-arrow-left"></i>
                                     </button>
@@ -157,7 +157,7 @@
                                     </div>
 
                                     <select class="form-control" multiple="multiple" id="id_assets_select"
-                                            name="app_asset_name"
+                                            name="app_asset_name" style="height: 15em;"
                                             required onclick="cancel_asset()">
                                     </select>
                                 </div>

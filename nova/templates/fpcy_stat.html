@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}发票查验产品统计分析{% endblock %}
 {% block formcss %}
+    <script src="{% static 'js/calendar.js' %}" type="text/javascript" language="javascript"></script>
     <style type="text/css">
         {#        th, td {#}
         {#            text-align: center; /** 设置水平方向居中 */#}
@@ -47,10 +49,13 @@
                 </form>
                 <form class="form-inline" name="searchBar">
                     <div class="col-sm-3 form-group">
-                        <label class="control-label"><span>请输入统计日期：</span></label>
-                        <input type="text" id="id_start_time" name="start_time"
-                               class="form-control" placeholder="格式:2018-01-01">
+                        <label class="control-label"><span>统计日期：</span></label>
+                        <input type="text" id="id_start_time" name="start_time" class="form-control"
+                               onclick="SetDate(this,'yyyy-MM-dd')" readonly="readonly">
                         </input>
+                        {#                        <input type="text" id="id_start_time" name="start_time"#}
+                        {#                               class="form-control" placeholder="格式:2018-01-01">#}
+                        {#                        </input>#}
                     </div>
                     <div class="col-sm-3 form-group">
                         <input type="button" class="btn btn-default"

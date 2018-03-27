@@ -144,19 +144,25 @@ class RunCmd(object):
             sftp = paramiko.SFTPClient.from_transport(t)
             print '#########################################'
             print 'Begin download file %s:%s to %s.' % (self.__host, remote_path, local_path)
-            local_file = os.path.split(remote_path)[1]
+            file_name = os.path.split(remote_path)[1]
+            local_file = os.path.join(local_path, file_name)
             try:
                 sftp.stat(remote_path)
             except IOError:
                 print("remote file %s not exist." % remote_path)
-            try:
-                sftp.get(remote_path, local_path)
-                print 'Download file %s:% to %s success.' % (self.__host, remote_path, local_path)
-                return u'下载成功!'
-            except Exception as e:
-                print u"下载失败!"
-                logger.info(e)
-                return u'下载失败!'
-            finally:
-                t.close()
-                print '#########################################'
+
+            sftp.get(remote_path, local_file)
+            return local_file
+
+            # try:
+            #     sftp.get(remote_path, local_file)
+            #     print 'Download file %s:% to %s success.' % (self.__host, remote_path, local_file)
+            #     logger.info(u'下载成功!')
+            #     return local_file
+            # except Exception as e:
+            #     logger.info(e)
+            #     logger.info(u'下载失败!')
+            #     return local_file
+            # finally:
+            #     t.close()
+            #     print '#########################################'

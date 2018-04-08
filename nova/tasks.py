@@ -92,12 +92,16 @@ def edit_ant_build_conf(file_name, app_name):
         frame_strings = ""
         add_jar_strings = ""
         jar_names = sorted(os.listdir(app_name))
+        # 打包qxgl时'adp-security'需要放在'adp-sms'后面
+        if 'adp-security' in jar_names:
+            jar_names.remove('adp-security')
+            jar_names.append('adp-security')
         # dzpt打包时adp-bill需要放在最前面
         if 'adp-bill' in jar_names:
             jar_names.remove('adp-bill')
             jar_names.insert(0, 'adp-bill')
         for jar_name in jar_names:
-            if jar_name.find('biz-') == 0:
+            if jar_name.find('biz-') == 0 or jar_name.find('mbiz-') == 0:
                 add_xml_strings = """				<javac srcdir="${basedir}/%s/src/main/java" destdir="${deploy}/%s/classes" debug="true" debuglevel="lines,source" encoding="UTF-8">
 					<classpath refid="project.frame"/>
 					<classpath refid="project"/>
@@ -173,7 +177,7 @@ def edit_ant_build_conf(file_name, app_name):
 				\n""" % (jar_name, jar_name, jar_name, jar_name, jar_name)
                     adp_strings = adp_strings + add_xml_strings
 
-            if jar_name.find('adp-') == 0 or jar_name.find('biz-') == 0:
+            if jar_name.find('adp-') == 0 or jar_name.find('biz-') == 0 or jar_name.find('mbiz-') == 0:
                 add_xml_strings = """				<mkdir dir="${deploy}/%s"/>
 				<mkdir dir="${deploy}/%s/classes"/>\n""" % (jar_name, jar_name)
                 add_jar_strings = add_jar_strings + add_xml_strings
@@ -1376,7 +1380,6 @@ def query_fpcy_every_day():
         logger.info(args)
         cur_list, cur_desc, cur_rows, dict_list = conn.exec_select(fpcy_sql.sql_sjcyfwztb, args)
         logger.info(u'查询%d条记录！' % cur_rows)
-        data_sql_sjcyfwztbs = cur_list
         data_sql_sjcyfwztbs = list(cur_list)
         for j in range(len(data_sql_sjcyfwztbs)):
             if type(data_sql_sjcyfwztbs[j]) != list:
@@ -1448,6 +1451,30 @@ def query_fpcy_every_day():
         except Exception as e:
             logger.info(e)
         # logger.info(data_sql_sjcyqqxq)
+
+        args = (begin_time, end_time, begin_time, end_time, begin_time, end_time, begin_time, end_time,
+                begin_time, end_time, begin_time, end_time)
+        logger.info(u'百望查验服务状态表:')
+        # logger.info(fpcy_sql.sql_bwcyfwztb)
+        logger.info(args)
+        cur_list, cur_desc, cur_rows, dict_list = conn.exec_select(fpcy_sql.sql_bwcyfwztb, args)
+        logger.info(u'查询%d条记录！' % cur_rows)
+        data_sql_bwcyfwztbs = cur_list
+        # 亦可以通过程序处理'（'
+        # data_sql_bwcyfwztbs = list(cur_list)
+        # for j in range(len(data_sql_bwcyfwztbs)):
+        #     if type(data_sql_bwcyfwztbs[j]) != list:
+        #         data_sql_bwcyfwztbs[j] = list(data_sql_bwcyfwztbs[j])
+        #     data_sql_bwcyfwztb = data_sql_bwcyfwztbs[j]
+        #     # 可能出现invoiceName为空的情况，需要判断.
+        #     if data_sql_bwcyfwztb[0] is not None:
+        #         data_sql_bwcyfwztb[0] = data_sql_bwcyfwztb[0].split('（')[0]
+        try:
+            collection = db_mongo['fpcy_bwcyfwztb']
+            data_sql_bwcyfwztbs = save_data_to_mongodb(data_sql_bwcyfwztbs, stat_day, collection, with_sum='Y')
+        except Exception as e:
+            logger.info(e)
+            # logger.info(data_sql_bwcyfwztbs)
 
         # 统计完成发送邮件
         try:

@@ -441,6 +441,39 @@
                     </tbody>
                 </table>
             </div>
+
+        <div class="margin-top-1" id="table">
+                <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                       id="dataTables-sql">
+                    <thead>
+                    <tr>
+                        <th colspan="12" style="background-color: lawngreen;font-size: 24px;">百望查验服务状态表</th>
+                    <tr>
+                        <th>税务局</th>
+                        <th>获取发票请求数</th>
+                        <th>查票反馈成功次数（<=10秒）</th>
+                        <th>查票反馈成功率（<=10秒）</th>
+                        <th>5秒内反馈次数</th>
+                        <th>5秒内反馈成功率</th>
+                        <th>有效反馈明细次数（<=60s(入库)）</th>
+                        <th>有效反馈明细次数（<=60s(百望查询)）</th>
+                        <th>有效反馈明细次数（<=60s(百望查询)）成功率</th>
+                        <th>有效反馈明细次数（<=5s(百望查询)）</th>
+                        <th>有效反馈明细次数（<=5s(百望查询)）成功率</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for record in data_sql_bwcyfwztb %}
+                        <tr class="gradeX">
+                            {% for i in record %}
+                                <td>{{ i }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
         </div>
     </div>
 {% endblock %}

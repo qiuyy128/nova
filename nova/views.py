@@ -118,7 +118,8 @@ def Login(request):
         form = UserForm()
         full_url = request.get_full_path()
         if full_url.find('?next=') != -1:
-            next = full_url.split('?next=')[1]
+            next = full_url.split('?next=')[1].replace('%3F', '?').replace('%3D', '=').replace('%26', '&')
+            logger.info(next)
         else:
             next = '/nova/'
         return render(request, 'login.html', {'form': form, 'next': next})
@@ -731,10 +732,11 @@ def config_file_editor(request, app_name, env, file_path, file_name):
             file_name = 'spring-config-ieds.xml'
         app_config_file = os.path.join(app_config_files_path, urllib.url2pathname(file_path), file_name)
         logger.info("Edit app_config_file:%s" % app_config_file)
-        if (file_name == 'config-oss.properties' or file_name == 'config-mysql.properties' \
-                    or file_name == 'quartz.properties' or file_name == 'config-sqlserver.properties' \
-                    or file_name == 'config-ocr.properties') and env == 'product':
-            data = {'msg': '暂不提供查看，请联系管理员查看，谢谢 ！'}
+        if (file_name == 'config-oss.properties' or file_name == 'config-mysql.properties'
+            or file_name == 'quartz.properties' or file_name == 'config-sqlserver.properties'
+            or file_name == 'config-ocr.properties' or file_name == 'config-sms.properties') \
+                and env == 'product' and not User.has_perm(request.user, 'nova.access_secret_file'):
+            data = {'msg': '没有权限查看涉密配置文件，请联系管理员查看！'}
             return render(request, 'message.html', data)
         else:
             try:
@@ -1750,6 +1752,14 @@ def fpcy_stat(request):
             data_sql_sjcyqqxq = query_fpcy_from_mongodb(begin_time, end_time, collection)
         except Exception as e:
             logger.info(e)
+
+        logger.info(u'百望查验服务状态表:')
+        try:
+            collection = db_mongo['fpcy_bwcyfwztb']
+            data_sql_bwcyfwztb = query_fpcy_from_mongodb(begin_time, end_time, collection)
+        except Exception as e:
+            logger.info(e)
+
     except Exception as e:
         data = {'rtn': '99', 'msg': u'查询错误:' + str(e)}
         logger.info(data)

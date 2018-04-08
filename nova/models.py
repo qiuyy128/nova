@@ -360,4 +360,5 @@ class Permission(models.Model):
             ('exec_sql', '执行SQL exec_sql'),
             ('upload_oss_file', '考试报名OSS附件上传 upload_oss_file'),
             ('exec_tax_agent_sql', '执行考试报名SQL exec_tax_agent_sql'),
+            ('access_secret_file', '查看涉密配置文件 access_secret_file'),
         )

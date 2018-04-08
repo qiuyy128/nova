@@ -491,3 +491,68 @@ WHERE
 GROUP BY
  invoicefalseState
 """
+
+# 百望查验服务状态表
+sql_bwcyfwztb = """
+SELECT SUBSTRING_INDEX(a.invoiceName,'（',1) invoiceName,sum(a.cnt1) a1,sum(a.cnt2) a2,CONCAT(ROUND(sum(a.cnt2)/sum(a.cnt1)*100,2),'%%') a3,
+sum(a.cnt3) a4,CONCAT(ROUND(sum(a.cnt3)/sum(a.cnt1)*100,2),'%%') a5,sum(a.cnt4) a6,sum(a.cnt5) a7,
+CONCAT(ROUND(sum(a.cnt5)/sum(a.cnt1)*100,2),'%%') a8,sum(a.cnt6) a9,CONCAT(ROUND(sum(a.cnt6)/sum(a.cnt1)*100,2),'%%') a10
+from (
+-- 获取发票请求数
+SELECT q.invoiceName,SUM(q.a) cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6 FROM (
+  SELECT count(1) as a,SUBSTR(invoiceName,1,6) invoiceName from fpcy_baiwang_request_log
+  WHERE   inputTime  BETWEEN %s AND %s
+  and requestType='cy'
+  GROUP BY invoiceName
+) q
+ GROUP BY  q.invoiceName
+UNION
+-- 有效反馈次数（<=10秒）
+SELECT  q.invoiceName,0 cnt1,SUM(a) cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6  FROM (
+ SELECT count(1) as a,SUBSTR(invoiceName,1,6) invoiceName from fpcy_baiwang_request_log
+  WHERE  inputTime  BETWEEN %s AND %s
+  and requestType='cy' and errorCode in('0','406','409') and CAST(requestTime AS UNSIGNED)/1000<=10
+  GROUP BY invoiceName
+) q
+ GROUP BY  q.invoiceName
+UNION
+-- 有效反馈次数（<=5秒）
+SELECT  q.invoiceName,0 cnt1,0 cnt2,SUM(a) cnt3,0 cnt4,0 cnt5,0 cnt6  FROM (
+ SELECT count(1) as a,SUBSTR(invoiceName,1,6) invoiceName from fpcy_baiwang_request_log
+WHERE inputTime  BETWEEN %s AND %s
+  and requestType='cy' and errorCode in('0','406','409') and CAST(requestTime AS UNSIGNED)/1000<=5
+ GROUP BY invoiceName
+) q
+ GROUP BY  q.invoiceName
+UNION
+
+-- 有效反馈明细次数（<=60s(入库)）
+SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,SUM(a) cnt4,0 cnt5,0 cnt6 FROM (
+  SELECT count(1) as a,SUBSTR(qy,1,6) invoiceName from cy_cyrz
+WHERE cyrq BETWEEN %s AND %s
+   and CAST(useTime AS UNSIGNED)/1000<=60
+ GROUP BY invoiceName
+) q
+ GROUP BY  q.invoiceName
+UNION
+-- 有效反馈明细次数（<=60s(百望查询)）
+SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,SUM(a) cnt5,0 cnt6  FROM (
+ SELECT count(1) as a,SUBSTR(invoiceName,1,6) invoiceName from fpcy_baiwang_request_log
+WHERE inputTime  BETWEEN %s AND %s
+  and requestType='cy' and errorCode ='0' and CAST(requestTime AS UNSIGNED)/1000<=60 and errorCode='0'
+ GROUP BY invoiceName
+) q
+ GROUP BY  q.invoiceName
+UNION
+-- 有效反馈明细次数（<=5s(百望查询)）
+SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,SUM(a) cnt6  FROM (
+ SELECT count(1) as a,SUBSTR(invoiceName,1,6) invoiceName from fpcy_baiwang_request_log
+WHERE inputTime  BETWEEN %s AND %s
+  and requestType='cy' and errorCode ='0'  and CAST(requestTime AS UNSIGNED)/1000<=5 and errorCode='0'
+ GROUP BY invoiceName
+) q
+ GROUP BY  q.invoiceName
+) a
+GROUP BY  a.invoiceName
+ order by a1 DESC
+""".encode('utf-8')

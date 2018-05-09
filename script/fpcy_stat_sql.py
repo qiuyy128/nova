@@ -2,12 +2,20 @@
 # -*- coding: utf-8 -*-
 
 # 发票入库情况
-sql_fprkqk1 = "SELECT count(1) FROM cy_cyrz"
-sql_fprkqk2 = "SELECT count(1) FROM cy_cyrz WHERE qy like %s".encode('utf-8')
-sql_fprkqk3 = "SELECT count(1) FROM cy_cyrz WHERE qy not like %s".encode('utf-8')
-sql_fprkqk4 = "SELECT count(1) FROM cy_cyrz where cyrq BETWEEN %s and %s"
-sql_fprkqk5 = "SELECT count(1) FROM cy_cyrz where cyrq BETWEEN %s and %s and qy like %s".encode('utf-8')
-sql_fprkqk6 = "SELECT count(1) FROM cy_cyrz where cyrq BETWEEN %s and %s and qy not like %s".encode('utf-8')
+# sql_fprkqk1 = "SELECT count(1) FROM cy_cyrz"
+# sql_fprkqk2 = "SELECT count(1) FROM cy_cyrz WHERE qy like %s".encode('utf-8')
+# sql_fprkqk3 = "SELECT count(1) FROM cy_cyrz WHERE qy not like %s".encode('utf-8')
+# sql_fprkqk4 = "SELECT count(1) FROM cy_cyrz where cyrq BETWEEN %s and %s"
+# sql_fprkqk5 = "SELECT count(1) FROM cy_cyrz where cyrq BETWEEN %s and %s and qy like %s".encode('utf-8')
+# sql_fprkqk6 = "SELECT count(1) FROM cy_cyrz where cyrq BETWEEN %s and %s and qy not like %s".encode('utf-8')
+sql_fprkqk= """
+SELECT CASE WHEN a.cyfs='system' THEN '乐税' WHEN a.cyfs='baiwang' THEN '百望' END cyfs,
+IFNULL(a.cnt1,0) cnt1,IFNULL(b.cnt2,0) cnt2,IFNULL(c.cnt3,0) cnt3 FROM
+(SELECT cyfs,count(1) cnt1 FROM cy_cyrz where cyrq BETWEEN %s and %s group by cyfs)a
+LEFT JOIN (SELECT cyfs,count(1) cnt2 FROM cy_cyrz WHERE qy like %s and cyrq BETWEEN %s and %s  group by cyfs)b on a.cyfs=b.cyfs
+LEFT JOIN (SELECT cyfs,count(1) cnt3 FROM cy_cyrz WHERE qy not like %s and cyrq BETWEEN %s and %s group by cyfs)c on a.cyfs=c.cyfs
+""".encode('utf-8')
+
 
 # 营收情况
 sql_ysqk_jfcs = """
@@ -177,13 +185,13 @@ and comeFromCode='6'
 GROUP BY customerId
 UNION
 -- 有效请求次数
-select 0 cnt1,count(1) cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6,0 cnt7,customerId from vat_requeststatistics_log where requestStatus not in('203','219','221','211','230','240') and
+select 0 cnt1,count(1) cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6,0 cnt7,customerId from vat_requeststatistics_log where requestStatus not in('203','219','210','221','211','230','240') and
  inputTime BETWEEN %s AND %s
 and comeFromCode='6'
 GROUP BY customerId
 UNION
 -- 有效反馈次数
-select 0 cnt1,0 cnt2,count(1) cnt3,0 cnt4,0 cnt5,0 cnt6,0 cnt7,customerId from vat_requeststatistics_log where requestStatus not in('203','219','221','213','211','230','240') and
+select 0 cnt1,0 cnt2,count(1) cnt3,0 cnt4,0 cnt5,0 cnt6,0 cnt7,customerId from vat_requeststatistics_log where requestStatus not in('203','219','210','221','213','211','230','240') and
  inputTime BETWEEN %s AND %s
 and comeFromCode='6'
 GROUP BY customerId
@@ -223,10 +231,10 @@ sum(a.cnt6) a10,sum(a.cnt7) a11 from (
 -- 请求次数
 SELECT q.invoiceName,SUM(q.a) cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6,0 cnt7 FROM (
  SELECT count(1) as a,SUBSTR(qy,1,6) invoiceName from cy_cwrz WHERE cyrq BETWEEN %s AND %s
- GROUP BY invoiceName
+ and cyfs='system' GROUP BY invoiceName
 UNION ALL
-  SELECT count(1) as a,SUBSTR(qy,1,6) invoiceName from cy_cyrz WHERE cyrq BETWEEN %s AND %s
- GROUP BY invoiceName
+SELECT count(1) as a,SUBSTR(qy,1,6) invoiceName from cy_cyrz WHERE cyrq BETWEEN %s AND %s
+ and cyfs='system' GROUP BY invoiceName
 ) q
 GROUP BY q.invoiceName
 UNION
@@ -234,10 +242,11 @@ UNION
 SELECT  q.invoiceName,0 cnt1,SUM(a) cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6,0 cnt7 FROM (
  SELECT count(1) as a,SUBSTR(qy,1,6) invoiceName from cy_cwrz  WHERE cyrq BETWEEN %s AND %s
  and invoicefalseState not in('203','210','212','211','219','221','213','231','232') and CAST(useTime AS UNSIGNED)/1000<=60
+and cyfs='system'
  GROUP BY invoiceName
  UNION ALL
   SELECT count(1) as a,SUBSTR(qy,1,6) invoiceName from cy_cyrz WHERE cyrq BETWEEN %s AND %s
-   and CAST(useTime AS UNSIGNED)/1000<=60
+   and CAST(useTime AS UNSIGNED)/1000<=60 and cyfs='system'
  GROUP BY invoiceName
 ) q
  GROUP BY q.invoiceName
@@ -246,18 +255,18 @@ UNION
 SELECT  q.invoiceName,0 cnt1,0 cnt2,SUM(a) cnt3,0 cnt4,0 cnt5,0 cnt6,0 cnt7 FROM (
  SELECT count(1) as a,SUBSTR(qy,1,6) invoiceName from cy_cwrz  WHERE cyrq BETWEEN %s AND %s
  and invoicefalseState not in('203','210','212','211','219','221','213','231','232') and CAST(useTime AS UNSIGNED)/1000<=10
- GROUP BY invoiceName
+ and cyfs='system' GROUP BY invoiceName
  UNION ALL
   SELECT count(1) as a,SUBSTR(qy,1,6) invoiceName from cy_cyrz WHERE cyrq BETWEEN %s AND %s
    and CAST(useTime AS UNSIGNED)/1000<=10
- GROUP BY invoiceName
+ and cyfs='system' GROUP BY invoiceName
 ) q
  GROUP BY  q.invoiceName
 UNION
 -- 反馈发票明细次数（<=60秒）
 SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,SUM(a) cnt4,0 cnt5,0 cnt6,0 cnt7 FROM (
   SELECT count(1) as a,SUBSTR(qy,1,6) invoiceName from cy_cyrz WHERE cyrq BETWEEN %s AND %s
-   and CAST(useTime AS UNSIGNED)/1000<=60
+   and CAST(useTime AS UNSIGNED)/1000<=60 and cyfs='system'
  GROUP BY invoiceName
 ) q
  GROUP BY  q.invoiceName
@@ -265,7 +274,7 @@ UNION
 -- 反馈发票明细次数（<=10秒）
 SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,SUM(a) cnt5,0 cnt6,0 cnt7 FROM (
   SELECT count(1) as a,SUBSTR(qy,1,6) invoiceName from cy_cyrz WHERE cyrq BETWEEN %s AND %s
-   and CAST(useTime AS UNSIGNED)/1000<=10
+   and CAST(useTime AS UNSIGNED)/1000<=10 and cyfs='system'
  GROUP BY invoiceName
 ) q
  GROUP BY  q.invoiceName
@@ -273,7 +282,7 @@ UNION
 -- 反馈发票明细张数
 SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,SUM(a) cnt6,0 cnt7 FROM (
   SELECT count(1) as a,SUBSTR(qy,1,6) invoiceName from cy_cyrz WHERE cyrq BETWEEN %s AND %s
- GROUP BY invoiceName
+ and cyfs='system' GROUP BY invoiceName
 ) q
  GROUP BY  q.invoiceName
 UNION
@@ -288,7 +297,7 @@ SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6,SUM(a) cnt7 FROM
 GROUP BY  a.invoiceName order by a1 DESC
 """.encode('utf-8')
 
-##税局查验服务状态表
+# 税局查验服务状态表
 sql_sjcyfwztb = """
 SELECT a.invoiceName,sum(a.cnt1) a1,sum(a.cnt2) a2,CONCAT(ROUND(sum(a.cnt2)/sum(a.cnt1)*100,2),'%%') a3,sum(a.cnt3) a4,CONCAT(ROUND(sum(a.cnt3)/sum(a.cnt1)*100,2),'%%') a5,sum(a.cnt4) a6,
 sum(a.cnt5) a7,CONCAT(ROUND(sum(a.cnt5)/sum(a.cnt4)*100,2),'%%') a8,sum(a.cnt6) a9,CONCAT(ROUND(sum(a.cnt6)/sum(a.cnt4)*100,2),'%%') a10,
@@ -346,7 +355,7 @@ SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,SUM(a) cnt6,0 cnt7,0 cn
 UNION
 -- 7打码次数
 SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6,SUM(a) cnt7,0 cnt8,0 cnt9,0 cnt10,0 cnt11 FROM (
-  SELECT count(1) as a,SUBSTR(b.invoiceName,1,6) invoiceName from ocr_request_log a
+  SELECT count(DISTINCT(a.id)) as a,SUBSTR(b.invoiceName,1,6) invoiceName from ocr_request_log a
   LEFT JOIN fpcy_request_log b on b.requestId=a.requestId
  WHERE a.inputTime BETWEEN %s AND %s
  GROUP BY b.invoiceName
@@ -355,7 +364,7 @@ SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6,SUM(a) cnt7,0 cn
 UNION
 -- 8打码成功响应次数（<=6秒）
 SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6,0 cnt7,SUM(a) cnt8,0 cnt9,0 cnt10,0 cnt11 FROM (
-  SELECT count(1) as a,SUBSTR(b.invoiceName,1,6) invoiceName from ocr_request_log a
+  SELECT count(DISTINCT(a.id)) as a,SUBSTR(b.invoiceName,1,6) invoiceName from ocr_request_log a
   LEFT JOIN fpcy_request_log b on b.requestId=a.requestId
  WHERE a.inputTime BETWEEN %s AND %s
  and CAST(dateLength AS UNSIGNED)/1000<=6
@@ -365,7 +374,7 @@ SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6,0 cnt7,SUM(a) cn
 UNION
 -- 9打码成功次数（已使用）
 SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6,0 cnt7,0 cnt8,SUM(a) cnt9,0 cnt10,0 cnt11 FROM (
-  SELECT count(1) as a,SUBSTR(b.invoiceName,1,6) invoiceName from ocr_request_log a
+  SELECT count(DISTINCT(a.id)) as a,SUBSTR(b.invoiceName,1,6) invoiceName from ocr_request_log a
   LEFT JOIN fpcy_request_log b on b.requestId=a.requestId
  WHERE a.inputTime BETWEEN %s AND %s
  AND isRight is not null
@@ -375,7 +384,7 @@ SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6,0 cnt7,0 cnt8,SU
 UNION
 -- 10 打码成功次数（未使用）
 SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6,0 cnt7,0 cnt8,0 cnt9,SUM(a) cnt10,0 cnt11 FROM (
-  SELECT count(1) as a,SUBSTR(b.invoiceName,1,6) invoiceName from ocr_request_log a
+  SELECT count(DISTINCT(a.id)) as a,SUBSTR(b.invoiceName,1,6) invoiceName from ocr_request_log a
   LEFT JOIN fpcy_request_log b on b.requestId=a.requestId
  WHERE a.inputTime BETWEEN %s AND %s
  AND isRight is null
@@ -385,7 +394,7 @@ SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6,0 cnt7,0 cnt8,0 
 UNION
 -- 11 打码正确次数
 SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6,0 cnt7,0 cnt8,0 cnt9,0 cnt10,SUM(a) cnt11 FROM (
-  SELECT count(1) as a,SUBSTR(b.invoiceName,1,6) invoiceName from ocr_request_log a
+  SELECT count(DISTINCT(a.id)) as a,SUBSTR(b.invoiceName,1,6) invoiceName from ocr_request_log a
   LEFT JOIN fpcy_request_log b on b.requestId=a.requestId
  WHERE a.inputTime BETWEEN %s AND %s
  AND isRight ='Y'
@@ -494,9 +503,9 @@ GROUP BY
 
 # 百望查验服务状态表
 sql_bwcyfwztb = """
-SELECT SUBSTRING_INDEX(a.invoiceName,'（',1) invoiceName,sum(a.cnt1) a1,sum(a.cnt2) a2,CONCAT(ROUND(sum(a.cnt2)/sum(a.cnt1)*100,2),'%%') a3,
-sum(a.cnt3) a4,CONCAT(ROUND(sum(a.cnt3)/sum(a.cnt1)*100,2),'%%') a5,sum(a.cnt4) a6,sum(a.cnt5) a7,
-CONCAT(ROUND(sum(a.cnt5)/sum(a.cnt1)*100,2),'%%') a8,sum(a.cnt6) a9,CONCAT(ROUND(sum(a.cnt6)/sum(a.cnt1)*100,2),'%%') a10
+SELECT SUBSTRING_INDEX(a.invoiceName,'（',1) invoiceName,sum(a.cnt1) a1,sum(a.cnt2) a2,CONCAT(sum(a.cnt2)/sum(a.cnt1)*100,'%%') a3,
+sum(a.cnt3) a4,CONCAT(sum(a.cnt3)/sum(a.cnt1)*100,'%%') a5,sum(a.cnt4) a6,CONCAT(sum(a.cnt4)/sum(a.cnt1)*100,'%%') a7,
+sum(a.cnt5) a8,CONCAT(sum(a.cnt5)/sum(a.cnt1)*100,'%%') a9,sum(a.cnt6) a10,sum(a.cnt1) a11
 from (
 -- 获取发票请求数
 SELECT q.invoiceName,SUM(q.a) cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6 FROM (
@@ -506,53 +515,77 @@ SELECT q.invoiceName,SUM(q.a) cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6 FROM (
   GROUP BY invoiceName
 ) q
  GROUP BY  q.invoiceName
+
 UNION
--- 有效反馈次数（<=10秒）
+-- 有效反馈次数（<=60s(百望查询)）
 SELECT  q.invoiceName,0 cnt1,SUM(a) cnt2,0 cnt3,0 cnt4,0 cnt5,0 cnt6  FROM (
  SELECT count(1) as a,SUBSTR(invoiceName,1,6) invoiceName from fpcy_baiwang_request_log
-  WHERE  inputTime  BETWEEN %s AND %s
-  and requestType='cy' and errorCode in('0','406','409') and CAST(requestTime AS UNSIGNED)/1000<=10
-  GROUP BY invoiceName
-) q
- GROUP BY  q.invoiceName
-UNION
--- 有效反馈次数（<=5秒）
-SELECT  q.invoiceName,0 cnt1,0 cnt2,SUM(a) cnt3,0 cnt4,0 cnt5,0 cnt6  FROM (
- SELECT count(1) as a,SUBSTR(invoiceName,1,6) invoiceName from fpcy_baiwang_request_log
 WHERE inputTime  BETWEEN %s AND %s
-  and requestType='cy' and errorCode in('0','406','409') and CAST(requestTime AS UNSIGNED)/1000<=5
+  and requestType='cy' and errorCode in('0','406','409','416') and CAST(requestTime AS UNSIGNED)/1000<=60 and errorCode='0'
  GROUP BY invoiceName
 ) q
  GROUP BY  q.invoiceName
-UNION
 
--- 有效反馈明细次数（<=60s(入库)）
-SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,SUM(a) cnt4,0 cnt5,0 cnt6 FROM (
-  SELECT count(1) as a,SUBSTR(qy,1,6) invoiceName from cy_cyrz
-WHERE cyrq BETWEEN %s AND %s
-   and CAST(useTime AS UNSIGNED)/1000<=60
+UNION
+-- 有效反馈次数（<=10s(百望查询)）
+SELECT  q.invoiceName,0 cnt1,0 cnt2,SUM(a) cnt3,0 cnt4,0 cnt5,0 cnt6  FROM (
+ SELECT count(1) as a,SUBSTR(invoiceName,1,6) invoiceName from fpcy_baiwang_request_log
+WHERE inputTime  BETWEEN %s AND %s
+  and requestType='cy' and errorCode in('0','406','409','416') and CAST(requestTime AS UNSIGNED)/1000<=10 and errorCode='0'
  GROUP BY invoiceName
 ) q
  GROUP BY  q.invoiceName
 UNION
 -- 有效反馈明细次数（<=60s(百望查询)）
-SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,SUM(a) cnt5,0 cnt6  FROM (
+SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,SUM(a) cnt4,0 cnt5,0 cnt6  FROM (
  SELECT count(1) as a,SUBSTR(invoiceName,1,6) invoiceName from fpcy_baiwang_request_log
 WHERE inputTime  BETWEEN %s AND %s
   and requestType='cy' and errorCode ='0' and CAST(requestTime AS UNSIGNED)/1000<=60 and errorCode='0'
  GROUP BY invoiceName
 ) q
  GROUP BY  q.invoiceName
+
 UNION
--- 有效反馈明细次数（<=5s(百望查询)）
-SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,SUM(a) cnt6  FROM (
+-- 有效反馈明细次数（<=10s(百望查询)）
+SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,SUM(a) cnt5,0 cnt6  FROM (
  SELECT count(1) as a,SUBSTR(invoiceName,1,6) invoiceName from fpcy_baiwang_request_log
 WHERE inputTime  BETWEEN %s AND %s
-  and requestType='cy' and errorCode ='0'  and CAST(requestTime AS UNSIGNED)/1000<=5 and errorCode='0'
+  and requestType='cy' and errorCode ='0'  and CAST(requestTime AS UNSIGNED)/1000<=10 and errorCode='0'
  GROUP BY invoiceName
 ) q
  GROUP BY  q.invoiceName
+
+UNION
+-- 反馈发票张数(百望查询)）
+SELECT  q.invoiceName,0 cnt1,0 cnt2,0 cnt3,0 cnt4,0 cnt5,SUM(a) cnt6  FROM (
+ SELECT count(1) as a,SUBSTR(invoiceName,1,6) invoiceName from fpcy_baiwang_request_log
+WHERE inputTime  BETWEEN %s AND %s
+  and requestType='cy' and errorCode ='0'
+ GROUP BY invoiceName
+) q
+ GROUP BY  q.invoiceName
+
 ) a
 GROUP BY  a.invoiceName
  order by a1 DESC
+""".encode('utf-8')
+
+# 用户账号点数情况
+sql_yhzhdsqk = """
+select a.userCode a1, a.rechargeSum a2, a.recharge81 a3, a.recharge71 a4, a.recharge51 a5, a.recharge60 a6, a.recharge50 a7, a.consumeSum a8, a.expense a9, a.balanceSum a10, (a.recharge50 + a.recharge51 + a.recharge60 + a.recharge71 + a.recharge81 - a.expense) a11 from (
+select t.userCode, SUM(t.rechargeSum) rechargeSum, SUM(t.consumeSum) consumeSum, SUM(t.balanceSum) balanceSum, SUM(t.recharge50) recharge50, SUM(t.recharge51) recharge51, SUM(t.recharge60) recharge60, SUM(t.recharge71) recharge71, SUM(t.recharge81) recharge81, SUM(t.expense) expense from (
+select userCode,   rechargeSum,   consumeSum,   balanceSum, 0 recharge50, 0 recharge51, 0 recharge60, 0 recharge71, 0 recharge81, 0 expense from charging_account_info a
+union all
+select userCode, 0 rechargeSum, 0 consumeSum, 0 balanceSum, SUM(rechargeAmount) recharge50, 0 recharge51, 0 recharge60, 0 recharge71, 0 recharge81, 0 expense from charging_record_recharge where rechargeWayCode = '5' and isFree = '0' and isSuccess = '1' GROUP BY userCode
+union all
+select userCode, 0 rechargeSum, 0 consumeSum, 0 balanceSum, 0 recharge50, SUM(rechargeAmount) recharge51, 0 recharge60, 0 recharge71, 0 recharge81, 0 expense from charging_record_recharge where rechargeWayCode = '5' and isFree = '1' and isSuccess = '1' GROUP BY userCode
+union all
+select userCode, 0 rechargeSum, 0 consumeSum, 0 balanceSum, 0 recharge50, 0 recharge51, SUM(rechargeAmount) recharge60, 0 recharge71, 0 recharge81, 0 expense from charging_record_recharge where rechargeWayCode = '6' and isFree = '0' and isSuccess = '1' GROUP BY userCode
+union all
+select userCode, 0 rechargeSum, 0 consumeSum, 0 balanceSum, 0 recharge50, 0 recharge51, 0 recharge60,  SUM(rechargeAmount) recharge71, 0 recharge81, 0 expense from charging_record_recharge where rechargeWayCode = '7' and isFree = '1' and isSuccess = '1' GROUP BY userCode
+union all
+select userCode, 0 rechargeSum, 0 consumeSum, 0 balanceSum, 0 recharge50, 0 recharge51, 0 recharge60, 0 recharge71, SUM(rechargeAmount) recharge81, 0 expense from charging_record_recharge where rechargeWayCode = '8' and isFree = '1' and isSuccess = '1' GROUP BY userCode
+union all
+select userCode, 0 rechargeSum, 0 consumeSum, 0 balanceSum, 0 recharge50, 0 recharge51, 0 recharge60, 0 recharge71, 0 recharge81, sum(expense) expense from charging_record_charging GROUP BY userCode
+) t group by t.userCode) a order by a.rechargeSum desc
 """.encode('utf-8')

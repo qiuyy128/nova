@@ -93,12 +93,17 @@
                                 <div>
                                     <input id="id_checkAll" type="checkbox" onclick="checkAll(this.checked)">
                                     </input>
-{#                                    <input type="button" id="id_asset_batch_del" class="start_apps btn btn-default"#}
-{#                                           value="批量删除">#}
-{#                                    </input>#}
+                                    {#                                    <input type="button" id="id_asset_batch_del" class="start_apps btn btn-default"#}
+                                    {#                                           value="批量删除">#}
+                                    {#                                    </input>#}
                                     <input type="button" id="id_batch_exec_cmd" class="reload_apps btn btn-default"
                                            value="批量执行命令">
                                     </input>
+                                    {% if request.user.is_superuser %}
+                                        <input type="button" id="id_batch_config_ssh_key" class="reload_apps btn btn-default"
+                                               value="配置SSH公钥">
+                                        </input>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -188,6 +193,36 @@
                     var result = confirm("是否确定批量执行命令?");
                     if (result == true) {
                         window.location.href = "{% url 'shell' %}?asset_ip=" + asset_ip
+                    }
+                }
+            })
+        });
+
+        $(document).ready(function () {
+            $('#id_batch_config_ssh_key').click(function () {
+                var obj = document.getElementsByName("asset_select");
+                var asset_list = document.getElementsByName("asset_ip");
+                var port_list = document.getElementsByName("asset_port");
+                var env_list = document.getElementsByName("app_env");
+                var asset_id = [];
+                var asset_ip = [];
+                var asset_env = [];
+                for (var i in obj) {
+                    if (obj[i].checked) {
+                        asset_id.push(obj[i].value);
+                        asset_ip.push(asset_list[i].innerText + ':' + port_list[i].innerText);
+                        if ($.inArray(env_list[i].innerText, asset_env) == -1) {
+                            asset_env.push(env_list[i].innerText);
+                        }
+                    }
+                }
+                if (asset_ip.length == 0) {
+                    alert('你还没有选择任何服务器！');
+                }
+                else {
+                    var result = confirm("是否确定配置SSH公钥?");
+                    if (result == true) {
+                        window.location.href = "{% url 'config_ssh_public_key' %}?asset_ip=" + asset_ip
                     }
                 }
             })

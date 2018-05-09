@@ -2,6 +2,7 @@
 
 from __future__ import absolute_import
 
+from nova.models import Asset
 import paramiko
 import time
 from datetime import datetime
@@ -33,14 +34,17 @@ class RunCmd(object):
         self.__port = port
         self.__username = username
         self.__password = password
+        self.__connect_method = Asset.objects.get(ip=self.__host).connect_method
         self.__private_key = paramiko.RSAKey.from_private_key_file('/root/.ssh/id_rsa')
 
-    def run_command(self, cmd):
-        print "[%s@%s:%s] out:" % (self.__username, self.__host, self.__port)
+    def run_command(self, cmd, log_file=''):
+        if log_file:
+            with open(log_file, 'a') as f:
+                f.write("[%s@%s:%s] run: %s\n" % (self.__username, self.__host, self.__port, cmd))
         s = paramiko.SSHClient()
         s.load_system_host_keys()
         s.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        if ssh_key_password == 'private_key':
+        if self.__connect_method == 'PublicKey':
             s.connect(hostname=self.__host, port=int(self.__port), username=self.__username, pkey=self.__private_key)
         else:
             s.connect(hostname=self.__host, port=int(self.__port), username=self.__username, password=self.__password)
@@ -69,22 +73,22 @@ class RunCmd(object):
             return result
         else:
             stdin, stdout, stderr = s.exec_command(cmd)
-            result = stdout.read()
-            error = stderr.read()
+            stdout = stdout.read()
+            stderr = stderr.read()
             s.close()
-            if error:
-                logger.info("[%s@%s:%s] error: " % (self.__username, self.__host, self.__port))
-                logger.info(error)
-            if result:
-                logger.info("[%s@%s:%s] out: " % (self.__username, self.__host, self.__port))
-                logger.info(result)
-            return result, error
+            if log_file:
+                with open(log_file, 'a') as f:
+                    if stderr:
+                        f.write("[%s@%s:%s] error: %s\n" % (self.__username, self.__host, self.__port, stderr))
+                    if stdout:
+                        f.write("[%s@%s:%s] out: %s\n" % (self.__username, self.__host, self.__port, stdout))
+            return stdout, stderr
 
     def file_exist(self, remote_path, create=''):
         print "[%s@%s:%s] out:" % (self.__username, self.__host, self.__port)
         if self.__username == 'root':
             t = paramiko.Transport((self.__host, int(self.__port)))
-            if ssh_key_password == 'private_key':
+            if self.__connect_method == 'PublicKey':
                 t.connect(username=self.__username, pkey=self.__private_key)
             else:
                 t.connect(username=self.__username, password=self.__password)
@@ -102,18 +106,18 @@ class RunCmd(object):
                 t.close()
                 return result
 
-    def upload_file(self, local_path, remote_path):
-        print "[%s@%s:%s] out:" % (self.__username, self.__host, self.__port)
+    def upload_file(self, local_path, remote_path, log_file=''):
         if self.__username == 'root':
             t = paramiko.Transport((self.__host, int(self.__port)))
-            if ssh_key_password == 'private_key':
+            if self.__connect_method == 'PublicKey':
                 t.connect(username=self.__username, pkey=self.__private_key)
             else:
                 t.connect(username=self.__username, password=self.__password)
             sftp = paramiko.SFTPClient.from_transport(t)
-            print '#########################################'
-            print 'Begin upload file %s to %s:%s at %s ' % (
-                local_path, self.__host, remote_path, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+            with open(log_file, 'a') as f:
+                msg = u'Begin upload file %s to %s:%s at %s.\n' % (
+                    local_path, self.__host, remote_path, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                f.write("[localhost] out: %s" % msg)
             remote_base_dir = os.path.split(remote_path)[0]
             try:
                 sftp.stat(remote_base_dir)
@@ -123,21 +127,22 @@ class RunCmd(object):
                 sftp.mkdir(remote_base_dir)
             try:
                 sftp.put(local_path, remote_path)
-                print 'Upload file %s success to %s:%s at %s ' % (
-                    local_path, self.__host, remote_path, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                with open(log_file, 'a') as f:
+                    msg = u'Upload file success at %s.\n' % datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    f.write("[localhost] out: %s" % msg)
             except Exception as e:
-                print u"上传失败!"
-                logger.info(e)
+                error = u"上传失败!失败原因：\n" + str(e)
+                with open(log_file, 'a') as f:
+                    f.write("[localhost] out: %s" % error)
             finally:
                 t.close()
-                print '#########################################'
                 # return 'done'
 
     def download_file(self, remote_path, local_path):
         print "[%s@%s:%s] out:" % (self.__username, self.__host, self.__port)
         if self.__username == 'root':
             t = paramiko.Transport((self.__host, int(self.__port)))
-            if ssh_key_password == 'private_key':
+            if self.__connect_method == 'PublicKey':
                 t.connect(username=self.__username, pkey=self.__private_key)
             else:
                 t.connect(username=self.__username, password=self.__password)

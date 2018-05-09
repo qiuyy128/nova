@@ -100,23 +100,17 @@
                             <td>
                                 {% if app_host.status == 'running' %}
                                     <input app_id={{ app_host.id }} app_env={{ app_host.env }}
-                                           type="button"
-                                           class="stop_app btn btn-sm btn-default"
-                                           value="停止">
+                                           type="button" class="stop_app btn btn-sm btn-default" value="停止">
                                     <input app_id={{ app_host.id }} app_env={{ app_host.env }}
-                                           type="button"
-                                           class="reload_app btn btn-sm btn-default"
-                                           value="重启">
+                                           type="button" class="reload_app btn btn-sm btn-default" value="重启">
                                 {% else %}
                                     <input app_id={{ app_host.id }} app_env={{ app_host.env }}
-                                           type="button"
-                                           class="start_app btn btn-sm btn-default"
-                                           value="启动">
+                                           type="button" class="start_app btn btn-sm btn-default" value="启动">
                                 {% endif %}
                                 <input app_name={{ app_host.name }} app_id={{ app_host.id }} app_env={{ app_host.env }}
-                                        type="button"
-                                       class="update_app btn btn-sm btn-default"
-                                       value="更新">
+                                        type="button" class="update_app btn btn-sm btn-danger" value="更新">
+                                <input app_name={{ app_host.name }} app_id={{ app_host.id }} app_env={{ app_host.env }}
+                                        type="button" class="rollback_apps btn btn-sm btn-danger" value="回滚">
                             </td>
                             <td>
                                 <div name="app_deploy_path">
@@ -490,6 +484,40 @@
                             contentType: "application/json",
                         });
                     }
+                }
+            })
+        });
+
+        $(document).ready(function () {
+            $('.rollback_apps').click(function () {
+                var app_name = $(this).attr('app_name');
+                var app_id = new Array($(this).attr('app_id'));
+                var app_env = $(this).attr('app_env');
+                var result = confirm("是否确定回滚应用?");
+                if (result == true) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{% url 'rollback_app' %}",
+                        data: JSON.stringify({
+                            app_name: app_name,
+                            app_id: app_id,
+                            app_env: app_env
+                        }),
+                        success: function (data) {
+                            if (data['rtn'] == "00") {
+                                {#                                alert(data['msg']);#}
+                                alert('请稍后，正在后台回滚所有应用！');
+                            }
+                            else {
+                                alert(data['msg']);
+                            }
+                        },
+                        error: function (data) {
+                            alert("回滚失败!");
+                        },
+                        dataType: "json",
+                        contentType: "application/json"
+                    });
                 }
             })
         });

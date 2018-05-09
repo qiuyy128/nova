@@ -1,0 +1,5 @@
+- hosts: "{{ host }}"
+  remote_user: root
+  tasks: 
+    - name: Set authorized key for user root
+      authorized_key: user=root key="{{ lookup('file', '/root/.ssh/id_rsa.pub') }}" path=/root/.ssh/authorized_keys state=present

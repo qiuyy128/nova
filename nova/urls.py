@@ -5,11 +5,12 @@ from django.conf.urls import url
 
 from . import views
 urlpatterns = [
-    url(r'^$', views.index, name='index'),
+    url(r'^$', views.console, name='index'),
     url(r'^home/$', views.home, name='home'),
     url(r'^login/$', views.Login, name='login'),
     url(r'^logout/$', views.Logout, name='logout'),
     url(r'^console/$', views.console, name='console'),
+    url(r'^config_ssh_public_key/$', views.config_ssh_public_key, name='config_ssh_public_key'),
     url(r'^asset/$', views.asset, name='asset'),
     url(r'^asset/asset_group$', views.asset_group, name='asset_group'),
     url(r'^download/$', views.download, name='download'),
@@ -31,6 +32,7 @@ urlpatterns = [
     url(r'^app/start/$', views.start_app, name='start_app'),
     url(r'^app/stop/$', views.stop_app, name='stop_app'),
     url(r'^app/reload/$', views.reload_app, name='reload_app'),
+    url(r'^app/rollback_app/$', views.rollback_app, name='rollback_app'),
     url(r'^app/update/$', views.update_app, name='update_app'),
     url(r'^app/config_file/$', views.config_file, name='config_file'),
     url(r'^app/config_file/add/$', views.config_file_add, name='config_file_add'),
@@ -54,4 +56,5 @@ urlpatterns = [
     url(r'^sql_list/$', views.sql_list, name='sql_list'),
     url(r'^sql_exec/$', views.sql_exec, name='sql_exec'),
     url(r'^shell/$', views.shell, name='shell'),
+    url(r'^view/$', views.view, name='view'),
 ]

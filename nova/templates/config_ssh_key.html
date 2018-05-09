@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}配置SSH公钥{% endblock %}
+{% block content %}
+    <style type="text/css">
+        .control-label {
+            padding-top: 70px;
+        }
+
+        .label-width {
+            width: 90px;
+        }
+
+        .row {
+            padding-left: -15px;
+            margin-left: -15px;
+        }
+    </style>
+    <div class="container col-sm-8 col-md-12">
+        <div class="col-md-offset-1 console-instance-head clearfix">
+            <div class="pull-left">
+                <h3><span>配置SSH公钥</span></h3>
+            </div>
+        </div>
+        <div class="col-md-offset-1 margin-top-1">
+            <form class="form-horizontal" action="{% url 'config_ssh_public_key' %}" method="post" id="command_form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="col-sm-3 control-label label-width"><span>服务器IP：</span></label>
+                    <div class="col-sm-3 row">
+                        <textarea class="form-control" rows="2" id="id_asset_ip"
+                                  name="command" style="width: 1000px;">{{ asset_ip }}</textarea>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-3">
+                        <input id="id_config_ssh_key" class="btn btn-default" type="button" value="配置root用户公钥">
+                        </input>
+                        <input id="id_config_normal_ssh_key" class="btn btn-default" type="button" value="推送普通用户公钥">
+                        </input>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-offset-1 margin-top-1">
+            <pre id='log'
+                 style="height: 40em;background-color:black;color:white;font-family: Courier;width: 100%;"></pre>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        function errmsg() {
+            alert("请联系管理员！")
+        }
+        $(document).ready(function () {
+            $("#id_config_ssh_key").click(function () {
+                var asset_ip = $("#id_asset_ip").val();
+                $.ajax({
+                    url: "{% url 'config_ssh_public_key' %}",
+                    type: 'POST',
+                    data: JSON.stringify({
+                        asset_ip: asset_ip,
+                        asset_user: 'root'
+                    }),
+                    success: function (data) {
+                        var list = data['lines'];
+                        if (list.length != 0) {
+                            var div = document.getElementById('log');
+                            for (var i = 0; i < list.length; i++) {
+                                var line = list[i];
+                                $("#log").append(line);
+                                div.scrollTop = div.scrollHeight;
+                            }
+                        }
+                    },
+                    error: function (data) {
+                        alert(data['lines']);
+                    },
+                    dataType: "json",
+                    contentType: "application/json"
+                });
+            });
+
+            $("#id_config_normal_ssh_key").click(function () {
+                var asset_ip = $("#id_asset_ip").val();
+                $.ajax({
+                    url: "{% url 'config_ssh_public_key' %}",
+                    type: 'POST',
+                    data: JSON.stringify({
+                        asset_ip: asset_ip,
+                        asset_user: 'dcyt'
+                    }),
+                    success: function (data) {
+                        var list = data['lines'];
+                        if (list.length != 0) {
+                            var div = document.getElementById('log');
+                            for (var i = 0; i < list.length; i++) {
+                                var line = list[i];
+                                $("#log").append(line);
+                                div.scrollTop = div.scrollHeight;
+                            }
+                        }
+                    },
+                    error: function (data) {
+                        alert(data['lines']);
+                    },
+                    dataType: "json",
+                    contentType: "application/json"
+                });
+            })
+        });
+    </script>
+{% endblock %}

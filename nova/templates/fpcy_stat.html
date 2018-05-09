@@ -2,7 +2,10 @@
 {% load static %}
 {% block title %}发票查验产品统计分析{% endblock %}
 {% block formcss %}
-    <script src="{% static 'js/calendar.js' %}" type="text/javascript" language="javascript"></script>
+    <link href="{% static 'css/bootstrap-datetimepicker.css' %}" rel="stylesheet" type="text/css">
+    <link href="{% static 'css/row_details/style.css' %}" rel="stylesheet" type="text/css">
+    <link href="{% static 'css/row_details/DT_bootstrap.css' %}" rel="stylesheet" type="text/css">
+
     <style type="text/css">
         {#        th, td {#}
         {#            text-align: center; /** 设置水平方向居中 */#}
@@ -18,19 +21,23 @@
             text-align: center;
             vertical-align: middle !important;
         }
+
     </style>
 {% endblock %}
 
 {% block content %}
-    <div class="container col-xs-12 col-sm-12 col-md-12">
+    <div class="container col-xs-8 col-sm-8 col-md-12">
         <div class="col-md-offset-1 ">
-            <div class="console-instance-head clearfix">
-                <div class="pull-left">
-                    <h3><span><a href="{% url 'fpcy_stat' %}">乐税发票查验产品统计分析表</a></span></h3>
+            <div class="margin-top-4">
+                <div class="console-instance-head clearfix">
+                    <div class="pull-left">
+                        <h3><span><a href="{% url 'fpcy_stat' %}">乐税发票查验产品统计分析表</a></span></h3>
+                    </div>
                 </div>
             </div>
+
             <div class="margin-top-1">
-                <form class="form-inline" name="searchBar">
+                <form class="form-inline row" name="searchBar">
                     <div class="col-sm-3 form-group">
                         <label class="control-label"><span>统计开始时间：</span></label>
                         <span>{{ begin_time }}</span>
@@ -45,23 +52,26 @@
                             <a href="{% url 'fpcy_stat' %}?stat_day={{ last_time }}">前一日统计数据</a>
                         </span>
                         </label>
+                        <label class="pull-right">
+                        <span>
+                            <a href="https://www.baiwang.com/admin/cloudinterface/notice/list.html"
+                               target="_blank">日常公告</a>
+                        </span>
+                        </label>
                     </div>
                 </form>
-                <form class="form-inline" name="searchBar">
+                <form class="form-inline row" name="searchBar">
                     <div class="col-sm-3 form-group">
-                        <label class="control-label"><span>统计日期：</span></label>
-                        <input type="text" id="id_start_time" name="start_time" class="form-control"
-                               onclick="SetDate(this,'yyyy-MM-dd')" readonly="readonly">
-                        </input>
-                        {#                        <input type="text" id="id_start_time" name="start_time"#}
-                        {#                               class="form-control" placeholder="格式:2018-01-01">#}
-                        {#                        </input>#}
+                        <label class="control-label"><span>选择统计日期：</span></label>
+                        <div class="input-group date">
+                            <input type="text" class="form-control" id="id_stat_time">
+                                <span class="input-group-addon">
+                                    <i class="glyphicon glyphicon-calendar"></i>
+                                </span>
+                        </div>
                     </div>
                     <div class="col-sm-3 form-group">
-                        <input type="button" class="btn btn-default"
-                               id="id_query"
-                               value="查询">
-                        </input>
+                        <input type="button" class="btn btn-default" id="stat_day_query" value="查询">
                     </div>
                 </form>
 
@@ -72,8 +82,9 @@
                        id="dataTables-sql">
                     <thead>
                     <tr>
-                        <th colspan="7" style="background-color: lawngreen;font-size: 24px;">发票入库情况</th>
+                        <th colspan="8" style="background-color: lawngreen;font-size: 24px;">发票入库情况</th>
                     <tr>
+                        <th rowspan="2">查验渠道</th>
                         <th rowspan="2">发票入库总数</th>
                         <th colspan="2">其中</th>
                         <th rowspan="2">发票入库张数（今日）</th>
@@ -88,11 +99,13 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr class="gradeX">
-                        {% for i in data_sql_fprkqk %}
-                            <td>{{ i }}</td>
-                        {% endfor %}
-                    </tr>
+                    {% for record in data_sql_fprkqk %}
+                        <tr class="gradeX">
+                            {% for i in record %}
+                                <td>{{ i }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -102,8 +115,9 @@
                        id="dataTables-sql">
                     <thead>
                     <tr>
-                        <th colspan="8" style="background-color: lawngreen;font-size: 24px;">营收情况</th>
+                        <th colspan="9" style="background-color: lawngreen;font-size: 24px;">营收情况</th>
                     <tr>
+                        <th>查验渠道</th>
                         <th style="background-color: red">打码费用</th>
                         <th style="background-color: red">每张入库成本</th>
                         <th>计费次数</th>
@@ -115,11 +129,25 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr class="gradeX">
-                        {% for i in data_sql_ysqk %}
-                            <td>{{ i }}</td>
-                        {% endfor %}
-                    </tr>
+                    {% for record in data_sql_ysqk %}
+                        <tr class="gradeX">
+                            {% if record.cyfs == '乐税' %}
+                                <td>{{ record.cyfs }}</td>
+                                <td>{{ record.col1 }}</td>
+                                <td>{{ record.col2 }}</td>
+                                <td rowspan=3>{{ record.col3 }}</td>
+                                <td rowspan=3>{{ record.col4 }}</td>
+                                <td rowspan=3>{{ record.col5 }}</td>
+                                <td rowspan=3>{{ record.col6 }}</td>
+                                <td rowspan=3>{{ record.col7 }}</td>
+                                <td rowspan=3>{{ record.col8 }}</td>
+                            {% else %}
+                                <td>{{ record.cyfs }}</td>
+                                <td>{{ record.col1 }}</td>
+                                <td>{{ record.col2 }}</td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -159,6 +187,92 @@
                         {% endfor %}
                     </tr>
                     </tbody>
+                </table>
+            </div>
+
+            <div class="margin-top-1" id="table">
+                <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                       id="dataTables-yhzhdsqk">
+                    <thead>
+                    <tr>
+                        <th colspan="11" style="background-color: lawngreen;font-size: 24px;">用户账号点数情况</th>
+                    </tr>
+                    <tr style="background-color: #FF9600;">
+                        <th rowspan="2">用户</th>
+                        <th rowspan="2">充值点数（账号）</th>
+                        <th colspan="5">充值点数</th>
+                        <th rowspan="2">消费点数</th>
+                        <th rowspan="2">消费点数（消费明细汇总）</th>
+                        <th rowspan="2">剩余点数（账号）</th>
+                        <th rowspan="2">剩余点数（充值明细汇总-消费明细汇总）</th>
+                    </tr>
+                    <tr style="background-color: #FF9600;">
+                        <th>注册赠送</th>
+                        <th>活动赠送</th>
+                        <th>手工充值（免费）</th>
+                        <th>订单充值</th>
+                        <th>手工充值（收费）</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for record in data_fpcy_yhzhdsqk %}
+                        <tr class="gradeX">
+                            {% for i in record %}
+                                <td>{{ i }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <table class="table table-fixed" width="100%" style=" bottom: 0px;">
+                    <tr>
+                        <td>
+                            <div>
+                                <div class="pull-right">
+                                    <div class="pagination-info">
+                                        <span id="id_table_name">fpcy_yhzhdsqk</span>
+                                        <span id="summary">共有 {{ all_counts }} 条，</span>
+                                        <span>第</span>
+                                        <span id="id_page_index">{{ page_index }}</span>
+                                        <span>/</span>
+                                        <span id="id_page_count">{{ page_count }}</span>
+                                        <span>页，</span>
+                                                <span>每页显示：
+                                                    <select id="id_page_size" name="page_size"
+                                                            onchange="change_page_size()">
+                                                        {% for i in page_size_option %}
+                                                            {% if i == page_size %}
+                                                                <option value="{{ i }}"
+                                                                        selected="selected">{{ i }}</option>
+                                                            {% else %}
+                                                                <option value="{{ i }}">{{ i }}</option>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </select>条
+                                                </span>
+                                    </div>
+
+                                    <ul id="id_pagination" class="pagination">
+                                        <li id="first_page"><a>«</a></li>
+                                        <li id="previous_page"><a>‹</a></li>
+                                        <li id="next_page"><a>›</a></li>
+                                        <li id="last_page"><a>»</a></li>
+                                    </ul>
+
+                                <span style="padding-left: 15px;padding-right: 15px">
+                                    <input type="text" id="id_page" name="page"
+                                           class="form-control"
+                                           style="width: 40px; display: inline-block;">
+                                    </input>
+                                    <input type="button" style="margin-left: 6px" class="btn btn-default"
+                                           id="page_query" disabled="disabled"
+                                           value="GO">
+                                    </input>
+                                </span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
                 </table>
             </div>
 
@@ -262,12 +376,12 @@
 
             <div class="margin-top-1" id="table">
                 <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
-                       id="dataTables-sql">
+                       id="dataTables-hxftztb">
                     <thead>
                     <tr>
                         <th colspan="12" style="background-color: lawngreen;font-size: 24px;">核心服务状态表</th>
-                    <tr>
-                        <th>税务局</th>
+                    <tr style="background-color: #FF9600;">
+                        <th>查验渠道</th>
                         <th>请求次数</th>
                         <th>有效反馈次数（<=60秒）</th>
                         <th>有效反馈成功率（<=60秒）</th>
@@ -282,10 +396,10 @@
                     </tr>
                     </thead>
                     <tbody>
-                    {% for i in data_sql_hxfwztbs %}
+                    {% for i in data_sql_hxfwztb_sum %}
                         <tr class="gradeX">
                             {% for data_sql_hxfwztb in i %}
-                                <td>{{ data_sql_hxfwztb }}</td>
+                                <td width="8%">{{ data_sql_hxfwztb }}</td>
                             {% endfor %}
                         </tr>
                     {% endfor %}
@@ -325,7 +439,7 @@
                     {% for i in data_sql_sjcyfwztbs %}
                         <tr class="gradeX">
                             {% for data_sql_sjcyfwzt in i %}
-                                <td>{{ data_sql_sjcyfwzt }}</td>
+                                <td width="5%">{{ data_sql_sjcyfwzt }}</td>
                             {% endfor %}
                         </tr>
                     {% endfor %}
@@ -442,54 +556,447 @@
                 </table>
             </div>
 
-        <div class="margin-top-1" id="table">
-                <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
-                       id="dataTables-sql">
-                    <thead>
-                    <tr>
-                        <th colspan="12" style="background-color: lawngreen;font-size: 24px;">百望查验服务状态表</th>
-                    <tr>
-                        <th>税务局</th>
-                        <th>获取发票请求数</th>
-                        <th>查票反馈成功次数（<=10秒）</th>
-                        <th>查票反馈成功率（<=10秒）</th>
-                        <th>5秒内反馈次数</th>
-                        <th>5秒内反馈成功率</th>
-                        <th>有效反馈明细次数（<=60s(入库)）</th>
-                        <th>有效反馈明细次数（<=60s(百望查询)）</th>
-                        <th>有效反馈明细次数（<=60s(百望查询)）成功率</th>
-                        <th>有效反馈明细次数（<=5s(百望查询)）</th>
-                        <th>有效反馈明细次数（<=5s(百望查询)）成功率</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for record in data_sql_bwcyfwztb %}
-                        <tr class="gradeX">
-                            {% for i in record %}
-                                <td>{{ i }}</td>
-                            {% endfor %}
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            {#            <div class="margin-top-1" id="table">#}
+            {#                <table width="100%" class="table table-striped table-bordered table-hover" name="editable"#}
+            {#                       id="dataTables-sql">#}
+            {#                    <thead>#}
+            {#                    <tr>#}
+            {#                        <th colspan="12" style="background-color: lawngreen;font-size: 24px;">百望查验服务状态表</th>#}
+            {#                    <tr>#}
+            {#                        <th>税务局</th>#}
+            {#                        <th>获取发票请求数</th>#}
+            {#                        <th>查票反馈成功次数（<=10秒）</th>#}
+            {#                        <th>查票反馈成功率（<=10秒）</th>#}
+            {#                        <th>5秒内反馈次数</th>#}
+            {#                        <th>5秒内反馈成功率</th>#}
+            {#                        <th>有效反馈明细次数（<=60s(入库)）</th>#}
+            {#                        <th>有效反馈明细次数（<=60s(百望查询)）</th>#}
+            {#                        <th>有效反馈明细次数（<=60s(百望查询)）成功率</th>#}
+            {#                        <th>有效反馈明细次数（<=5s(百望查询)）</th>#}
+            {#                        <th>有效反馈明细次数（<=5s(百望查询)）成功率</th>#}
+            {#                    </tr>#}
+            {#                    </thead>#}
+            {#                    <tbody>#}
+            {#                    {% for record in data_sql_bwcyfwztb %}#}
+            {#                        <tr class="gradeX">#}
+            {#                            {% for i in record %}#}
+            {#                                <td width="9%">{{ i }}</td>#}
+            {#                            {% endfor %}#}
+            {#                        </tr>#}
+            {#                    {% endfor %}#}
+            {#                    </tbody>#}
+            {#                </table>#}
+            {#            </div>#}
 
         </div>
     </div>
 {% endblock %}
 
 {% block js %}
+    <script type="text/javascript" src="{% static 'js/moment-with-locales.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/bootstrap-datetimepicker.min.js' %}"></script>
+    {#    <script type="text/javascript" src="{% static 'js/row_details/DT_bootstrap.js' %}"></script>#}
+
+    <script type="text/javascript">
+        $(function () {
+            $('#id_stat_time').datetimepicker({
+                format: 'YYYY-MM-DD',//显示格式
+                locale: moment.locale('zh-cn')
+            });
+        });
+    </script>
+
+    <script type="text/javascript">
+        var oTable;
+        $(document).ready(function () {
+            var oTable = $('#dataTables-hxftztb').DataTable({
+                "paging": false,
+                "searching": false,
+                "info": false,
+                "sorting": false,
+                "aaSorting": [
+                    [1, "asc"]
+                ],
+                "fnCreatedRow": function (nRow, aData, iDataIndex) {
+                    if (aData[0] != '合计') {
+                        $('td:eq(0)', nRow).html("<span class='row-details row-details-close' data_id='" + aData[1] + "'></span>&nbsp;" + aData[0]);
+                    }
+                }
+            });
+
+            $('.table').on('click', ' tbody td .row-details',
+                    function () {
+                        var stat_day = '{{ stat_day|safe }}';
+                        var data_hxfwztb = {{ data_hxfwztb|safe }};
+                        var data_bwcyfwztb = {{ data_bwcyfwztb|safe }};
+                        var tr = $(this).closest('tr');
+                        var row = oTable.row(tr);
+                        if (row.child.isShown()) {
+                            // This row is already open - close it
+                            row.child.hide();
+                            tr.removeClass('shown');
+                            $(this).addClass("row-details-close").removeClass("row-details-open");
+                        }
+                        else {
+                            tr.addClass('shown');
+                            $(this).addClass("row-details-open").removeClass("row-details-close");
+                            // Open this row
+                            if (row.data()[0] == '乐税') {
+                                var array = data_hxfwztb;
+                            }
+                            else {
+                                var array = data_bwcyfwztb;
+                            }
+                            var sOut = '<table style="width:100%;">';
+                            for (var i = 0; i < array.length - 1; i++) {
+                                var resData = array[i];
+                                sOut += '<tr>';
+                                for (var j = 0; j < resData.length; j++) {
+                                    if (j == 0) {
+                                        sOut += '<td width="7.7%">' + resData[j] + '</td>';
+                                    }
+                                    else {
+                                        sOut += '<td width="8.3%">' + resData[j] + '</td>';
+                                    }
+                                }
+                                sOut += '</tr>';
+                            }
+                            sOut += '</table>';
+                            row.child(sOut).show();
+
+                            {#                            // 从GET请求数据#}
+                            {#                                                        $.ajax({#}
+                            {#                                                            type: "GET",#}
+                            {#                                                            url: "{% url 'fpcy_stat_hxftztb' %}?stat_day=" + stat_day,#}
+                            {#                                                            success: function (data) {#}
+                            {#                                                                var array = data;#}
+                            {#                                                                var sOut = '<table style="width:100%;">';#}
+                            {#                                                                for (var i = 0; i < array.length - 1; i++) {#}
+                            {#                                                                    var resData = array[i];#}
+                            {#                                                                    sOut += '<tr>';#}
+                            {#                                                                    for (var j = 0; j < resData.length; j++) {#}
+                            {#                                                                        if (j == 0) {#}
+                            {#                                                                            sOut += '<td width="7.7%">' + resData[j] + '</td>';#}
+                            {#                                                                        }#}
+                            {#                                                                        else {#}
+                            {#                                                                            sOut += '<td width="8.4%">' + resData[j] + '</td>';#}
+                            {#                                                                        }#}
+                            {#                                                                    }#}
+                            {#                                                                    sOut += '</tr>';#}
+                            {#                                                                }#}
+                            {#                                                                sOut += '</table>';#}
+                            {#                                                                row.child(sOut).show();#}
+                            {#                                                            },#}
+                            {#                                                            error: function (data) {#}
+                            {#                                                                alert('未查询到核心服务状态明细数据！');#}
+                            {#                                                            },#}
+                            {#                                                            dataType: "json",#}
+                            {#                                                            contentType: "application/json"#}
+                            {#                                                        });#}
+
+                        }
+                    });
+        });
+    </script>
+
     <script type="application/javascript">
         $(document).ready(function () {
-            $('#id_query').click(function () {
-                var stat_day = $("#id_start_time").val();
+            $('#stat_day_query').click(function () {
+                var stat_day = $("#id_stat_time").val();
                 if (stat_day == undefined || stat_day == "" || stat_day == null) {
                     alert('请输入正确的查询日期，如2018-01-01');
                 }
                 else {
                     window.location.href = "{% url 'fpcy_stat' %}?stat_day=" + stat_day;
                 }
+            });
+
+            {#            $('#dataTables-yhzhdsqk').DataTable(#}
+            {#                    {#}
+            {#                        "aaSorting": [#}
+            {#                            [1, "desc"],#}
+            {#                            [7, "desc"],#}
+            {#                            [9, "desc"]#}
+            {#                        ],#}
+            {#                        "searching": true,#}
+            {#                        "info": false,#}
+            {#                        "iDisplayLength": 5,#}
+            {#                        "bLengthChange": false,#}
+            {#                        language: {#}
+            {#                            "sProcessing": "处理中...",#}
+            {#                            "sLengthMenu": "显示 _MENU_ 项结果",#}
+            {#                            "sZeroRecords": "没有匹配结果",#}
+            {#                            "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",#}
+            {#                            "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",#}
+            {#                            "sInfoFiltered": "(由 _MAX_ 项结果过滤)",#}
+            {#                            "sInfoPostFix": "",#}
+            {#                            "sSearch": "搜索:",#}
+            {#                            "sUrl": "",#}
+            {#                            "sEmptyTable": "表中数据为空",#}
+            {#                            "sLoadingRecords": "载入中...",#}
+            {#                            "sInfoThousands": ",",#}
+            {#                            "oPaginate": {#}
+            {#                                "sFirst": "首页",#}
+            {#                                "sPrevious": "上页",#}
+            {#                                "sNext": "下页",#}
+            {#                                "sLast": "末页"#}
+            {#                            },#}
+            {#                            "oAria": {#}
+            {#                                "sSortAscending": ": 以升序排列此列",#}
+            {#                                "sSortDescending": ": 以降序排列此列"#}
+            {#                            }#}
+            {#                        }#}
+            {#                    }#}
+            {#            );#}
+        });
+
+        {#    # 异步翻页查询#}
+        $("#id_table_name").hide();
+        var stat_day = '{{ stat_day|safe }}';
+        var table_name = $("#id_table_name").text();
+        var page_size = Number($("#id_page_size").val());
+        var page_count = Number($("#id_page_count").text());
+        var page_index = Number($("#id_page_index").text());
+        function change_page_size() {
+            $("#dataTables-yhzhdsqk tbody tr").remove();
+            var page_index = 1;
+            var page_size = Number($("#id_page_size").val());
+            $.ajax({
+                type: "POST",
+                url: "{% url 'fpcy_stat' %}",
+                data: JSON.stringify({
+                    stat_day: stat_day,
+                    table_name: table_name,
+                    page_index: page_index,
+                    page_size: page_size
+                }),
+                success: function (result) {
+                    if (typeof result == 'string') {
+                        result = JSON.parse(result);
+                    }
+                    var list = result.data_fpcy_yhzhdsqk;
+                    var totalCount = result.all_counts;
+                    var page_count = result.page_count;
+                    {#                        $.each(result.access_logs, function (i,v) {#}
+                    {#                            alert(v.time);#}
+                    {#                            alert(v.refer);#}
+                    {#                        });#}
+                    if (list.length != 0) {
+                        for (var i = 0; i < list.length; i++) {
+                            appendData(list[i]);
+                            displayFooter(totalCount, page_count, page_index);
+                        }
+                    }
+                    else {
+                        {#                            $("#table").hide();#}
+                        {#                            $("#footer").hide();#}
+                    }
+                },
+                error: function (result) {
+                    alert('error');
+                },
+                dataType: "json",
+                contentType: "application/json"
+            })
+            ;
+        }
+
+        $(document).ready(function () {
+            $('#id_page_query').click(function () {
+
+                var stat_day = $('#id_stat_day').val();
+                $("#dataTables-yhzhdsqk tbody tr").remove();
+                var page_index = 1;
+                var page_size = Number($("#id_page_size").val());
+                $.ajax({
+                    type: "POST",
+                    url: "{% url 'fpcy_stat' %}",
+                    data: JSON.stringify({
+                        stat_day: stat_day,
+                        table_name: table_name,
+                        page_index: page_index,
+                        page_size: page_size
+                    }),
+                    success: function (result) {
+                        if (typeof result == 'string') {
+                            result = JSON.parse(result);
+                        }
+                        var list = result.data_fpcy_yhzhdsqk;
+                        var totalCount = result.all_counts;
+                        var page_count = result.page_count;
+                        {#                        $.each(result.access_logs, function (i,v) {#}
+                        {#                            alert(v.time);#}
+                        {#                            alert(v.refer);#}
+                        {#                        });#}
+                        if (list.length != 0) {
+                            for (var i = 0; i < list.length; i++) {
+                                appendData(list[i]);
+                                displayFooter(totalCount, page_count, page_index);
+                            }
+                        }
+                        else {
+                            {#                            $("#table").hide();#}
+                            {#                            $("#footer").hide();#}
+                        }
+                    },
+                    error: function (result) {
+                        alert('error');
+                    },
+                    dataType: "json",
+                    contentType: "application/json"
+                });
             })
         });
+
+        function appendData(record) {
+            str = "<tr class='gradeX'>"
+                    + "<td>" + record[0] + "</td>"
+                    + "<td>" + record[1] + "</td>"
+                    + "<td>" + record[2] + "</td>"
+                    + "<td>" + record[3] + "</td>"
+                    + "<td>" + record[4] + "</td>"
+                    + "<td>" + record[5] + "</td>"
+                    + "<td>" + record[6] + "</td>"
+                    + "<td>" + record[7] + "</td>"
+                    + "<td>" + record[8] + "</td>"
+                    + "<td>" + record[9] + "</td>"
+                    + "<td>" + record[10] + "</td>"
+                    + "</tr>";
+            console.log(str);
+            $("#dataTables-yhzhdsqk").append(str);
+        }
+
+        function loadData(page_index, page_size) {
+            $("#dataTables-yhzhdsqk tbody tr").remove();
+            $.ajax({
+                type: "POST",
+                url: "{% url 'fpcy_stat' %}",
+                data: JSON.stringify({
+                    stat_day: stat_day,
+                    page_index: page_index,
+                    page_size: page_size
+                }),
+                success: function (result) {
+                    if (typeof result == 'string') {
+                        result = JSON.parse(result);
+                    }
+                    var list = result.data_fpcy_yhzhdsqk;
+                    var totalCount = result.all_counts;
+                    var page_count = result.page_count;
+                    {#                        $.each(result.access_logs, function (i,v) {#}
+                    {#                            alert(v.time);#}
+                    {#                            alert(v.refer);#}
+                    {#                        });#}
+                    if (list.length != 0) {
+                        for (var i = 0; i < list.length; i++) {
+                            appendData(list[i]);
+                            displayFooter(totalCount, page_count, page_index);
+                        }
+                    }
+                    else {
+                        {#                            $("#table").hide();#}
+                        {#                            $("#footer").hide();#}
+                    }
+                },
+                error: function (result) {
+                    alert('error');
+                },
+                dataType: "json",
+                contentType: "application/json"
+            });
+            $("#id_page_index").text(page_count);
+        }
+
+        function displayFooter(totalCount, page_count, page_index) {
+            {#            var newText = '共' + totalCount + '条，' + '第' + page_index + '/' + page_count + '页，';#}
+            var newText = '共有 ' + totalCount + ' 条，';
+            $("#summary").text(newText);
+            $("#id_page_index").text(page_index);
+            $("#id_page_count").text(page_count);
+        }
+
+        $("#id_page").keydown(function (e) {
+            if (e.keyCode) {
+                $("#page_query").attr("disabled", false)
+            }
+        });
+
+        $(document).ready(function () {
+            $('#page_query').click(function () {
+                var goPage = Number($("#id_page").val());
+                var page_index = Number($("#id_page_index").text());
+                var page_count = Number($("#id_page_count").text());
+                if (goPage >= 1 && goPage <= page_count && goPage != page_index) {
+                    page_index = goPage;
+                    var page_size = Number($("#id_page_size").val());
+                    loadData(page_index, page_size);
+                    $('#id_page').val("");
+                    $("#page_query").attr("disabled", true)
+                } else {
+                    return false;
+                }
+
+            });
+        });
+
+        $("#first_page").click(function () {
+            var page_index = Number($("#id_page_index").text());
+            var page_size = Number($("#id_page_size").val());
+            if (page_index == 1) {
+                alert('当前页已经是首页！');
+                $("#first_page").attr("disabled", true);
+                $("#previous_page").attr("disabled", true);
+                {#                return false;#}
+            } else {
+                page_index = 1;
+                loadData(page_index, page_size);
+            }
+
+        });
+
+        $("#last_page").click(function () {
+            var page_index = Number($("#id_page_index").text());
+            var page_size = Number($("#id_page_size").val());
+            var page_count = Number($("#id_page_count").text());
+            if (page_index == page_count) {
+                alert('已经翻到最后一页！');
+                $("#next_page").attr("disabled", true);
+                $("#last_page").attr("disabled", true);
+            } else {
+                page_index = page_count;
+                loadData(page_index, page_size);
+            }
+        });
+
+        $("#previous_page").click(function () {
+            var page_index = Number($("#id_page_index").text());
+            var page_size = Number($("#id_page_size").val());
+            if (page_index == 1) {
+                alert('没有上一页了！');
+                $("#first_page").attr("disabled", true);
+                $("#previous_page").attr("disabled", true);
+                {#                return false;#}
+            } else {
+                page_index--;
+                loadData(page_index, page_size);
+            }
+        });
+
+        $("#next_page").click(function () {
+            var page_index = Number($("#id_page_index").text());
+            var page_count = Number($("#id_page_count").text());
+            var page_size = Number($("#id_page_size").val());
+            if (page_index == page_count) {
+                alert('没有下一页了！');
+                $("#next_page").attr("disabled", true);
+                $("#last_page").attr("disabled", true);
+                {#                return false;#}
+            }
+            else {
+                page_index++;
+                loadData(page_index, page_size);
+            }
+        })
+        ;
     </script>
 {% endblock %}

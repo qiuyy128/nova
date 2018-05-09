@@ -1,0 +1,9 @@
+- hosts: "{{ host }}"
+  remote_user: root
+  vars:
+    UserName: "{{ user }}"
+    ThePassword: "{{ new_pass }}"
+  tasks:
+  - name: create new user {{ UserName }}
+    #user: name={{ UserName }} shell=/bin/bash group=ndsdevelop groups=sudo password={{ ThePassword |password_hash('sha512') }} update_password=always append=yes
+    user: name={{ UserName }} shell=/bin/bash password={{ ThePassword |password_hash('sha512') }} update_password=always append=yes

@@ -100,6 +100,12 @@ def edit_ant_build_conf(file_name, app_name):
         if 'adp-bill' in jar_names:
             jar_names.remove('adp-bill')
             jar_names.insert(0, 'adp-bill')
+        # 中税协因'adp-ws'引用了'adp-ywlc'，故'adp-ywlc'需要先打包
+        if 'adp-ws' in jar_names and 'adp-ywlc' in jar_names:
+            adp_wx_index = jar_names.index('adp-ws')
+            adp_ywlc_index = jar_names.index('adp-ywlc')
+            jar_names[adp_wx_index] = 'adp-ywlc'
+            jar_names[adp_ywlc_index] = 'adp-ws'
         for jar_name in jar_names:
             if jar_name.find('biz-') == 0 or jar_name.find('mbiz-') == 0:
                 add_xml_strings = """				<javac srcdir="${basedir}/%s/src/main/java" destdir="${deploy}/%s/classes" debug="true" debuglevel="lines,source" encoding="UTF-8">
@@ -204,8 +210,12 @@ def do_start_app(app_id):
     outs = ''
     errors = ''
     app_hosts = AppHost.objects.filter(id__in=app_id)
-    logger.info(u'启动%s on %s' % (app_hosts.values('name'), app_hosts.values('ip')))
+    task_id = do_start_app.request.id
+    log_file = os.path.join(base_path, 'logs', 'task_log', task_id)
+    if not os.path.exists(os.path.dirname(log_file)):
+        os.makedirs(os.path.dirname(log_file))
     for app_host in app_hosts:
+        logger.info(u'开始启动%s on %s, port: %s' % (app_host.name, app_host.ip, app_host.port))
         app_env = app_host.env
         app_name = app_host.name
         if app_name == 'mysql':
@@ -242,7 +252,7 @@ def do_start_app(app_id):
                 print 'release %s on %s:' % (app_name, app_source_asset.ip), cmd0
                 out, error = RunCmd(host=app_source_asset.ip, port=app_source_asset.port,
                                     username=app_source_asset.username,
-                                    password=app_source_asset.password).run_command(cmd0)
+                                    password=app_source_asset.password).run_command(cmd0, log_file)
                 outs = outs + out
                 errors = errors + error
                 # install fdp_server and start fdp_server
@@ -250,7 +260,7 @@ def do_start_app(app_id):
                 app_asset = Asset.objects.get(ip=app_host.ip)
                 print 'install npm of %s on %s:' % (app_name, app_asset.ip), cmd
                 out, error = RunCmd(host=app_asset.ip, port=app_asset.port, username=app_asset.username,
-                                    password=app_asset.password).run_command(cmd)
+                                    password=app_asset.password).run_command(cmd, log_file)
                 cmd = "cd %s;pm2 start bin/www -i %d --name %s" % (app_server_path, int(node_app_number), app_name)
                 outs = outs + out
                 errors = errors + error
@@ -267,18 +277,16 @@ def do_start_app(app_id):
         app_asset = Asset.objects.get(ip=app_host.ip)
         print 'Start %s on %s:' % (app_name, app_asset.ip), cmd
         out, error = RunCmd(host=app_asset.ip, port=app_asset.port, username=app_asset.username,
-                            password=app_asset.password).run_command(cmd)
+                            password=app_asset.password).run_command(cmd, log_file)
         outs = outs + out
         errors = errors + error
-        logger.info(u'启动%s on %s, port: %s' % (app_host.name, app_host.ip, app_host.port))
+        logger.info(u'完成启动%s on %s, port: %s' % (app_host.name, app_host.ip, app_host.port))
     if errors:
-        # print 'errors is:'
-        # print errors
         msg = u"启动失败"
     else:
-        # print 'outs is:'
-        # print outs
         msg = u"启动成功"
+    with open(log_file, 'a') as f:
+        f.write(u"%s" % msg)
     return msg
 
 
@@ -289,8 +297,12 @@ def do_stop_app(app_id):
     :return:
     """
     app_hosts = AppHost.objects.filter(id__in=app_id)
-    logger.info(u'停止%s on %s' % (app_hosts.values('name'), app_hosts.values('ip')))
+    task_id = do_stop_app.request.id
+    log_file = os.path.join(base_path, 'logs', 'task_log', task_id)
+    if not os.path.exists(os.path.dirname(log_file)):
+        os.makedirs(os.path.dirname(log_file))
     for app_host in app_hosts:
+        logger.info(u'开始停止%s on %s, port: %s' % (app_host.name, app_host.ip, app_host.port))
         app_name = app_host.name
         if app_name == 'mysql':
             cmd = 'service mysqld stop'
@@ -302,28 +314,32 @@ def do_stop_app(app_id):
         app_asset = Asset.objects.get(ip=app_host.ip)
         print 'Stop %s on %s:' % (app_name, app_asset.ip), cmd
         out, error = RunCmd(host=app_asset.ip, port=app_asset.port, username=app_asset.username,
-                            password=app_asset.password).run_command(cmd)
-        logger.info(u'停止%s on %s, port: %s' % (app_host.name, app_host.ip, app_host.port))
+                            password=app_asset.password).run_command(cmd, log_file)
+        logger.info(u'完成停止%s on %s, port: %s' % (app_host.name, app_host.ip, app_host.port))
     if error:
-        # print 'error is:'
-        # print error
         msg = u'停止失败'
     else:
-        # print 'out is:'
-        # print out
         msg = u'停止成功'
+    with open(log_file, 'a') as f:
+        f.write(u"%s" % msg)
     return msg
 
 
-@shared_task
+@shared_task()
 def do_reload_app(app_id):
     """
     :param app_id: 应用id列表
     :return:
     """
     app_hosts = AppHost.objects.filter(id__in=app_id)
-    logger.info(u'重启%s on %s' % (app_hosts.values('name'), app_hosts.values('ip')))
+    outs = ''
+    errors = ''
+    task_id = do_reload_app.request.id
+    log_file = os.path.join(base_path, 'logs', 'task_log', task_id)
+    if not os.path.exists(os.path.dirname(log_file)):
+        os.makedirs(os.path.dirname(log_file))
     for app_host in app_hosts:
+        outs += u'开始重启%s on %s, port: %s\n' % (app_host.name, app_host.ip, app_host.port)
         app_name = app_host.name
         deploy_path = app_host.deploy_path
         if app_name == 'mysql':
@@ -335,22 +351,22 @@ def do_reload_app(app_id):
                 cd %slogs/;%sbin/catalina.sh start;sleep %d" % (
                 deploy_path, deploy_path, deploy_path, int(STARTUP_APP_SLEEP))
         app_asset = Asset.objects.get(ip=app_host.ip)
-        print '重启 %s on %s:' % (app_name, app_asset.ip), cmd
         out, error = RunCmd(host=app_asset.ip, port=app_asset.port, username=app_asset.username,
-                            password=app_asset.password).run_command(cmd)
-        logger.info(u'重启%s on %s, port: %s' % (app_host.name, app_host.ip, app_host.port))
-    if error:
-        # print 'error is:'
-        # print error
+                            password=app_asset.password).run_command(cmd, log_file)
+        if error:
+            errors += error
+        if out:
+            outs += out
+    if errors:
         msg = u'重启失败'
     else:
-        # print 'out is:'
-        # print out
         msg = u'重启成功'
+    with open(log_file, 'a') as f:
+        f.write(u"%s" % msg)
     return msg
 
 
-def checkout(app_name, app_env, svn_url):
+def checkout(app_name, app_env, svn_url, log_file=''):
     outs = ''
     errors = ''
     app_name = app_name.encode('utf-8')
@@ -372,12 +388,19 @@ def checkout(app_name, app_env, svn_url):
         #     commit_revision, svn_url, svn_username, svn_password, app_checkout_path)
         svn_cmd = "svn co %s --username %s --password %s --no-auth-cache --non-interactive %s" % (
             svn_url, svn_username, svn_password, app_checkout_path)
-        print u"请稍后,正在下载 %s" % svn_url
         svn_out = os.popen(svn_cmd).read()
-        # print svn_out
-        print u"文件已经下载到 : %s" % app_checkout_path
+        with open(log_file, 'a') as f:
+            f.write(u"请稍后,正在下载 %s\n" % svn_url)
+            # print svn_out
+            f.write(u"文件已经下载到 : %s\n" % app_checkout_path)
         cmd = 'cd %s;tar -zcf %s %s' % (svn_checkout_path, app_name_compress, app_name)
         out = os.popen(cmd).read()
+        with open(log_file, 'a') as f:
+            f.write(u"%s" % out)
+        if os.path.exists(os.path.join(svn_checkout_path, app_name_compress)):
+            return True
+        else:
+            return False
     if app_name.find('tomcat-') == 0:
         app_war_name = app_name.split('tomcat-')[1]
         app_war = '%s.war' % app_name.split('tomcat-')[1]
@@ -389,10 +412,10 @@ def checkout(app_name, app_env, svn_url):
             tomcat_checkout_path = os.path.join(app_checkout_path, svn_basename)
             svn_cmd = "svn co %s --username %s --password %s --no-auth-cache --non-interactive %s" % (
                 i, svn_username, svn_password, tomcat_checkout_path)
-            print u"请稍后,正在下载 %s" % i
-            svn_out = os.popen(svn_cmd).read()
-            # print svn_out
-            print u"文件已经下载到 : %s" % tomcat_checkout_path
+            with open(log_file, 'a') as f:
+                f.write(u"请稍后,正在下载 %s\n" % i)
+                svn_out = os.popen(svn_cmd).read()
+                f.write(u"文件已经下载到 : %s\n" % tomcat_checkout_path)
         # ant打包
         build_app_xml = 'build_%s.xml' % app_name.split('tomcat-')[1]
         source_xml = os.path.join(svn_checkout_paths, 'build.xml.orig')
@@ -401,9 +424,15 @@ def checkout(app_name, app_env, svn_url):
         edit_ant_build_conf(target_xml, app_checkout_path)
         ant_cmd = "cd %s;source /etc/profile;ant -f %s %s -debug -l build.log" % (
             app_checkout_path, build_app_xml, app_name.split('tomcat-')[1])
-        print ant_cmd
         ant_out = os.popen(ant_cmd).read()
-        print ant_out
+        with open(log_file, 'a') as f:
+            f.write(u"%s\n" % ant_cmd)
+            f.write(u"%s" % ant_out)
+        app_war_ant_path = os.path.join(app_checkout_path, 'deploy', 'war', app_war)
+        if os.path.exists(app_war_ant_path):
+            return True
+        else:
+            return False
 
 
 @shared_task
@@ -415,8 +444,17 @@ def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_
     outs = ''
     errors = ''
     app_name = app_name.encode('utf-8')
+    task_id = do_deploy_app.request.id
+    log_file = os.path.join(base_path, 'logs', 'task_log', task_id)
+    if not os.path.exists(os.path.dirname(log_file)):
+        os.makedirs(os.path.dirname(log_file))
     # 调用checkout函数打包
-    checkout(app_name, app_env, svn_url)
+    checkout_flag = checkout(app_name, app_env, svn_url, log_file)
+    if not checkout_flag:
+        msg = u'checkout打包失败，部署失败!'
+        with open(log_file, 'a') as f:
+            f.write(u"%s\n" % msg)
+        return msg
     # 部署fdp-source
     if app_name.find('fdp_') == 0:
         if app_env == 'product':
@@ -432,13 +470,12 @@ def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_
         remote_path = os.path.join(deploy_path, '%s') % app_name_compress
         # 上传app压缩包
         RunCmd(host=app_source_asset.ip, port=app_source_asset.port, username=app_source_asset.username,
-               password=app_source_asset.password).upload_file(app_checkout_compress_path, remote_path)
+               password=app_source_asset.password).upload_file(app_checkout_compress_path, remote_path, log_file)
         # 安装fdp-source
         cmd = "cd %s;tar -zxf %s;ln -s %s fdp-source;rm -f %s;" % (
             deploy_path, app_name_compress, app_name, app_name_compress)
-        print cmd
         out, error = RunCmd(host=app_source_asset.ip, port=app_source_asset.port, username=app_source_asset.username,
-                            password=app_source_asset.password).run_command(cmd)
+                            password=app_source_asset.password).run_command(cmd, log_file)
         outs = outs + out
         errors = errors + error
     # 部署app
@@ -461,13 +498,13 @@ def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_
                 node_local_path = os.path.join(attachment_path, '%s') % NODE_NAME
                 node_remote_tar_path = os.path.join('/usr/local', '%s') % NODE_NAME
                 RunCmd(host=app_host_ip, port=host_port, username='root', password=password).upload_file(
-                    local_path=node_local_path, remote_path=node_remote_tar_path)
+                    local_path=node_local_path, remote_path=node_remote_tar_path, log_file=log_file)
                 RunCmd(host=app_host_ip, port=host_port, username='root', password=password).run_command(
-                    '''cd /usr/local;tar -zxf %s;rm -f %s;''' % (NODE_NAME, NODE_NAME))
+                    '''cd /usr/local;tar -zxf %s;rm -f %s;''' % (NODE_NAME, NODE_NAME), log_file)
                 # 添加环境变量
                 cmd2 = '''echo "export PATH=/usr/local/node/bin:\$PATH" > /etc/profile.d/node.sh;
                     echo "export NODE_ENV=production" >> /etc/profile.d/node.sh;source /etc/profile.d/node.sh;'''
-                RunCmd(host=app_host_ip, port=host_port, username='root', password=password).run_command(cmd2)
+                RunCmd(host=app_host_ip, port=host_port, username='root', password=password).run_command(cmd2, log_file)
 
             # 判断fdp-receiver是否安装
             remote_path = '/u01'
@@ -480,12 +517,12 @@ def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_
             if results == 'not exist':
                 print 'Install %s ...' % FDP_RECEIVE_BASENAME
                 RunCmd(host=host_ip, port=host_port, username='root', password=password).upload_file(
-                    fdp_receive_local_path, fdp_receive_remote_tar_path)
+                    fdp_receive_local_path, fdp_receive_remote_tar_path, log_file)
                 cmd = '''cd %s;tar -zxf %s;rm -f %s;cd %s;pm2 start bin/www -i 1 --name receiver''' % (
                     remote_path, fdp_receive_name, fdp_receive_name, fdp_receive_remote_path)
                 print 'Start receiver on %s:' % app_asset.ip, cmd
                 out, error = RunCmd(host=app_asset.ip, port=app_asset.port, username=app_asset.username,
-                                    password=app_asset.password).run_command(cmd)
+                                    password=app_asset.password).run_command(cmd, log_file)
                 outs = outs + out
                 errors = errors + error
 
@@ -503,7 +540,8 @@ def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_
             tomcat_remote_path = os.path.join(remote_path, tomcat_name)
             # 上传tomcat
             RunCmd(host=host_ip, port=host_port, username='root', password=password).upload_file(tomcat_local_path,
-                                                                                                 tomcat_remote_path)
+                                                                                                 tomcat_remote_path,
+                                                                                                 log_file)
             tomcat_app_port_1 = app_port.encode('utf-8').replace('8', '7', 1)
             tomcat_app_port_3 = app_port.encode('utf-8').replace('8', '9', 1)
             # 修改tomcat配置
@@ -514,7 +552,8 @@ def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_
                 tomcat_name, tomcat_app_port_1, app_port, tomcat_app_port_3, app_path, JVM_MEMSize, JVM_XmnSize,
                 PermSize, os.path.basename(os.path.dirname(deploy_path)), tomcat_name)
             print cmd2
-            out, error = RunCmd(host=app_host_ip, port=host_port, username='root', password=password).run_command(cmd2)
+            out, error = RunCmd(host=app_host_ip, port=host_port, username='root', password=password).run_command(cmd2,
+                                                                                                                  log_file)
             outs = outs + out
             errors = errors + error
             # install jdk.
@@ -533,18 +572,20 @@ def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_
             if results == 'not exist':
                 print 'Install %s ...' % jdk_base_name
                 RunCmd(host=host_ip, port=host_port, username='root', password=password).upload_file(jdk_local_path,
-                                                                                                     jdk_remote_tar_path)
+                                                                                                     jdk_remote_tar_path,
+                                                                                                     log_file)
                 cmd3 = '''cd /u01;tar -zxf %s;echo "export PATH=/u01/%s/bin:\$PATH" > /etc/profile.d/java.sh;
                             rm -f %s;source /etc/profile.d/java.sh''' % (jdk_name, jdk_base_name, jdk_name)
                 print cmd3
-                out, error = RunCmd(host=host_ip, port=host_port, username='root', password=password).run_command(cmd3)
+                out, error = RunCmd(host=host_ip, port=host_port, username='root', password=password).run_command(cmd3, log_file)
                 outs = outs + out
                 errors = errors + error
             app_war_ant_path = os.path.join(app_checkout_path, 'deploy', 'war', app_war)
             remote_path = os.path.join(deploy_path, 'webapps', app_war)
             # 上传app war包至服务器
             RunCmd(host=app_host_ip, port=host_port, username='root', password=password).upload_file(app_war_ant_path,
-                                                                                                     remote_path)
+                                                                                                     remote_path,
+                                                                                                     log_file)
     # 删除app本次压缩包
     if app_name.find('fdp_') == 0:
         os.chdir(svn_checkout_path)
@@ -557,6 +598,135 @@ def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_
         # print 'out is:'
         # print outs
         msg = u'部署成功'
+    with open(log_file, 'a') as f:
+        f.write(u"%s\n" % msg)
+    return msg
+
+
+@shared_task()
+def do_rollback_app(app_name, app_env):
+    """
+    :param app_name: 应用名称
+    :param app_env: 应用环境
+    :return:
+    """
+    app_hosts = AppHost.objects.filter(name=app_name, env=app_env)
+    outs = ''
+    errors = ''
+    task_id = do_rollback_app.request.id
+    log_file = os.path.join(base_path, 'logs', 'task_log', task_id)
+    if not os.path.exists(os.path.dirname(log_file)):
+        os.makedirs(os.path.dirname(log_file))
+    if app_name.find('fdp_') == 0:
+        deploy_path = os.path.join('/u01', '%s') % app_name
+        if app_env == 'product':
+            app_source_asset = Asset.objects.get(ip=NODE_SOURCE_SERVER)
+        if app_env == 'staging':
+            app_source_asset = Asset.objects.get(ip=NODE_SOURCE_STAGING_SERVER)
+        if app_env == 'test':
+            app_source_asset = Asset.objects.get(ip=NODE_SOURCE_SERVER)
+        app_source_path = os.path.join(deploy_path, 'fdp-source')
+        app_source_link = os.path.join(deploy_path, '%s') % app_name
+        app_source_bak = os.path.join(deploy_path, '%s.bak') % app_name
+        app_server_path = os.path.join(deploy_path, 'fdp_server')
+        # 判断是否存在可回滚的版本
+        results = RunCmd(host=app_source_asset.ip, port=app_source_asset.port, username=app_source_asset.username,
+                         password=app_source_asset.password).file_exist(remote_path='%s' % app_source_bak)
+        if results == 'not exist':
+            msg = u"没有可回滚的版本！"
+            with open(log_file, 'a') as f:
+                f.write("[%s@%s:%s] error: %s\n" % (
+                    app_source_asset.username, app_source_asset.ip, app_source_asset.port, msg))
+            return msg
+        else:
+            # 回滚
+            cmd = "cd %s;rm -rf %s;mv %s %s;" % (deploy_path, app_source_link, app_source_bak, app_source_link)
+            out, error = RunCmd(host=app_source_asset.ip, port=app_source_asset.port,
+                                username=app_source_asset.username,
+                                password=app_source_asset.password).run_command(cmd, log_file)
+            if error:
+                errors += error
+            if out:
+                outs += out
+            app_conf_path = os.path.join(app_source_path, 'conf')
+            results = RunCmd(host=app_source_asset.ip, port=app_source_asset.port, username=app_source_asset.username,
+                             password=app_source_asset.password).file_exist(remote_path='%s' % app_conf_path)
+            if results == 'not exist':
+                release_cmd = "fis3 release production -c"
+            else:
+                if app_env == 'product':
+                    release_cmd = "fdp release production -c"
+                if app_env == 'staging':
+                    release_cmd = "fdp release preproduction -c"
+                if app_env == 'test':
+                    release_cmd = "fdp release test -c"
+            cmd = "cd %s;%s;" % (app_source_path, release_cmd)
+            out, error = RunCmd(host=app_source_asset.ip, port=app_source_asset.port,
+                                username=app_source_asset.username,
+                                password=app_source_asset.password).run_command(cmd, log_file)
+            outs = outs + out
+            errors = errors + error
+            # reload fdp_server
+            cmd = "cd %s;npm update;pm2 reload %s;" % (app_server_path, app_name)
+            for app_host in app_hosts:
+                app_asset = Asset.objects.get(ip=app_host.ip)
+                out, error = RunCmd(host=app_asset.ip, port=app_asset.port, username=app_asset.username,
+                                    password=app_asset.password).run_command(cmd, log_file)
+                outs = outs + out
+                errors = errors
+            with open(log_file, 'a') as f:
+                f.write(u"更新完成！\n")
+    elif app_name.find('tomcat-') == 0:
+        for app_host in app_hosts:
+            with open(log_file, 'a') as f:
+                f.write(u"开始回滚%s on %s, port: %s\n" % (app_host.name, app_host.ip, app_host.port))
+            deploy_path = app_host.deploy_path
+            app_path = os.path.join(deploy_path, 'webapps', app_name.split('tomcat-')[1])
+            app_unpack_path = os.path.join(deploy_path, 'webapps', app_name.split('tomcat-')[1]) + '.war'
+            app_unpack_bak = os.path.join(deploy_path, 'webapps', app_name.split('tomcat-')[1]) + '.war.bak'
+            app_base = os.path.join(deploy_path, 'webapps')
+            app_logs = os.path.join(deploy_path, 'logs')
+            app_cache = os.path.join(deploy_path, 'work', 'Catalina', 'localhost')
+            app_asset = Asset.objects.get(ip=app_host.ip)
+            # 判断是否存在可回滚的版本
+            logger.info(app_unpack_bak)
+            results = RunCmd(host=app_asset.ip, port=app_asset.port, username=app_asset.username,
+                             password=app_asset.password).file_exist(remote_path='%s' % app_unpack_bak)
+            if results == 'not exist':
+                msg = u"没有可回滚的版本！"
+                with open(log_file, 'a') as f:
+                    f.write("[%s@%s:%s] error: %s\n" % (app_asset.username, app_asset.ip, app_asset.port, msg))
+                return msg
+            else:
+                # 停止
+                cmd = "ps -ef|grep %s|grep -v grep|awk '{print $2}'|xargs kill -9;" % deploy_path
+                RunCmd(host=app_asset.ip, port=app_asset.port, username=app_asset.username,
+                       password=app_asset.password).run_command(cmd, log_file)
+                # 回滚
+                cmd = "cd %s;rm -rf %s %s ROOT;mv %s %s;rm -rf %swork;" % (
+                    app_base, app_unpack_path, app_path, app_unpack_bak, app_unpack_path, app_cache)
+                out, error = RunCmd(host=app_asset.ip, port=app_asset.port, username=app_asset.username,
+                                    password=app_asset.password).run_command(cmd, log_file)
+                if error:
+                    errors += error
+                if out:
+                    outs += out
+                # 启动
+                cmd = "cd %s;%sbin/catalina.sh start;sleep %d" % (app_logs, deploy_path, int(STARTUP_APP_SLEEP))
+                out, error = RunCmd(host=app_asset.ip, port=app_asset.port, username=app_asset.username,
+                                    password=app_asset.password).run_command(cmd, log_file)
+                if error:
+                    errors += error
+                if out:
+                    outs += out
+    else:
+        return u'暂不支持操作！'
+    if errors:
+        msg = u'回滚失败'
+    else:
+        msg = u'回滚成功'
+    with open(log_file, 'a') as f:
+        f.write(u"%s\n" % msg)
     return msg
 
 
@@ -565,6 +735,10 @@ def do_update_app(app_name, app_env):
     logger.info(u'更新 %s, env: %s' % (app_name, app_env))
     outs = ''
     errors = ''
+    task_id = do_update_app.request.id
+    log_file = os.path.join(base_path, 'logs', 'task_log', task_id)
+    if not os.path.exists(os.path.dirname(log_file)):
+        os.makedirs(os.path.dirname(log_file))
     app_name = app_name.encode('utf-8')
     app_env = app_env.encode('utf-8')
     app_hosts = AppHost.objects.filter(name=app_name, env=app_env)
@@ -590,10 +764,12 @@ def do_update_app(app_name, app_env):
         else:
             svn_cmd = "svn co %s --username %s --password %s --no-auth-cache --non-interactive %s" % (
                 svn_url, svn_username, svn_password, app_checkout_path)
-        print u"请稍后,正在更新 %s" % app_checkout_path
-        svn_out = os.popen(svn_cmd).read()
-        print svn_out
-        print u'文件已经更新到 : %s' % app_checkout_path
+        print
+        with open(log_file, 'a') as f:
+            f.write(u"[localhost] out: 请稍后,正在更新 %s\n" % app_checkout_path)
+            svn_out = os.popen(svn_cmd).read()
+            f.write(u'[localhost] out: %s' % svn_out)
+            f.write(u'[localhost] out: 文件已经更新到 %s\n' % app_checkout_path)
         cmd = 'cd %s;tar -zcf %s %s' % (svn_checkout_path, app_name_compress, app_name)
         out = os.popen(cmd).read()
         print out
@@ -602,7 +778,7 @@ def do_update_app(app_name, app_env):
         app_server_path = os.path.join(deploy_path, 'fdp_server')
         remote_path = os.path.join(deploy_path, '%s') % app_name_compress
         RunCmd(host=app_source_asset.ip, port=app_source_asset.port, username=app_source_asset.username,
-               password=app_source_asset.password).upload_file(app_checkout_compress_path, remote_path)
+               password=app_source_asset.password).upload_file(app_checkout_compress_path, remote_path, log_file)
 
         os.chdir(svn_checkout_path)
         os.remove('%s' % app_name_compress)
@@ -626,9 +802,8 @@ def do_update_app(app_name, app_env):
                 cd %s;%s;""" % (
                 deploy_path, app_name, app_name, app_name, app_name_compress, app_name_compress, app_name, app_name,
                 app_name, app_name, app_name, app_name, app_source_path, release_cmd)
-        print cmd2
         out, error = RunCmd(host=app_source_asset.ip, port=app_source_asset.port, username=app_source_asset.username,
-                            password=app_source_asset.password).run_command(cmd2)
+                            password=app_source_asset.password).run_command(cmd2, log_file)
         outs = outs + out
         errors = errors + error
         # reload fdp_server
@@ -637,9 +812,11 @@ def do_update_app(app_name, app_env):
         for app_host in app_hosts:
             app_asset = Asset.objects.get(ip=app_host.ip)
             out, error = RunCmd(host=app_asset.ip, port=app_asset.port, username=app_asset.username,
-                                password=app_asset.password).run_command(cmd3)
+                                password=app_asset.password).run_command(cmd3, log_file)
             outs = outs + out
             errors = errors
+        with open(log_file, 'a') as f:
+            f.write(u"更新完成！\n")
     if app_name.find('tomcat-') == 0:
         app_path = app_name.split('tomcat-')[1]
         app_war = '%s.war' % app_name.split('tomcat-')[1]
@@ -655,10 +832,11 @@ def do_update_app(app_name, app_env):
             else:
                 svn_cmd = "svn co %s --username %s --password %s --no-auth-cache --non-interactive %s" % (
                     i, svn_username, svn_password, tomcat_checkout_path)
-            print u"请稍后,正在更新 %s" % i
-            svn_out = os.popen(svn_cmd).read()
-            print svn_out
-            print u"文件已经更新到 : %s" % tomcat_checkout_path
+            with open(log_file, 'a') as f:
+                f.write(u"[localhost] out: 请稍后,正在更新 %s\n" % i)
+                svn_out = os.popen(svn_cmd).read()
+                f.write(u"[localhost] out: %s" % svn_out)
+                f.write(u"[localhost] out: 文件已经更新到 %s\n" % tomcat_checkout_path)
 
         # 替换配置文件
         app_configs = AppConfig.objects.filter(name=app_name, env=app_env)
@@ -672,7 +850,8 @@ def do_update_app(app_name, app_env):
                 config_file = os.path.join(config_files_path, app_env, app_name.split('tomcat-')[1], key, file)
                 target_config_file = os.path.join(app_checkout_path, key, file)
                 shutil.copy2('%s' % config_file, '%s' % target_config_file)
-                print 'copy %s to %s.' % (config_file, target_config_file)
+                with open(log_file, 'a') as f:
+                    f.write(u"[localhost] out: copy %s to %s.\n" % (config_file, target_config_file))
         # 替换配置文件
         # ant打包
         build_app_xml = 'build_%s.xml' % app_name.split('tomcat-')[1]
@@ -682,10 +861,11 @@ def do_update_app(app_name, app_env):
         edit_ant_build_conf(target_xml, app_checkout_path)
         ant_cmd = "source /etc/profile;cd %s;rm -rf deploy;ant -f %s %s -debug -l build.log" % (
             app_checkout_path, build_app_xml, app_name.split('tomcat-')[1])
-        print ant_cmd
-        ant_out = os.popen(ant_cmd).read()
-        # ant_out = os.system(ant_cmd)
-        print ant_out
+        with open(log_file, 'a') as f:
+            f.write(u"[localhost] out: %s.\n" % ant_cmd)
+            ant_out = os.popen(ant_cmd).read()
+            # ant_out = os.system(ant_cmd)
+            f.write(u"[localhost] out: %s.\n" % ant_out)
         app_war_ant_path = os.path.join(app_checkout_path, 'deploy', 'war', app_war)
         if os.path.exists(app_war_ant_path):
             # 更新至服务器并重启
@@ -699,12 +879,11 @@ def do_update_app(app_name, app_env):
                 cmd1 = '''ps -ef|grep %s|grep -v grep|awk '{print $2}'|xargs kill -9;
                         cd %s;rm -f %s.bak;mv %s %s.bak;rm -rf %s ROOT;
                         rm -rf %s''' % (deploy_path, app_base, app_war, app_war, app_war, app_path, app_cache)
-                print cmd1
                 RunCmd(host=app_host_asset.ip, port=app_host_asset.port, username=app_host_asset.username,
-                       password=app_host_asset.password).run_command(cmd1)
+                       password=app_host_asset.password).run_command(cmd1, log_file)
                 # 更新
                 RunCmd(host=app_host_asset.ip, port=app_host_asset.port, username=app_host_asset.username,
-                       password=app_host_asset.password).upload_file(app_war_ant_path, remote_path)
+                       password=app_host_asset.password).upload_file(app_war_ant_path, remote_path, log_file)
                 # 启动
                 logs_path = os.path.join(deploy_path, 'logs')
                 catalina_path = os.path.join(deploy_path, 'bin', 'catalina.sh')
@@ -712,12 +891,15 @@ def do_update_app(app_name, app_env):
                 cmd2 = "cd %s;if [ -e 'catalina.out' ] ;then mv catalina.out catalina.out.%s.bak;fi;%s start;sleep %d" % (
                     logs_path, tag, catalina_path, int(STARTUP_APP_SLEEP))
                 out, error = RunCmd(host=app_host_asset.ip, port=app_host_asset.port, username=app_host_asset.username,
-                                    password=app_host_asset.password).run_command(cmd2)
+                                    password=app_host_asset.password).run_command(cmd2, log_file)
                 outs = outs + out
                 errors = errors + error
+            with open(log_file, 'a') as f:
+                f.write(u"更新完成！\n")
         else:
-            print u'%s 不存在,更新失败,未更新应用！' % app_war_ant_path
-            msg = u'打包失败,未更新应用'
+            with open(log_file, 'a') as f:
+                f.write(u"打包失败,%s不存在,未更新应用！\n" % app_war_ant_path)
+            msg = u"打包失败,%s不存在,未更新应用！\n" % app_war_ant_path
             return msg
     if errors:
         # print 'errors is:'
@@ -767,7 +949,7 @@ def update_task_status():
                                                               name=name, port=port, env=env)
                         except Exception, e:
                             print str(e)
-                        app.apphosts.add(app_host)
+                        app.app_hosts.add(app_host)
                         logger.info(u'已新增%s:应用%s on %s' % (env, name, ip))
             if task_get.name.find(u'更新') == 0:
                 app_hosts = AppHost.objects.filter(id__in=task_get.app_id.split(','))
@@ -985,59 +1167,76 @@ def get_service_mon_data():
                 logger.info(e)
 
 
+def query_fpcy_from_mongodb(data_time, end_time, collection):
+    # 查询发票查验数据
+    logger.info(u'从mongodb取出数据.')
+    try:
+        # data_list = collection.find_one({"time": data_time}, {"_id": 0, "time": 0})
+        data_list = collection.find_one({"time": {"$gte": data_time, "$lt": end_time}}, {"_id": 0, "time": 0})
+        # logger.info(str(data_list).decode('string_escape'))
+        logger.info(data_list['data'])
+        return data_list['data']
+    except Exception as e:
+        logger.info(u'从mongodb查询发票查验数据异常:' + str(e))
+        return None
+
+
 def save_data_to_mongodb(data, data_time, collection, with_sum='N'):
     data_list = []
-    if type(data) == tuple:
-        data = list(data)
-    logger.info(u'数据库查询出来的数据:')
-    logger.info(str(data).decode('string_escape'))
-    for i in range(len(data)):
-        if type(data[i]) == tuple:
-            data[i] = list(data[i])
-        if type(data[i]) == list:
-            record = data[i]
-            for j in range(len(record)):
-                if type(record[j]) == tuple:
-                    record[j] = list(record[j])
-                if record[j] is not None and isinstance(record[j], decimal.Decimal):
-                    record[j] = str(record[j])
-                    if str(record[j]).find('.') == -1:
-                        record[j] = int(record[j])
-                    else:
-                        record[j] = float(record[j])
-                if record[j] is None:
-                    record[j] = ''
-    if with_sum == 'Y':
-        data_col_len = len(data[0])
-        total = [0 for i in range(data_col_len)]
-        for i in data:
-            for j in range(len(i))[1:]:
-                try:
-                    if i[j] != '' and i[j] is not None and str(i[j]).find('%') == -1:
-                        total[j] = total[j] + i[j]
-                    if str(i[j]).find('%') != -1:
-                        total[j] = '-'
-                except Exception as e:
-                    logger.info(e)
-        total[0] = u'合计'
-        data.append(total)
-    # 存储数据
-    logger.info(u'存储查询数据至mongodb:')
-    logger.info({'data': str(data).decode('string_escape'), 'time': data_time})
-    try:
-        collection.insert({'data': data, 'time': data_time})
-    except Exception as e:
-        print e
-        logger.info(e)
-    # 查询数据
-    try:
-        data_list = collection.find_one({"time": data_time}, {"_id": 0, "time": 0})
-    except Exception as e:
-        print e
-    logger.info(u'从mongodb取出来的数据:')
-    logger.info(str(data_list).decode('string_escape'))
-    # logger.info(type(data_list))
-    return data_list['data']
+    if len(data) == 0:
+        return None
+    else:
+        if type(data) == tuple:
+            data = list(data)
+        logger.info(u'数据库查询出来的数据:')
+        logger.info(str(data).decode('string_escape'))
+        for i in range(len(data)):
+            if type(data[i]) == tuple:
+                data[i] = list(data[i])
+            if type(data[i]) == list:
+                record = data[i]
+                for j in range(len(record)):
+                    if type(record[j]) == tuple:
+                        record[j] = list(record[j])
+                    if record[j] is not None and isinstance(record[j], decimal.Decimal):
+                        record[j] = str(record[j])
+                        if str(record[j]).find('.') == -1:
+                            record[j] = int(record[j])
+                        else:
+                            record[j] = float(record[j])
+                    if record[j] is None:
+                        record[j] = ''
+        if with_sum == 'Y':
+            data_col_len = len(data[0])
+            total = [0 for i in range(data_col_len)]
+            for i in data:
+                for j in range(len(i))[1:]:
+                    try:
+                        if i[j] != '' and i[j] is not None and str(i[j]).find('%') == -1:
+                            total[j] = total[j] + i[j]
+                        if str(i[j]).find('%') != -1:
+                            total[j] = '-'
+                    except Exception as e:
+                        logger.info(e)
+            total[0] = u'合计'
+            data.append(total)
+        # 存储数据
+        logger.info(u'存储查询数据至mongodb:')
+        logger.info({'data': str(data).decode('string_escape'), 'time': data_time})
+        try:
+            collection.insert({'data': data, 'time': data_time})
+        except Exception as e:
+            print e
+            logger.info(e)
+        # 查询数据
+        try:
+            data_list = collection.find_one({"time": data_time}, {"_id": 0, "time": 0})
+        except Exception as e:
+            print e
+        logger.info(u'从mongodb取出来的数据:')
+        logger.info(str(data_list).decode('string_escape'))
+        # logger.info(type(data_list))
+        return data_list['data']
 
 
 # 查询用户的题分信息
@@ -1134,47 +1333,60 @@ def query_fpcy_every_day():
         logger.info(json.dumps(data, encoding='utf-8', ensure_ascii=False))
     try:
         # 发票入库情况
-
+        logger.info(u'开始执行发票查验统计:')
         logger.info('#' * 100)
         logger.info(u'发票入库情况:')
-        logger.info(fpcy_sql.sql_fprkqk1)
-        data_sql_fprkqk = []
-        cur_list, cur_desc, cur_rows, dict_list = conn.exec_select(fpcy_sql.sql_fprkqk1)
-        data_sql_fprkqk1 = cur_list[0][0]
-        data_sql_fprkqk.append(data_sql_fprkqk1)
-
-        logger.info(fpcy_sql.sql_fprkqk2)
-        args = (zzs_name,)
-        cur_list, cur_desc, cur_rows, dict_list = conn.exec_select(fpcy_sql.sql_fprkqk2, args)
-        data_sql_fprkqk2 = cur_list[0][0]
-        data_sql_fprkqk.append(data_sql_fprkqk2)
-
-        logger.info(fpcy_sql.sql_fprkqk3)
-        args = (zzs_name,)
-        cur_list, cur_desc, cur_rows, dict_list = conn.exec_select(fpcy_sql.sql_fprkqk3, args)
-        data_sql_fprkqk3 = cur_list[0][0]
-        data_sql_fprkqk.append(data_sql_fprkqk3)
-
-        logger.info(fpcy_sql.sql_fprkqk4)
-        args = (begin_time, end_time)
-        cur_list, cur_desc, cur_rows, dict_list = conn.exec_select(fpcy_sql.sql_fprkqk4, args)
-        data_sql_fprkqk4 = cur_list[0][0]
-        data_sql_fprkqk.append(data_sql_fprkqk4)
-
-        logger.info(fpcy_sql.sql_fprkqk5)
-        args = (begin_time, end_time, zzs_name)
-        cur_list, cur_desc, cur_rows, dict_list = conn.exec_select(fpcy_sql.sql_fprkqk5, args)
-        data_sql_fprkqk5 = cur_list[0][0]
-        data_sql_fprkqk.append(data_sql_fprkqk5)
-
-        logger.info(fpcy_sql.sql_fprkqk6)
-        args = (begin_time, end_time, zzs_name)
-        cur_list, cur_desc, cur_rows, dict_list = conn.exec_select(fpcy_sql.sql_fprkqk6, args)
-        data_sql_fprkqk6 = cur_list[0][0]
-        data_sql_fprkqk.append(data_sql_fprkqk6)
-
-        data_sql_fprkqk7 = str(round(float(data_sql_fprkqk4) / data_sql_fprkqk1 * 100, 2)) + '%'
-        data_sql_fprkqk.append(data_sql_fprkqk7)
+        # 先查询当日增量数据
+        args = (begin_time, end_time, zzs_name, begin_time, end_time, zzs_name, begin_time, end_time)
+        cur_list, cur_desc, cur_rows, dict_list = conn.exec_select(fpcy_sql.sql_fprkqk, args)
+        data_sql_fprkqk = list(cur_list)
+        for j in range(len(data_sql_fprkqk)):
+            if type(data_sql_fprkqk[j]) != list:
+                data_sql_fprkqk[j] = list(data_sql_fprkqk[j])
+        # 统计总数=当日增量数据+昨日统计数据
+        collection = db_mongo['fpcy_fprkqk']
+        data_sql_fprkqk_yesterday = query_fpcy_from_mongodb(last_time, end_time, collection)
+        for i in range(len(data_sql_fprkqk_yesterday)):
+            data_sql_fprkqk_yesterday[i][4] = 0
+            data_sql_fprkqk_yesterday[i][5] = 0
+            data_sql_fprkqk_yesterday[i][6] = 0
+            data_sql_fprkqk_yesterday[i][7] = '-'
+            for j in dict_list:
+                if data_sql_fprkqk_yesterday[i][0] == j.get('cyfs'):
+                    data_sql_fprkqk_yesterday[i][1] += j.get('cnt1')
+                    data_sql_fprkqk_yesterday[i][2] += j.get('cnt2')
+                    data_sql_fprkqk_yesterday[i][3] += j.get('cnt3')
+                    data_sql_fprkqk_yesterday[i][4] = j.get('cnt1')
+                    data_sql_fprkqk_yesterday[i][5] = j.get('cnt2')
+                    data_sql_fprkqk_yesterday[i][6] = j.get('cnt3')
+                    data_sql_fprkqk_yesterday[i][7] = str(
+                        round(float(j.get('cnt1')) / float(data_sql_fprkqk_yesterday[i][1]) * 100, 2)) + '%'
+        # 计算合计
+        # 删除昨日合计
+        data_sql_fprkqk_yesterday.pop()
+        # 重新计算合计
+        data_col_len = len(data_sql_fprkqk_yesterday[0])
+        total = [0 for i in range(data_col_len)]
+        for i in data_sql_fprkqk_yesterday:
+            for j in range(len(i))[1:]:
+                try:
+                    if i[j] != '' and i[j] is not None and str(i[j]).find('%') == -1:
+                        total[j] = total[j] + i[j]
+                    if str(i[j]).find('%') != -1:
+                        total[j] = '-'
+                except Exception as e:
+                    logger.info(e)
+        total[0] = u'合计'
+        data_sql_fprkqk_yesterday.append(total)
+        # 重新计算合计后的百分比
+        try:
+            for record in data_sql_fprkqk_yesterday:
+                if record[0] == '合计':
+                    record[7] = str(round(float(record[4]) / float(record[1]) * 100, 2)) + '%'
+        except Exception as e:
+            logger.info(e)
+        data_sql_fprkqk = data_sql_fprkqk_yesterday
+        logger.info(data_sql_fprkqk)
         try:
             collection = db_mongo['fpcy_fprkqk']
             data_sql_fprkqk = save_data_to_mongodb(data_sql_fprkqk, stat_day, collection)
@@ -1184,6 +1396,8 @@ def query_fpcy_every_day():
         # 营收情况
         logger.info(u'营收情况:')
         data_sql_ysqk = []
+        # 乐税
+        data_sql_ysqk_record = {}
         collection = db_mongo['fpcy_ysqk_dmfy']
         # 获取超级鹰用户的题分信息
         try:
@@ -1205,34 +1419,58 @@ def query_fpcy_every_day():
             data_sql_ysqk_dmfy = round(float(last_chaojiying_tifen - current_chaojiying_tifen) / 1000.00, 2)
         else:
             data_sql_ysqk_dmfy = round(float(current_chaojiying_tifen) / 1000.00, 2)
-        data_sql_ysqk.append(data_sql_ysqk_dmfy)
         # 营收情况 -> 每张入库成本
-        if data_sql_fprkqk[3] == 0:
+        for i in data_sql_fprkqk:
+            if i[0] == '乐税':
+                data_fprkzs_today = i[4]
+        if data_fprkzs_today == 0:
             data_sql_ysqk_mzrkcb = 0
         else:
-            data_sql_ysqk_mzrkcb = round(data_sql_ysqk_dmfy / data_sql_fprkqk4, 2)
-        data_sql_ysqk.append(data_sql_ysqk_mzrkcb)
-
+            data_sql_ysqk_mzrkcb = round(data_sql_ysqk_dmfy / data_fprkzs_today, 2)
+        data_sql_ysqk_record['cyfs'] = '乐税'
+        data_sql_ysqk_record['col1'] = data_sql_ysqk_dmfy
+        data_sql_ysqk_record['col2'] = data_sql_ysqk_mzrkcb
         args = (begin_time, end_time)
         logger.info(args)
         cur_list, cur_desc, cur_rows, dict_list = conn.exec_select(fpcy_sql.sql_ysqk_jfcs, args)
         data_sql_ysqk_jfcs = cur_list[0][0]
-        data_sql_ysqk.append(data_sql_ysqk_jfcs)
-        data_sql_ysqk_xfds_yk = data_sql_ysqk_jfcs * CHARGE_POINT_FEE
-        data_sql_ysqk.append(data_sql_ysqk_xfds_yk)
+        data_sql_ysqk_record['col3'] = data_sql_ysqk_jfcs
+
+        data_sql_ysqk_xfds_yk = data_sql_ysqk_jfcs * 15
+        data_sql_ysqk_record['col4'] = data_sql_ysqk_xfds_yk
+
         data_sql_ysqk_xfje_yk = data_sql_ysqk_xfds_yk / 100
-        data_sql_ysqk.append(data_sql_ysqk_xfje_yk)
+        data_sql_ysqk_record['col5'] = data_sql_ysqk_xfje_yk
+
         # 营收情况 ->  来源计费系统（charging）
         args = (begin_time, end_time)
         cur_list, cur_desc, cur_rows, dict_list = conn_charging.exec_select(fpcy_sql.sql_ysqk_xfds_sk, args)
         data_sql_ysqk_xfds_sk = cur_list[0][0]
-        data_sql_ysqk.append(data_sql_ysqk_xfds_sk)
+        data_sql_ysqk_record['col6'] = data_sql_ysqk_xfds_sk
+
         data_sql_ysqk_xfje = data_sql_ysqk_xfds_sk / 100
-        data_sql_ysqk.append(data_sql_ysqk_xfje)
-        # # 营收情况 ->  充值金额（ls库）
+        data_sql_ysqk_record['col7'] = data_sql_ysqk_xfje
+
+        # 营收情况 ->  充值金额（ls库）
         cur_list, cur_desc, cur_rows, dict_list = conn_ls.exec_select(fpcy_sql.sql_ysqk_czje, args)
         data_sql_ysqk_czje = str(cur_list[0][0])
-        data_sql_ysqk.append(data_sql_ysqk_czje)
+        data_sql_ysqk_record['col8'] = data_sql_ysqk_czje
+
+        data_sql_ysqk.append(data_sql_ysqk_record)
+        # 百望
+        data_sql_ysqk_record = {}
+        data_sql_ysqk_record['cyfs'] = '百望'
+        data_sql_ysqk_record['col1'] = '*'
+        data_sql_ysqk_record['col2'] = '*'
+        data_sql_ysqk.append(data_sql_ysqk_record)
+        # 合计
+        data_sql_ysqk_record = {}
+        data_sql_ysqk_record['cyfs'] = '合计'
+        data_sql_ysqk_record['col1'] = data_sql_ysqk[0]['col1']
+        data_sql_ysqk_record['col2'] = data_sql_ysqk[0]['col2']
+        data_sql_ysqk.append(data_sql_ysqk_record)
+        logger.info(data_sql_ysqk)
+        # 存储到mongodb
         try:
             collection = db_mongo['fpcy_ysqk']
             data_sql_ysqk = save_data_to_mongodb(data_sql_ysqk, stat_day, collection)
@@ -1366,6 +1604,10 @@ def query_fpcy_every_day():
             data_sql_hxfwztb = data_sql_hxfwztbs[j]
             data_sql_hxfwztb[0] = data_sql_hxfwztb[0].split('（')[0]
         try:
+            # 存储明细
+            collection = db_mongo['fpcy_hxfwzt_detail']
+            data_sql_hxfwztbs = save_data_to_mongodb(data_sql_hxfwztbs, stat_day, collection)
+            # 存储汇总
             collection = db_mongo['fpcy_hxfwzt']
             data_sql_hxfwztbs = save_data_to_mongodb(data_sql_hxfwztbs, stat_day, collection, with_sum='Y')
         except Exception as e:
@@ -1388,6 +1630,8 @@ def query_fpcy_every_day():
             # 可能出现invoiceName为空的情况，需要判断.
             if data_sql_sjcyfwztb[0] is not None:
                 data_sql_sjcyfwztb[0] = data_sql_sjcyfwztb[0].split('（')[0]
+            else:
+                data_sql_sjcyfwztb[0] = '打码未使用'
         try:
             collection = db_mongo['fpcy_sjcyfwzt']
             data_sql_sjcyfwztbs = save_data_to_mongodb(data_sql_sjcyfwztbs, stat_day, collection, with_sum='Y')
@@ -1475,6 +1719,28 @@ def query_fpcy_every_day():
         except Exception as e:
             logger.info(e)
             # logger.info(data_sql_bwcyfwztbs)
+
+        logger.info(u'用户账号点数情况:')
+        # logger.info(fpcy_sql.sql_yhzhdsqk)
+        args = ()
+        cur_list, cur_desc, cur_rows, dict_list = conn_charging.exec_select(fpcy_sql.sql_yhzhdsqk, args)
+        logger.info(u'查询%d条记录！' % cur_rows)
+        data_sql_yhzhdsqk = list(cur_list)
+        # 更新usercode为用户名称
+        for j in range(len(data_sql_yhzhdsqk)):
+            if type(data_sql_yhzhdsqk[j]) != list:
+                data_sql_yhzhdsqk[j] = list(data_sql_yhzhdsqk[j])
+            # 用户账号点数情况 -> 企业名称（opendb）
+            args = (data_sql_yhzhdsqk[j][0],)
+            cur_list, cur_desc, cur_rows, dict_list = conn_opendb.exec_select(fpcy_sql.sql_qyjkcyqk_qymc, args)
+            if len(cur_list) > 0:
+                data_sql_yhzhdsqk[j][0] = cur_list[0][0] + cur_list[0][1]
+        try:
+            collection = db_mongo['fpcy_yhzhdsqk']
+            data_sql_yhzhdsqk = save_data_to_mongodb(data_sql_yhzhdsqk, stat_day, collection)
+        except Exception as e:
+            logger.info(e)
+            # logger.info(data_sql_yhzhdsqk)
 
         # 统计完成发送邮件
         try:

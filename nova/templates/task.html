@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 {% block title %}任务列表{% endblock %}
 {% block content %}
-{#    <div class="container col-sm-8 col-sm-offset-2 col-md-10 col-md-offset-2 main">#}
-    <div  class="container col-sm-8 col-md-12">
-    <div class="col-md-offset-1 console-instance-head clearfix">
+    {#    <div class="container col-sm-8 col-sm-offset-2 col-md-10 col-md-offset-2 main">#}
+    <div class="container col-sm-8 col-md-12">
+        <div class="col-md-offset-1 console-instance-head clearfix">
             <div class="pull-left">
                 <h3><span>任务列表</span></h3>
             </div>
@@ -26,7 +26,7 @@
                 <tbody>
                 {% for task in tasks %}
                     <tr class="gradeX">
-                        <td>{{ task.id }}</td>
+                        <td name="task_id"><a href="{% url 'view' %}?task_id={{ task.task_id }}">{{ task.id }}</a></td>
                         <td>{{ task.name }}</td>
                         <td>{{ task.status }}</td>
                         <td>{{ task.start_time|date:"Y-m-d H:i:s" }}</td>
@@ -37,45 +37,138 @@
                 {% endfor %}
                 </tbody>
             </table>
+
+            <table class="table table-fixed" width="100%" style="position: fixed; bottom: 0px;">
+                {#                            <table class="table table-fixed" width="100%">#}
+                <tr>
+                    <td>
+                        <div>
+                            <div class="pull-right">
+                                <div class="pagination-info">
+                                    <span class="ng-binding">共有 {{ all_count }} 条，</span>
+                                    <span>每页显示：
+                                        <select id="id_limit" name="limit" onchange="change_limit()">
+                                            {% for i in limit_option %}
+                                                {% if i == limit %}
+                                                    <option value="{{ i }}" selected="selected">{{ i }}</option>
+                                                {% else %}
+                                                    <option value="{{ i }}">{{ i }}</option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </select>条
+                                    </span>
+                                </div>
+                                <ul class="pagination">
+                                    {% if tasks.has_previous %}
+                                        <li><a href="?page=1&limit={{ limit }}">«</a></li>
+                                        <li>
+                                            <a href="?page={{ tasks.previous_page_number }}&limit={{ limit }}">‹</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="disabled"><a href="?page=1">«</a></li>
+                                        <li class="disabled"><a>‹</a></li>
+                                    {% endif %}
+                                    {% for pg in page_range %}
+                                        {% if tasks.number == pg %}
+                                            <li class="active"><a href="?page={{ pg }}">{{ pg }}</a></li>
+                                        {% else %}
+                                            <li><a href="?page={{ pg }}&limit={{ limit }}">{{ pg }}</a></li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if tasks.has_next %}
+                                        <li><a href="?page={{ tasks.next_page_number }}&limit={{ limit }}">›</a>
+                                        </li>
+                                        <li><a href="?page={{ all_pages }}&limit={{ limit }}">»</a></li>
+                                    {% else %}
+                                        <li class="disabled"><a>›</a></li>
+                                        <li class="disabled"><a href="?page={{ all_pages }}">»</a></li>
+                                    {% endif %}
+                                </ul>
+                                <span style="padding-left: 15px;padding-right: 15px">
+                                    <input type="text" id="id_page" name="page"
+                                           class="form-control"
+                                           style="width: 40px; display: inline-block;">
+                                    <input type="button" style="margin-left: 6px" class="btn btn-default"
+                                           id="page_query" disabled="disabled"
+                                           value="GO">
+                                    </input>
+                                </span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
         </div>
     </div>
 {% endblock %}
 
 {% block js %}
-    <script>
-        $(document).ready(function () {
-            $('#dataTables-task').DataTable(
-                    {
-                        responsive: true,
-                        "aaSorting": [
-                            [3, "desc"]
-                        ],
-                        language: {
-                            "sProcessing": "处理中...",
-                            "sLengthMenu": "显示 _MENU_ 项结果",
-                            "sZeroRecords": "没有匹配结果",
-                            "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
-                            "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
-                            "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
-                            "sInfoPostFix": "",
-                            "sSearch": "搜索:",
-                            "sUrl": "",
-                            "sEmptyTable": "表中数据为空",
-                            "sLoadingRecords": "载入中...",
-                            "sInfoThousands": ",",
-                            "oPaginate": {
-                                "sFirst": "首页",
-                                "sPrevious": "上页",
-                                "sNext": "下页",
-                                "sLast": "末页"
-                            },
-                            "oAria": {
-                                "sSortAscending": ": 以升序排列此列",
-                                "sSortDescending": ": 以降序排列此列"
-                            }
-                        }
-                    }
-            );
+    <script type="text/javascript">
+        function change_limit() {
+            var limit = $("#id_limit").val();
+            if (limit == 10) {
+                window.location.href = "{% url 'task_list' %}";
+            }
+            else {
+                window.location.href = "{% url 'task_list' %}?limit=" + limit;
+                window.location.href = "{% url 'task_list' %}?limit=" + limit;
+            }
+        }
+
+        $("#id_page").keydown(function (e) {
+            if (e.keyCode) {
+                $("#page_query").attr("disabled", false)
+            }
         });
+
+        $(document).ready(function () {
+            $('#page_query').click(function () {
+                var page = $("#id_page").val();
+                var limit = $("#id_limit").val();
+                window.location.href = "{% url 'task_list' %}?page=" + page + '&limit=' + limit;
+            });
+        });
+
+        $(function () {
+            setInterval(function () {
+                window.location.href = "{% url 'task_list' %}";
+            }, 30000);
+        });
+
+        {#        $(document).ready(function () {#}
+        {#            $('#dataTables-task').DataTable(#}
+        {#                    {#}
+        {#                        responsive: true,#}
+        {#                        "aaSorting": [#}
+        {#                            [3, "desc"]#}
+        {#                        ],#}
+        {#                        language: {#}
+        {#                            "sProcessing": "处理中...",#}
+        {#                            "sLengthMenu": "显示 _MENU_ 项结果",#}
+        {#                            "sZeroRecords": "没有匹配结果",#}
+        {#                            "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",#}
+        {#                            "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",#}
+        {#                            "sInfoFiltered": "(由 _MAX_ 项结果过滤)",#}
+        {#                            "sInfoPostFix": "",#}
+        {#                            "sSearch": "搜索:",#}
+        {#                            "sUrl": "",#}
+        {#                            "sEmptyTable": "表中数据为空",#}
+        {#                            "sLoadingRecords": "载入中...",#}
+        {#                            "sInfoThousands": ",",#}
+        {#                            "oPaginate": {#}
+        {#                                "sFirst": "首页",#}
+        {#                                "sPrevious": "上页",#}
+        {#                                "sNext": "下页",#}
+        {#                                "sLast": "末页"#}
+        {#                            },#}
+        {#                            "oAria": {#}
+        {#                                "sSortAscending": ": 以升序排列此列",#}
+        {#                                "sSortDescending": ": 以降序排列此列"#}
+        {#                            }#}
+        {#                        }#}
+        {#                    }#}
+        {#            );#}
+        {#        });#}
     </script>
 {% endblock %}

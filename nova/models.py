@@ -47,6 +47,11 @@ ASSET_TYPE = (
     (7, u"其他")
 )
 
+ASSET_CONNECT_METHOD = (
+    ('Password', u"密码连接"),
+    ('PublicKey', u"公钥连接")
+)
+
 
 class AssetGroup(models.Model):
     name = models.CharField(max_length=80, unique=True, verbose_name=u"主机组名称")
@@ -68,6 +73,8 @@ class Asset(models.Model):
     asset_groups = models.ManyToManyField(AssetGroup, blank=True, verbose_name=u"所属主机组")
     username = models.CharField(max_length=16, blank=True, null=True, verbose_name=u"管理用户名")
     password = models.CharField(max_length=256, blank=True, null=True, verbose_name=u"密码")
+    connect_method = models.CharField(choices=ASSET_CONNECT_METHOD, max_length=30, verbose_name=u'连接方式')
+    public_key_file = models.CharField(max_length=512, blank=True, null=True, verbose_name=u"私钥文件")
     use_default_auth = models.BooleanField(default=True, verbose_name=u"使用默认管理账号")
     mac = models.CharField(max_length=20, blank=True, null=True, verbose_name=u"MAC地址")
     remote_ip = models.CharField(max_length=16, blank=True, null=True, verbose_name=u'远控卡IP')

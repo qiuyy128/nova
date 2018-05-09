@@ -1,0 +1,7 @@
+- hosts: "{{ host }}"
+  tasks:
+  - name: Set authorized key for user dcyt copying it from current user
+    authorized_key:
+      user: dcyt
+      state: present
+      key: "{{ lookup('file', '/home/dcyt/.ssh/id_rsa.pub') }}"

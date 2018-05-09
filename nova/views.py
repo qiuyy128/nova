@@ -45,6 +45,7 @@ from django.http import StreamingHttpResponse
 from django.http import FileResponse
 import zipfile
 import shutil
+# from ansible.runner import Runner
 
 import sys
 import configmodule
@@ -194,7 +195,7 @@ def get_user_asset_id(request):
 
 
 @login_required()
-@permission_required('nova.access_asset')
+# @permission_required('nova.access_asset')
 def console(request):
     # 获取访问请求用户的所有权限
     perms = User.get_all_permissions(request.user)
@@ -382,6 +383,14 @@ def app_deploy(request):
 @login_required
 def task_list(request):
     res = request.GET
+    if 'page' in res:
+        page = int(request.GET.get('page'))
+    else:
+        page = 1
+    if request.GET.get('limit'):
+        limit = int(request.GET.get('limit'))
+    else:
+        limit = 10
     if 'task_id' in res:
         task_id = request.GET['task_id']
         tasks = Task.objects.filter(task_id=task_id)
@@ -391,7 +400,40 @@ def task_list(request):
             tasks.update(status=status, result=result)
     else:
         tasks = Task.objects.order_by('-start_time').all()
-    data = {'tasks': tasks}
+    # 实例化一个分页对象
+    paginator = Paginator(tasks, limit)
+    all_counts = paginator.count
+    try:
+        tasks = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        tasks = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        tasks = paginator.page(paginator.num_pages)
+
+    # 根据参数配置导航显示范围
+    temp_range = paginator.page_range
+    after_range_num = 5
+    before_range_num = 4
+    # 如果页面很小
+    if (page - before_range_num) <= 0:
+        # 如果总页面比after_range_num大，那么显示到after_range_num
+        if temp_range[-1] > after_range_num:
+            page_range = xrange(1, after_range_num + 1)
+        # 否则显示当前页
+        else:
+            page_range = xrange(1, temp_range[-1] + 1)
+    # 如果页面比较大
+    elif (page + after_range_num) > temp_range[-1]:
+        # 显示到最大页
+        page_range = xrange(page - before_range_num, temp_range[-1] + 1)
+    # 否则在before_range_num和after_range_num之间显示
+    else:
+        page_range = xrange(page - before_range_num + 1, page + after_range_num)
+    limit_option = [10, 20, 50, 100]
+    data = {'tasks': tasks, 'all_count': all_counts, 'all_pages': paginator.num_pages,
+            'page_range': page_range, 'limit': limit, 'limit_option': limit_option}
     return render(request, 'task.html', context=data)
 
 
@@ -589,6 +631,39 @@ def reload_app(request):
 
 @login_required()
 @csrf_exempt
+def rollback_app(request):
+    logger.info("User is:%s;Request is:rollback app!" % request.user.username)
+    if User.has_perm(request.user, 'nova.access_app'):
+        logger.info(request.body)
+        if request.body:
+            app_name = json.loads(request.body)['app_name']
+            app_env = json.loads(request.body)['app_env']
+            app_id = json.loads(request.body)['app_id']
+            logger.info(app_name)
+        else:
+            data = {'rtn': '98', 'msg': u'未提交必要参数!'}
+            return HttpResponse(json.dumps(data))
+        logger.info('User is:%s;Rollback app %s:,env:%s' % (request.user.username, app_name, app_env))
+        if 'product' in app_env and not User.has_perm(request.user, 'nova.operate_product'):
+            data = {'rtn': '98', 'msg': '没有生产环境操作权限，请联系管理员!'}
+            return HttpResponse(json.dumps(data))
+        logger.info(u'回滚应用：')
+        logger.info(AppHost.objects.filter(name=app_name, env=app_env))
+        app_ids = ','.join(app_id).encode('utf-8')
+        from .tasks import do_rollback_app
+        result = do_rollback_app.delay(app_name, app_env)
+        task_name = u'回滚%s:%s' % (app_env, app_ids)
+        Task.objects.create(task_id=result.task_id, name=task_name, status=result.status,
+                            start_time=timezone.now(), result=result.result, app_id=app_ids,
+                            execute_user=request.user.username)
+        data = {'rtn': '00', 'msg': '正在后台进行回滚操作！'}
+    else:
+        data = {'rtn': '99', 'msg': '没有操作权限，请联系管理员!'}
+    return HttpResponse(json.dumps(data))
+
+
+@login_required()
+@csrf_exempt
 def update_app(request):
     # POST 请求
     logger.info("User is:%s;Request is:update app!" % request.user.username)
@@ -666,7 +741,8 @@ def config_file_add(request):
             config_file_form.save()
             # 自动在服务器上创建文件夹
             logger.info(u'自动在服务器上创建应用配置文件路径:%s' % config_file_path)
-            os.makedirs(config_file_path)
+            if not os.path.exists(config_file_path):
+                os.makedirs(config_file_path)
             msg = u"添加应用配置文件路径成功"
             logger.info(msg)
             return HttpResponseRedirect(reverse('config_file'))
@@ -1191,6 +1267,47 @@ def shell(request):
     if request.method == 'POST':
         command = json.loads(request.body)['command']
         asset_ip = json.loads(request.body)['asset_ip']
+
+        # 使用ansible API接口
+        # results = Runner(
+        #     pattern='*',
+        #     # pattern='web2',
+        #     forks=10,
+        #     module_name='shell',
+        #     module_args=command,
+        #     host_list=asset_ip,
+        #     # remote_port=10085,
+        #     remote_user='root',
+        #     # private_key_file = key_path,
+        #     environment={'LANG': 'zh_CN.UTF-8', 'LC_CTYPE': 'zh_CN.UTF-8'}
+        # ).run()
+        #
+        # if results is None:
+        #     print "No hosts found"
+        #     sys.exit(1)
+        #
+        # for (key, msg) in results.items():
+        #     try:
+        #         with open(command_file, 'a') as f:
+        #             if key == 'dark':
+        #                 print "DOWN *********"
+        #                 for (hostname, result) in msg.items():
+        #                     logger.info("%s DOWN>>> %s\n" % (hostname, result))
+        #                     f.write("%s DOWN>>> \n%s\n" % (hostname, result))
+        #             if key == 'contacted':
+        #                 for (hostname, result) in msg.items():
+        #                     if 'failed' in result:
+        #                         print "FAILED *******"
+        #                         logger.info("%s FAILED>>> %s\n" % (hostname, result))
+        #                         f.write("%s FAILED>>> \n%s\n" % (hostname, result))
+        #                     else:
+        #                         print "UP ***********"
+        #                         logger.info("%s STDOUT>>> %s\n" % (hostname, result['stdout']))
+        #                         f.write("%s STDOUT>>> \n%s\n" % (hostname, result['stdout']))
+        #     except Exception as e:
+        #         logger.info(e)
+
+        # 使用ansible 命令
         command = '''ansible all -i "%s," -m shell -a "%s"''' % (asset_ip, command)
         logger.info(command)
         p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -1219,7 +1336,7 @@ def shell(request):
                     # file_object.write(stderr)
                     with open(command_file, 'a') as f:
                         f.write(stderr)
-        # file_object.close()
+
         data = {'rtn': '00', 'command': command, 'command_file': command_file, 'file_size': file_size}
         logger.info(data)
         return HttpResponse(json.dumps(data))
@@ -1603,54 +1720,24 @@ def access_log(request):
 
 def query_fpcy_from_mongodb(data_time, end_time, collection):
     # 查询发票查验数据
+    logger.info(u'从mongodb提取发票查验统计数据.')
     try:
         # data_list = collection.find_one({"time": data_time}, {"_id": 0, "time": 0})
         data_list = collection.find_one({"time": {"$gte": data_time, "$lt": end_time}}, {"_id": 0, "time": 0})
+        # logger.info(str(data_list).decode('string_escape'))
+        # logger.info(data_list)
+        logger.info(data_list['data'])
+        return data_list['data']
     except Exception as e:
-        print e
-    logger.info(u'从mongodb取出数据.')
-    # logger.info(str(data_list).decode('string_escape'))
-    return data_list['data']
+        # logger.info(u'从mongodb提取发票查验统计数据异常:' + str(e))
+        logger.info(u'从mongodb提取发票查验统计数据异常！')
+        return None
 
 
 @login_required()
 @csrf_exempt
 @permission_required('nova.access_monitor', raise_exception=True)
 def fpcy_stat(request):
-    res = request.GET
-    if 'stat_day' in res:
-        begin_day = request.GET['stat_day']
-        stat_day = datetime.datetime.strptime(str(begin_day), '%Y-%m-%d')
-    else:
-        # 默认当天年月日
-        begin_day = datetime.date.today()
-        # date转datetime
-        # begin_day_datetime = datetime.datetime.strptime(str(begin_day), '%Y-%m-%d')
-        # 当天00:00:00转时间戳
-        begin_day_seconds = time.mktime(datetime.datetime.strptime(str(begin_day), '%Y-%m-%d').timetuple())
-        # 当天22:00前取前一天
-        if time.time() - begin_day_seconds < 22 * 60 * 60:
-            stat_day = begin_day - datetime.timedelta(days=string.atoi('1'))
-        else:
-            stat_day = datetime.date.today()
-        # date转datetime
-        stat_day = datetime.datetime.strptime(str(stat_day), '%Y-%m-%d')
-    # 统计开始与统计结束时间均取22:00:00
-    begin_time = stat_day - datetime.timedelta(hours=string.atoi('2'))
-    end_time = begin_time + datetime.timedelta(hours=string.atoi('24'))
-    last_time = stat_day - datetime.timedelta(days=string.atoi('1'))
-    # 转字符串
-    begin_time = begin_time.strftime('%Y-%m-%d %H:%M:%S')
-    last_time = last_time.strftime('%Y-%m-%d')
-    end_time = end_time.strftime('%Y-%m-%d %H:%M:%S')
-    stat_day = stat_day.strftime('%Y-%m-%d')
-    # # date转datetime
-    # begin_day_datetime = datetime.datetime.strptime(begin_time, '%Y-%m-%d %H:%M:%S')
-    # last_day_datetime = datetime.datetime.strptime(last_time, '%Y-%m-%d')
-    # end_day_datetime = datetime.datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')
-    logger.info('begin_time is: %s' % begin_time)
-    logger.info('end_time is: %s' % end_time)
-    logger.info('stat_day is: %s' % stat_day)
     db_env = 'slave'
     try:
         # 连接mongodb数据库
@@ -1661,109 +1748,252 @@ def fpcy_stat(request):
     except Exception as e:
         data = {'rtn': '99', 'msg': u'连接数据库错误:' + str(e)}
         logger.info(data)
-    try:
-        # 发票入库情况
-        logger.info('#' * 100)
-        logger.info(u'发票入库情况:')
-        try:
-            collection = db_mongo['fpcy_fprkqk']
-            data_sql_fprkqk = query_fpcy_from_mongodb(begin_time, end_time, collection)
-        except Exception as e:
-            logger.info(e)
+    if request.method == 'GET':
+        page_index = 1
+        page_size = 10
+        res = request.GET
+        if 'stat_day' in res:
+            begin_day = request.GET['stat_day']
+            stat_day = datetime.datetime.strptime(str(begin_day), '%Y-%m-%d')
+        else:
+            # 默认当天年月日
+            begin_day = datetime.date.today()
+            # date转datetime
+            # begin_day_datetime = datetime.datetime.strptime(str(begin_day), '%Y-%m-%d')
+            # 当天00:00:00转时间戳
+            begin_day_seconds = time.mktime(datetime.datetime.strptime(str(begin_day), '%Y-%m-%d').timetuple())
+            # 当天22:00前取前一天
+            if time.time() - begin_day_seconds < 22 * 60 * 60:
+                stat_day = begin_day - datetime.timedelta(days=string.atoi('1'))
+            else:
+                stat_day = datetime.date.today()
+            # date转datetime
+            stat_day = datetime.datetime.strptime(str(stat_day), '%Y-%m-%d')
+        # 统计开始与统计结束时间均取22:00:00
+        begin_time = stat_day - datetime.timedelta(hours=string.atoi('2'))
+        end_time = begin_time + datetime.timedelta(hours=string.atoi('24'))
+        last_time = stat_day - datetime.timedelta(days=string.atoi('1'))
+        # 转字符串
+        begin_time = begin_time.strftime('%Y-%m-%d %H:%M:%S')
+        last_time = last_time.strftime('%Y-%m-%d')
+        end_time = end_time.strftime('%Y-%m-%d %H:%M:%S')
+        stat_day = stat_day.strftime('%Y-%m-%d')
+        # # date转datetime
+        # begin_day_datetime = datetime.datetime.strptime(begin_time, '%Y-%m-%d %H:%M:%S')
+        # last_day_datetime = datetime.datetime.strptime(last_time, '%Y-%m-%d')
+        # end_day_datetime = datetime.datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')
+        logger.info('begin_time is: %s' % begin_time)
+        logger.info('end_time is: %s' % end_time)
+        logger.info('stat_day is: %s' % stat_day)
 
-        # 营收情况
-        logger.info(u'营收情况:')
-        data_sql_ysqk = []
-        collection = db_mongo['fpcy_ysqk_dmfy']
-        # 获取超级鹰用户的题分信息
         try:
-            collection = db_mongo['fpcy_ysqk']
-            data_sql_ysqk = query_fpcy_from_mongodb(begin_time, end_time, collection)
-        except Exception as e:
-            logger.info(e)
+            # 发票入库情况
+            logger.info('#' * 100)
+            logger.info(u'发票入库情况:')
+            try:
+                collection = db_mongo['fpcy_fprkqk']
+                data_sql_fprkqk = query_fpcy_from_mongodb(begin_time, end_time, collection)
+            except Exception as e:
+                logger.info(e)
 
-        # 用户充值、消费点数情况
-        logger.info(u'用户充值、消费点数情况:')
-        try:
-            collection = db_mongo['fpcy_yhczxfdsqk']
-            data_sql_yhczxfdsqk = query_fpcy_from_mongodb(begin_time, end_time, collection)
-        except Exception as e:
-            logger.info(e)
+            # 营收情况
+            logger.info(u'营收情况:')
+            data_sql_ysqk = []
+            collection = db_mongo['fpcy_ysqk_dmfy']
+            # 获取超级鹰用户的题分信息
+            try:
+                collection = db_mongo['fpcy_ysqk']
+                data_sql_ysqk = query_fpcy_from_mongodb(begin_time, end_time, collection)
+            except Exception as e:
+                logger.info(e)
 
-        logger.info(u'用户查验反馈情况表:')
-        try:
-            collection = db_mongo['fpcy_yhcyfkqk']
-            data_sql_yhcyfkqkb = query_fpcy_from_mongodb(begin_time, end_time, collection)
-        except Exception as e:
-            logger.info(e)
+            # 用户充值、消费点数情况
+            logger.info(u'用户充值、消费点数情况:')
+            try:
+                collection = db_mongo['fpcy_yhczxfdsqk']
+                data_sql_yhczxfdsqk = query_fpcy_from_mongodb(begin_time, end_time, collection)
+            except Exception as e:
+                logger.info(e)
 
-        logger.info(u'子产品查验情况表:')
-        try:
-            collection = db_mongo['fpcy_zcpcyqk']
-            data_sql_zcpcyqks = query_fpcy_from_mongodb(begin_time, end_time, collection)
-        except Exception as e:
-            logger.info(e)
+            logger.info(u'用户查验反馈情况表:')
+            try:
+                collection = db_mongo['fpcy_yhcyfkqk']
+                data_sql_yhcyfkqkb = query_fpcy_from_mongodb(begin_time, end_time, collection)
+            except Exception as e:
+                logger.info(e)
 
-        logger.info(u'企业接口查验情况:')
-        try:
-            collection = db_mongo['fpcy_qyjkcyqk']
-            data_sql_qyjkcyqks = query_fpcy_from_mongodb(begin_time, end_time, collection)
-        except Exception as e:
-            logger.info(e)
+            logger.info(u'子产品查验情况表:')
+            try:
+                collection = db_mongo['fpcy_zcpcyqk']
+                data_sql_zcpcyqks = query_fpcy_from_mongodb(begin_time, end_time, collection)
+            except Exception as e:
+                logger.info(e)
 
-        logger.info(u'核心服务状态表:')
-        try:
-            collection = db_mongo['fpcy_hxfwzt']
-            data_sql_hxfwztbs = query_fpcy_from_mongodb(begin_time, end_time, collection)
-        except Exception as e:
-            logger.info(e)
+            logger.info(u'企业接口查验情况:')
+            try:
+                collection = db_mongo['fpcy_qyjkcyqk']
+                data_sql_qyjkcyqks = query_fpcy_from_mongodb(begin_time, end_time, collection)
+            except Exception as e:
+                logger.info(e)
 
-        logger.info(u'税局查验服务状态表:')
-        try:
-            collection = db_mongo['fpcy_sjcyfwzt']
-            data_sql_sjcyfwztbs = query_fpcy_from_mongodb(begin_time, end_time, collection)
-        except Exception as e:
-            logger.info(e)
+            logger.info(u'核心服务状态表:')
+            try:
+                collection = db_mongo['fpcy_hxfwzt']
+                data_sql_hxfwztbs = query_fpcy_from_mongodb(begin_time, end_time, collection)
+            except Exception as e:
+                logger.info(e)
 
-        logger.info(u'打码情况:')
-        try:
-            collection = db_mongo['fpcy_dmqk']
-            data_sql_dmqks = query_fpcy_from_mongodb(begin_time, end_time, collection)
-        except Exception as e:
-            logger.info(e)
+            logger.info(u'税局查验服务状态表:')
+            try:
+                collection = db_mongo['fpcy_sjcyfwzt']
+                data_sql_sjcyfwztbs = query_fpcy_from_mongodb(begin_time, end_time, collection)
+            except Exception as e:
+                logger.info(e)
 
-        logger.info(u'税局响应情况（>60秒）:')
-        try:
-            collection = db_mongo['fpcy_sjxyqk']
-            data_sql_sjxyqks = query_fpcy_from_mongodb(begin_time, end_time, collection)
-        except Exception as e:
-            logger.info(e)
+            logger.info(u'打码情况:')
+            try:
+                collection = db_mongo['fpcy_dmqk']
+                data_sql_dmqks = query_fpcy_from_mongodb(begin_time, end_time, collection)
+            except Exception as e:
+                logger.info(e)
 
-        logger.info(u'用户查验请求详情:')
-        try:
-            collection = db_mongo['fpcy_yhcyqqxq']
-            data_sql_yhcyqqxq = query_fpcy_from_mongodb(begin_time, end_time, collection)
-        except Exception as e:
-            logger.info(e)
+            logger.info(u'税局响应情况（>60秒）:')
+            try:
+                collection = db_mongo['fpcy_sjxyqk']
+                data_sql_sjxyqks = query_fpcy_from_mongodb(begin_time, end_time, collection)
+            except Exception as e:
+                logger.info(e)
 
-        logger.info(u'税局查验请求详情:')
-        try:
-            collection = db_mongo['fpcy_sjcyqqxq']
-            data_sql_sjcyqqxq = query_fpcy_from_mongodb(begin_time, end_time, collection)
-        except Exception as e:
-            logger.info(e)
+            logger.info(u'用户查验请求详情:')
+            try:
+                collection = db_mongo['fpcy_yhcyqqxq']
+                data_sql_yhcyqqxq = query_fpcy_from_mongodb(begin_time, end_time, collection)
+            except Exception as e:
+                logger.info(e)
 
-        logger.info(u'百望查验服务状态表:')
-        try:
-            collection = db_mongo['fpcy_bwcyfwztb']
-            data_sql_bwcyfwztb = query_fpcy_from_mongodb(begin_time, end_time, collection)
-        except Exception as e:
-            logger.info(e)
+            logger.info(u'税局查验请求详情:')
+            try:
+                collection = db_mongo['fpcy_sjcyqqxq']
+                data_sql_sjcyqqxq = query_fpcy_from_mongodb(begin_time, end_time, collection)
+            except Exception as e:
+                logger.info(e)
 
-    except Exception as e:
-        data = {'rtn': '99', 'msg': u'查询错误:' + str(e)}
-        logger.info(data)
-    return render(request, 'fpcy_stat.html', locals())
+            logger.info(u'用户账号点数情况:')
+            try:
+                collection = db_mongo['fpcy_yhzhdsqk']
+                # data_fpcy_yhzhdsqk = query_fpcy_from_mongodb(begin_time, end_time, collection)
+                # add 20180424
+                all_counts = len(collection.find_one({"time": stat_day}).get('data'))
+                # 记算分多少页
+                if all_counts % page_size != 0:
+                    page_count = (all_counts / page_size) + 1
+                else:
+                    page_count = (all_counts / page_size)
+                if page_index == 1:
+                    data_fpcy_yhzhdsqk = collection.find_one({"time": stat_day}, {"_id": 0, "time": 0}).get('data')[0:10]
+                else:
+                    data_start = (page_index - 1) * page_size
+                    data_end = (page_index - 1) * page_size + page_size
+                    data_fpcy_yhzhdsqk = collection.find_one({"time": stat_day}, {"_id": 0, "time": 0}).get('data')[
+                                         data_start:data_end]
+                page_size_option = [10, 20, 50, 100]
+                logger.info(data_fpcy_yhzhdsqk)
+                # end add 20180424
+            except Exception as e:
+                logger.info(e)
+                data_fpcy_yhzhdsqk = None
+
+            logger.info(u'百望查验服务状态表:')
+            try:
+                collection = db_mongo['fpcy_bwcyfwztb']
+                data_sql_bwcyfwztb = query_fpcy_from_mongodb(begin_time, end_time, collection)
+            except Exception as e:
+                logger.info(e)
+
+            # 统计核心服务状态表取乐税与百望的合计
+            data_sql_hxfwztb_sum = []
+            data_hxfwztb_tmp = data_sql_hxfwztbs[-1]
+            data_hxfwztb_tmp[0] = u'乐税'
+            data_sql_hxfwztb_sum.append(data_hxfwztb_tmp)
+            data_hxfwztb_tmp = data_sql_bwcyfwztb[-1]
+            data_hxfwztb_tmp[0] = u'百望'
+            data_sql_hxfwztb_sum.append(data_hxfwztb_tmp)
+            # 计算合计
+            data_col_len = len(data_sql_hxfwztb_sum[0])
+            total = [0 for i in range(data_col_len)]
+            for i in data_sql_hxfwztb_sum:
+                for j in range(len(i))[1:]:
+                    try:
+                        if i[j] != '' and i[j] is not None and str(i[j]).find('%') == -1 and str(i[j]).find('-') == -1:
+                            total[j] = total[j] + i[j]
+                        if str(i[j]).find('%') != -1:
+                            total[j] = '-'
+                        if str(i[j]).find('-') != -1:
+                            pass
+                    except Exception as e:
+                        logger.info(e)
+            total[0] = u'合计'
+            for i in range(len(total)):
+                if total[i] == 0:
+                    total[i] = '-'
+            data_sql_hxfwztb_sum.append(total)
+            # 重新计算合计后的百分比
+            try:
+                for record in data_sql_hxfwztb_sum:
+                    record[3] = str(round(float(record[2]) / float(record[1]) * 100, 2)) + '%'
+                    record[5] = str(round(float(record[4]) / float(record[1]) * 100, 2)) + '%'
+                    record[7] = str(round(float(record[6]) / float(record[1]) * 100, 2)) + '%'
+                    record[9] = str(round(float(record[8]) / float(record[1]) * 100, 2)) + '%'
+            except Exception as e:
+                logger.info(e)
+            logger.info(data_sql_hxfwztb_sum)
+
+            # 核心服务状态表明细
+            data_hxfwztb = json.dumps(data_sql_hxfwztbs)
+            data_bwcyfwztb = json.dumps(data_sql_bwcyfwztb)
+
+            logger.info(data_hxfwztb)
+            logger.info(data_bwcyfwztb)
+            logger.info('#' * 100)
+        except Exception as e:
+            data = {'rtn': '99', 'msg': u'查询错误:' + str(e)}
+            logger.info(data)
+        if datetime.datetime.strptime(str(stat_day), '%Y-%m-%d') >= datetime.datetime.strptime(str('2018-04-20'),
+                                                                                               '%Y-%m-%d'):
+            return render(request, 'fpcy_stat.html', locals())
+        else:
+            return render(request, 'fpcy_stat.20180419.html', locals())
+    else:
+        param = json.loads(request.body)
+        if param:
+            page_index = param['page_index']
+            page_size = param['page_size']
+            table_name = param.get('table_name')
+            stat_day = param['stat_day']
+            logger.info(u'用户账号点数情况:')
+            try:
+                collection = db_mongo['fpcy_yhzhdsqk']
+                all_counts = len(collection.find_one({"time": stat_day}).get('data'))  # 记算分多少页
+                if all_counts % page_size != 0:
+                    page_count = (all_counts / page_size) + 1
+                else:
+                    page_count = (all_counts / page_size)
+                if page_index == 1:
+                    data_fpcy_yhzhdsqk = collection.find_one({"time": stat_day}, {"_id": 0, "time": 0}).get('data')[
+                                         0:page_size]
+                else:
+                    data_start = (page_index - 1) * page_size
+                    data_end = (page_index - 1) * page_size + page_size
+                    data_fpcy_yhzhdsqk = collection.find_one({"time": stat_day}, {"_id": 0, "time": 0}).get('data')[
+                                         data_start:data_end]
+                page_size_option = [10, 20, 50, 100]
+            except Exception as e:
+                logger.info(e)
+            logger.info(data_fpcy_yhzhdsqk)
+            data = {'rtn': '00', 'data_fpcy_yhzhdsqk': data_fpcy_yhzhdsqk, 'all_counts': all_counts,
+                    'page_index': page_index, 'page_count': page_count, 'page_size': page_size,
+                    'page_size_option': page_size_option}
+            return HttpResponse(json.dumps(data), content_type='application/json')
 
 
 @login_required
@@ -1891,3 +2121,149 @@ def download(request):
             return render(request, 'download.html')
     else:
         return HttpResponseRedirect(reverse('deny'))
+
+
+@login_required
+@csrf_exempt
+@permission_required('nova.access_command', raise_exception=True)
+def config_ssh_public_key(request):
+    logger.info("User is:%s;Request is:config ssh public key!" % request.user.username)
+    if User.has_perm(request.user, 'nova.access_command'):
+        if request.method == 'POST':
+            asset_ips = json.loads(request.body)['asset_ip'].encode('utf-8')
+            asset_user = json.loads(request.body)['asset_user'].encode('utf-8')
+            logger.info(asset_ips)
+            asset_ip_list = asset_ips.split(',')
+            lines = ''
+            ansible_hosts_file = '/etc/ansible/hosts'
+            if asset_user == 'dcyt':
+                # 创建ssh公钥
+                cmd = '''su - dcyt -c "if [ ! -e ~/.ssh/id_rsa ]; then ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa;fi"'''
+                subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            else:
+                # 配置root用户公钥
+                # 创建ssh公钥
+                cmd = "if [ ! -e ~/.ssh/id_rsa ]; then ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa;fi"
+                subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                for ip in asset_ip_list:
+                    ip_with_port = ip.split(':')
+                    asset_ip = ip_with_port[0]
+                    host = Asset.objects.get(ip=asset_ip)
+                    try:
+                        output = ''
+                        errs = ''
+                        # 配置/etc/ansible/hosts文件
+                        cmd = '''if [ -e %s ]; then if ( ! grep '^%s' %s ); then
+                                echo %s ansible_ssh_pass="%s" >> %s;fi;fi;''' % (
+                                ansible_hosts_file, ip, ansible_hosts_file, ip, host.password, ansible_hosts_file)
+                        logger.info(cmd)
+                        subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        # 拷贝公钥至远程服务器
+                        # cmd = '''sshpass -p "%s" ssh-copy-id -i ~/.ssh/id_rsa.pub "%s -p%s -o StrictHostKeyChecking=no"''' % (host.password, asset_ip, asset_port)
+                        ssh_add_key_path = os.path.join(base_path, 'script', 'ssh_addkey.yml')
+                        cmd = '''ansible-playbook %s -e "host=%s"''' % (ssh_add_key_path, host.ip)
+                        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        if not p.stderr:
+                            for line in p.stdout.readlines():
+                                output += line
+                        else:
+                            for line in p.stderr.readlines():
+                                errs += line
+                        # 去掉ansible_ssh_pass
+                        cmd = '''sed -i 's/^%s[[:space:]].*/%s/' %s''' % (ip, ip, ansible_hosts_file)
+                        logger.info(cmd)
+                        subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        # 验证公钥是否配置成功
+                        cmd = '''ansible all -i "%s," -m shell -a "ifconfig"''' % ip
+                        logger.info(cmd)
+                        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        msg = ''
+                        for line in p.stdout.readlines():
+                            output += line
+                            msg += line
+                        logger.info(u'=================验证公钥是否配置成功信息=============')
+                        logger.info(msg)
+                        logger.info(u'=================验证公钥是否配置成功信息=============')
+                        # 公钥配置成功后修改连接为公钥连接并清空密码
+                        success_msg = '%s | success' % host.ip
+                        if success_msg in p.stdout.readlines():
+                            host.connect_method = 'PublicKey'
+                            host.password = ''
+                            host.save()
+                        else:
+                            for line in p.stderr.readlines():
+                                errs += line
+                        lines = lines + output + errs
+                    except Exception as e:
+                        logger.info(e)
+
+            for ip in asset_ip_list:
+                ip_with_port = ip.split(':')
+                asset_ip = ip_with_port[0]
+                host = Asset.objects.get(ip=asset_ip)
+                try:
+                    output = ''
+                    errs = ''
+                    # 配置普通ssh用户配置公钥
+                    user_add_yml_path = os.path.join(base_path, 'script', 'useradd.yml')
+                    # 添加用户
+                    ssh_username = Config.objects.get(name='add_ssh_user', config_key='username').config_value
+                    ssh_password = Config.objects.get(name='add_ssh_user', config_key='password').config_value
+                    cmd = '''ansible-playbook %s -e "host=%s user=%s new_pass=%s"''' % (
+                            user_add_yml_path, host.ip, ssh_username, ssh_password)
+                    logger.info(cmd)
+                    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    if not p.stderr:
+                        for line in p.stdout.readlines():
+                            output += line
+                    else:
+                        for line in p.stderr.readlines():
+                            errs += line
+                    # 推送PublicKey
+                    push_ssh_yml_path = os.path.join(base_path, 'script', 'push_ssh.yml')
+                    cmd = '''ansible-playbook %s -e "host=%s"''' % (push_ssh_yml_path, host.ip)
+                    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    if not p.stderr:
+                        for line in p.stdout.readlines():
+                            output += line
+                    else:
+                        for line in p.stderr.readlines():
+                            errs += line
+                    lines = lines + output + errs
+                except Exception as e:
+                    logger.info(e)
+            logger.info(lines)
+            data = {'rtn': '00', 'lines': lines}
+            return HttpResponse(json.dumps(data))
+        else:
+            asset_ip = request.GET.get('asset_ip')
+            data = {'asset_ip': asset_ip}
+        return render(request, 'config_ssh_key.html', data)
+
+
+def read_file(file_path):
+    file_object = open(file_path)
+    while True:
+        return file_object.readlines()
+
+
+@login_required
+@permission_required('nova.access_monitor', raise_exception=True)
+def view(request):
+    res = request.GET
+    if 'task_id' in res:
+        task_id = request.GET['task_id']
+        file_path = os.path.join(base_path, 'logs', 'task_log', task_id)
+        try:
+            task_name = Task.objects.get(task_id=task_id).name
+            task_exec_user = Task.objects.get(task_id=task_id).execute_user
+            task_logs = read_file(file_path)
+            file_size = os.path.getsize(file_path)
+            return render(request, 'view.html', locals())
+        except Exception as e:
+            logger.info(e)
+            data = {'msg': str(e)}
+            return render(request, 'message.html', data)
+    else:
+        data = {'msg': '没有task_id！'}
+        return render(request, 'message.html', data)

@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}访问日志分析{% endblock %}
 {% block formcss %}
-    <script src="{% static 'js/calendar.js' %}" type="text/javascript" language="javascript"></script>
+    <link href="{% static 'css/bootstrap-datetimepicker.css' %}" rel="stylesheet" type="text/css">
     <style type="text/css">
         th, td {
             text-align: center; /** 设置水平方向居中 */
@@ -51,61 +51,61 @@
         <div class="col-md-offset-1 margin-top-1">
             <form class="form-inline row" name="searchBar">
                 <div class="form-group">
-                    <label class="col-sm-3 control-label label-width"><span
-                            class="text-danger">*</span><span>开始时间：</span></label>
-                    <div class="col-sm-3">
-                        <input name="start_time" type="text" class="form-control" id="id_start_time"
-                               onclick="SetDate(this,'yyyy-MM-dd hh:mm:ss')" readonly="readonly"/>
-{#                        <input class="form-control" type="text" id="id_start_time" name="start_time"#}
-{#                               value="{{ start_time|date:"Y-m-d H:i:s" }}">#}
+                    <label class="col-sm-3 control-label label-width">
+                        <span class="text-danger">*</span>开始时间：
+                    </label>
+                    <div class="col-sm-3 input-group date">
+                        <input type="text" class="form-control" id="id_start_time" style="width: 260px">
+                                <span class="input-group-addon">
+                                    <i class="glyphicon glyphicon-calendar"></i>
+                                </span>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label label-width"><span
-                            class="text-danger">*</span><span>结束时间：</span></label>
-                    <div class="col-sm-3">
-                        <input name="end_time" type="text" class="form-control" id="id_end_time"
-                               onclick="SetDate(this,'yyyy-MM-dd hh:mm:ss')" readonly="readonly"/>
-{#                        <input class="form-control" type="text" id="id_end_time" name="end_time"#}
-{#                               value="{{ end_time|date:"Y-m-d H:i:s" }}">#}
+                    <label class="col-sm-3 control-label label-width">
+                        <span class="text-danger">*</span>结束时间：
+                    </label>
+                    <div class="col-sm-3 input-group date">
+                        <input type="text" class="form-control" id="id_end_time" style="width: 260px">
+                                <span class="input-group-addon">
+                                    <i class="glyphicon glyphicon-calendar"></i>
+                                </span>
                     </div>
                 </div>
+            </form>
+            <form class="form-inline row" name="searchBar">
                 <div class="form-group">
                     <label class="col-sm-3 control-label label-width"><span>refer关键字：</span></label>
-                    <div class="col-sm-3">
+                    <div class="col-sm-3 input-group">
                         <input type="text" id="id_refer" name="refer" placeholder="输入refer关键字模糊查询"
                                class="form-control" style="width: 300px">
                     </div>
                 </div>
 
-            </form>
-            <form class="form-inline row" name="searchBar">
                 <div class="form-group">
                     <label class="col-sm-3 control-label label-width"><span>IP地址：</span></label>
-                    <div class="col-sm-3">
+                    <div class="col-sm-3 input-group">
                         <input type="text" id="id_ip" name="ip" placeholder="输入IP地址精确查询"
-                               class="form-control">
+                               class="form-control" style="width: 300px">
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label label-width"><span>访问状态：</span></label>
-                    <div class="col-sm-3">
+                    <div class="col-sm-3 input-group">
                         <input type="text" id="id_status" name="status" placeholder="输入访问状态值精确查询"
-                               class="form-control">
+                               class="form-control" style="width: 300px">
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label label-width"><span>请求URL：</span></label>
-                    <div class="col-sm-3">
+                    <div class="col-sm-3 input-group">
                         <input type="text" id="id_request" name="request" placeholder="输入请求URL关键字模糊查询"
                                class="form-control" style="width: 300px">
                     </div>
                 </div>
-            </form>
-            <form class="form-inline row" name="searchBar">
                 <div class="form-group">
-                    <label class="col-sm-3 control-label label-width"><span>userAgent：</span></label>
-                    <div class="col-sm-3">
+                    <label class="col-sm-2 control-label label-width"><span>userAgent：</span></label>
+                    <div class="col-sm-3 input-group">
                         <input type="text" id="id_userAgent" name="userAgent" placeholder="输入userAgent关键字模糊查询"
                                class="form-control" style="width: 300px">
                     </div>
@@ -114,13 +114,10 @@
             <form class="form-inline row" name="searchBar">
                 <div class="form-group">
                     <div class="col-sm-3">
-                        <input type="button" class="btn btn-default"
-                               id="id_query"
-                               value="查询">
+                        <input type="button" class="btn btn-primary" id="id_query" value="查询">
                     </div>
                 </div>
             </form>
-
         </div>
 
         <div class="col-md-offset-1 margin-top-1" id="table">
@@ -216,7 +213,20 @@
 {% endblock %}
 
 {% block js %}
+    <script type="text/javascript" src="{% static 'js/moment-with-locales.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/bootstrap-datetimepicker.min.js' %}"></script>
     <script type="text/javascript">
+        $(function () {
+            $('#id_start_time').datetimepicker({
+                format: 'YYYY-MM-DD HH:mm:ss',//显示格式
+                locale: moment.locale('zh-cn')
+            });
+            $('#id_end_time').datetimepicker({
+                format: 'YYYY-MM-DD HH:mm:ss',//显示格式
+                locale: moment.locale('zh-cn')
+            });
+        });
+
         var page_size = Number($("#id_page_size").val());
         var page_count = Number($("#id_page_count").text());
         var page_index = Number($("#id_page_index").text());

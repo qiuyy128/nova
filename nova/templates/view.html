@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Console{% endblock %}
 
 {% block content %}
@@ -17,20 +18,24 @@
         </div>
         <div class="col-md-offset-1 margin-top-1" id=toolbar>
             <span id="id_log_file" style="display: none">{{ file_path }}</span>
+            <span id="id_task_id" style="display: none">{{ task_id }}</span>
             <span id="id_file_size" style="display: none">{{ file_size }}</span>
             <pre style="width: 100%;" id='log'>{% for line in task_logs %}{{ line }}{% endfor %}</pre>
+            <div id="spinner"><img src="{% static 'images/spinner.gif' %}"></div>
         </div>
     </div>
 {% endblock %}
 
 {% block js %}
-    <script>
+    <script type="text/javascript">
+        var task_id = $("#id_task_id").text();
         var seek = Number($("#id_file_size").text());
         var log_file = $("#id_log_file").text();
         console.log(seek);
         function errmsg() {
             alert("请联系管理员！");
         }
+        window.scrollTo(0, document.body.scrollHeight);
         $(function () {
             var t = setInterval(function () {
                 $.ajax({
@@ -49,10 +54,11 @@
                                 var line = list[i];
                                 $("#log").append(line);
                                 div.scrollTop = div.scrollHeight;
+                                window.scrollTo(0, document.body.scrollHeight);
                             }
                         }
                     },
-                    error: function (data) {
+                    error: function () {
                         errmsg();
                         clearInterval(t);
                         return false;
@@ -60,7 +66,24 @@
                     dataType: "json",
                     contentType: "application/json"
                 });
-            }, 10000);
+                $.ajax({
+                    url: "{% url 'get_task_status' %}?task_id=" + task_id,
+                    type: 'GET',
+                    success: function (data) {
+                        console.log(data);
+                        var task_status = data['task_status'];
+                        if (task_status != 'PENDING') {
+                            $("#spinner").hide();
+                            clearInterval(t);
+                        }
+                    },
+                    error: function () {
+                        return false;
+                    },
+                    dataType: "json",
+                    contentType: "application/json"
+                });
+            }, 3000);
         });
     </script>
 {% endblock %}

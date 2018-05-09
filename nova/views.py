@@ -380,6 +380,16 @@ def app_deploy(request):
     return HttpResponseRedirect(reverse('deny'))
 
 
+@login_required()
+def get_task_status(request):
+    res = request.GET
+    if 'task_id' in res:
+        task_id = request.GET['task_id']
+        task_status = AsyncResult(id=task_id).status
+        data = {'task_id': task_id, 'task_status': task_status}
+        return HttpResponse(json.dumps(data))
+
+
 @login_required
 def task_list(request):
     res = request.GET

@@ -51,6 +51,7 @@ urlpatterns = [
     url(r'^upload/ksbm_oss_file/$', views.update_ksbm_oss_file, name='ksbm_oss_file'),
     url(r'^task/$', views.task_list, name='task_list'),
     url(r'^task/log/$', views.task_log, name='task_log'),
+    url(r'^task/status/$', views.get_task_status, name='get_task_status'),
     url(r'^deny/$', views.deny, name='deny'),
     url(r'^sql_submit/$', views.sql_submit, name='sql_submit'),
     url(r'^sql_list/$', views.sql_list, name='sql_list'),

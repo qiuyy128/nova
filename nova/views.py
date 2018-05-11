@@ -377,7 +377,7 @@ def app_deploy(request):
     else:
         data = {'rtn': '99', 'msg': '没有操作权限，请联系管理员!'}
     # return HttpResponse(json.dumps(data))
-    return HttpResponseRedirect(reverse('deny'))
+    return render(request, 'deny.html')
 
 
 @login_required()
@@ -502,13 +502,13 @@ def apps(request):
             apps_search = App.objects.filter(Q(name=app_name) & Q(id=i))
             apps = apps | apps_search
         if apps.count() == 0:
-            return HttpResponseRedirect(reverse('deny'))
+            return render(request, 'deny.html')
     elif keyword:
         for i in get_user_apps_id(request):
             apps_search = App.objects.filter(Q(name__contains=keyword) & Q(id=i))
             apps = apps | apps_search
         if apps.count() == 0:
-            return HttpResponseRedirect(reverse('deny'))
+            return render(request, 'deny.html')
     else:
         # 取当前用户所拥有权限的应用
         apps = get_user_apps(request)
@@ -783,7 +783,7 @@ def config_file(request):
             app_config = AppConfig.objects.filter(name=App.objects.get(id=i).name, env=App.objects.get(id=i).env)
             app_configs = app_configs | app_config
         if app_configs.count() == 0:
-            return HttpResponseRedirect(reverse('deny'))
+            return render(request, 'deny.html')
     # 改为从数据库查询
     app_config_list = []
     for app_config in app_configs:
@@ -804,7 +804,7 @@ def config_file(request):
 def config_file_editor(request, app_name, env, file_path, file_name):
     logger.info('User is:%s; Request env is:%s' % (request.user.username, env.upper()))
     if 'product' == env and not User.has_perm(request.user, 'nova.operate_product'):
-        return HttpResponseRedirect(reverse('deny'))
+        return render(request, 'deny.html')
     else:
         file_name = file_name.encode('utf-8')
         if app_name.find('tomcat-') == 0:
@@ -926,7 +926,7 @@ def sql_submit(request):
             return render(request, 'sql_submit.html')
     else:
         data = {'rtn': '99', 'msg': '没有操作权限，请联系管理员!'}
-        return HttpResponseRedirect(reverse('deny'))
+        return render(request, 'deny.html')
 
 
 @login_required
@@ -1200,7 +1200,8 @@ def sql_exec(request):
                                 data = {'rtn': '99', 'msg': '生成回滚SQL错误:' + str(e)}
                                 return HttpResponse(json.dumps(data))
                     else:
-                        logger.info(u'该SQL不是DML:%s' % sql_command)
+                        data = {'rtn': '99', 'msg': u'该SQL不是DML:%s' % sql_command}
+                        return HttpResponse(json.dumps(data))
         logger.info('sql_recovery is:%s' % sql_recovery)
         if not os.path.exists(sql_logs_path):
             os.makedirs(sql_logs_path)
@@ -1527,7 +1528,8 @@ def upload_file_list(request):
         data = {'upload_files': upload_files}
         return render(request, 'upload_file.html', context=data)
     else:
-        return HttpResponseRedirect(reverse('deny'))
+        # return render(request, 'deny.html')
+        return render(request, 'deny.html')
 
 
 @login_required
@@ -2130,7 +2132,7 @@ def download(request):
         if request.method == 'GET':
             return render(request, 'download.html')
     else:
-        return HttpResponseRedirect(reverse('deny'))
+        return render(request, 'deny.html')
 
 
 @login_required

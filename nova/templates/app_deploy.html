@@ -108,7 +108,7 @@
                                 <!-- 未选择 -->
                                 <div class="col-sm-4">
                                     <div class="select-top">
-{#                                        <div class="select-lft">全部服务器</div>#}
+                                        {#                                        <div class="select-lft">全部服务器</div>#}
                                         {#                                        <div class="select-right"><a>全选</a></div>#}
                                     </div>
                                     <div>
@@ -116,7 +116,7 @@
                                                id="search_input" name="keyword" value="{{ keyword }}"
                                                style="border-bottom-right-radius: 0; border-bottom-left-radius: 0; padding-left: 10px; padding-right: 24px"
                                                class="form-control">
-{#                                                                                <span class="glyphicon glyphicon-search input-search-icon"></span>#}
+                                        {#                                                                                <span class="glyphicon glyphicon-search input-search-icon"></span>#}
                                     </div>
                                     <select class="form-control" multiple="multiple" id="id_assets"
                                             name="app_assets" style="height: 15em;"
@@ -148,13 +148,13 @@
                                         <div class="select-lft" style="font-size: 14px; height: 32px;">已选服务器</div>
                                         {#                                        <div class="select-right"><a>全选</a></div>#}
                                     </div>
-{#                                    <div>#}
-{#                                        <input type="text" placeholder=""#}
-{#                                               id="search_input" name="keyword" value="{{ keyword }}"#}
-{#                                               style="border-bottom-right-radius: 0; border-bottom-left-radius: 0; padding-left: 10px; padding-right: 24px"#}
-{#                                               class="form-control">#}
-                                        {#                                        <span class="glyphicon glyphicon-search input-search-icon"></span>#}
-{#                                    </div>#}
+                                    {#                                    <div>#}
+                                    {#                                        <input type="text" placeholder=""#}
+                                    {#                                               id="search_input" name="keyword" value="{{ keyword }}"#}
+                                    {#                                               style="border-bottom-right-radius: 0; border-bottom-left-radius: 0; padding-left: 10px; padding-right: 24px"#}
+                                    {#                                               class="form-control">#}
+                                    {#                                        <span class="glyphicon glyphicon-search input-search-icon"></span>#}
+                                    {#                                    </div>#}
 
                                     <select class="form-control" multiple="multiple" id="id_assets_select"
                                             name="app_asset_name" style="height: 15em;"
@@ -221,7 +221,11 @@
                     });
                 },
                 error: function () {
-                    alert('error');
+                    layer.alert('error！', {
+                        icon: 2,
+                        skin: 'layui-layer-molv',
+                        closeBtn: 0
+                    });
                 },
                 dataType: "json",
                 contentType: "application/json"
@@ -232,11 +236,15 @@
                 success: function (data) {
                     $('#id_app_port').val(data['max_port']);
                 },
-                error: function (data) {
-                    alert('未取到端口号！');
+                error: function () {
+                    layer.alert('未取到端口号！', {
+                        icon: 2,
+                        skin: 'layui-layer-molv',
+                        closeBtn: 0
+                    });
                 },
                 dataType: "json",
-                contentType: "application/json",
+                contentType: "application/json"
             });
         }
         function change_env() {
@@ -306,7 +314,11 @@
                     });
                 },
                 error: function () {
-                    alert('error');
+                    layer.alert('error！', {
+                        icon: 2,
+                        skin: 'layui-layer-molv',
+                        closeBtn: 0
+                    });
                 },
                 dataType: "json",
                 contentType: "application/json"
@@ -339,18 +351,20 @@
                 });
 
                 if (app_name == undefined || app_name == "" || app_name == null) {
-                    alert('服务名称不能为空');
+                    layer.alert('服务名称不能为空');
                 }
                 else if (deploy_path == undefined || deploy_path == "" || deploy_path == null) {
-                    alert('部署路径不能为空');
+                    layer.alert('部署路径不能为空');
                 }
                 else if (app_assets == undefined || app_assets == "" || app_assets == null) {
-                    alert('部署服务器不能为空');
+                    layer.alert('部署服务器不能为空');
                 }
                 else {
-                    var result = confirm("是否确定部署?");
-                    if (result == true) {
-                        alert('请稍后......');
+                    layer.confirm('是否确定部署?', {
+                        icon: 3,
+                        btn: ['确定', '取消'],
+                        area: ['420px', '240px']
+                    }, function () {
                         $.ajax({
                             type: "POST",
                             url: "{% url 'apps_deploy' %}",
@@ -368,7 +382,7 @@
                             contentType: "application/json"
                         });
                         window.location.href = "{% url 'task_list' %}";
-                    }
+                    });
                 }
             })
         });

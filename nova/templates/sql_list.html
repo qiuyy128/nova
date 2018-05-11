@@ -198,9 +198,11 @@
                 var db_name = $(this).attr('db_name');
                 var db_env = $(this).attr('db_env');
                 var sql_id = $(this).attr('sql_id');
-                var result = confirm("是否确定执行该sql?");
-                if (result == true) {
-                    alert("请稍后!");
+                layer.confirm('是否确定执行该sql?', {
+                    icon: 3,
+                    btn: ['确定', '取消'],
+                    area: ['420px', '240px']
+                }, function () {
                     $.ajax({
                         type: "POST",
                         url: "{% url 'sql_exec' %}",
@@ -211,29 +213,56 @@
                         }),
                         success: function (response) {
                             if (response['rtn'] == "00") {
-                                alert('执行sql成功！');
-                            }
-                            else if (response['rtn'] == "99") {
-                                alert(response['msg']);
+                                layer.alert('执行sql成功！', {
+                                    icon: 1,
+                                    skin: 'layui-layer-molv',
+                                    area: ['420px', '240px'],
+                                    closeBtn: 0,
+                                    end: function () {
+                                        parent.location.reload();
+                                    }
+                                });
                             }
                             else {
-                                alert(response['msg']);
+                                layer.alert(response['msg'], {
+                                    icon: 7,
+                                    skin: 'layui-layer-molv',
+                                    area: ['420px', '240px'],
+                                    closeBtn: 0,
+                                    end: function () {
+                                        parent.location.reload();
+                                    }
+                                });
                             }
-                            parent.location.reload();
                         },
                         error: function (response) {
                             if (response['msg']) {
-                                alert(response['msg']);
+                                layer.alert(response['msg'], {
+                                    icon: 2,
+                                    skin: 'layui-layer-molv',
+                                    area: ['420px', '240px'],
+                                    closeBtn: 0,
+                                    end: function () {
+                                        parent.location.reload();
+                                    }
+                                });
                             }
                             else {
-                                alert('执行sql失败，其他错误！');
+                                layer.alert('执行sql失败，其他错误！', {
+                                    icon: 2,
+                                    skin: 'layui-layer-molv',
+                                    area: ['420px', '240px'],
+                                    closeBtn: 0,
+                                    end: function () {
+                                        parent.location.reload();
+                                    }
+                                });
                             }
-                            parent.location.reload();
                         },
                         dataType: "json",
-                        contentType: "application/json",
+                        contentType: "application/json"
                     });
-                }
+                });
             })
         });
     </script>

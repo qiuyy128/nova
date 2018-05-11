@@ -35,8 +35,11 @@
             $('#save').click(function () {
                 var content = $('#content').val();
                 var env = $(this).attr('env');
-                var result = confirm("是否确定保存?");
-                if (result == true) {
+                layer.confirm('是否确定保存?', {
+                    icon: 3,
+                    btn: ['确定', '取消'],
+                    area: ['420px', '240px']
+                }, function () {
                     $.ajax({
                         type: "POST",
                         url: "{% url 'save_config_file' %}",
@@ -48,20 +51,40 @@
                         }),
                         success: function (response) {
                             if (response['rtn'] == "00") {
-                                alert('保存成功！');
+                                layer.alert('保存成功！', {
+                                    icon: 1,
+                                    skin: 'layui-layer-molv',
+                                    area: ['420px', '240px'],
+                                    closeBtn: 0,
+                                    end: function () {
+                                        parent.location.reload();
+                                    }
+                                });
                             }
                             else {
-                                alert(response['msg']);
+                                layer.alert(response['msg'], {
+                                    icon: 7,
+                                    skin: 'layui-layer-molv',
+                                    area: ['420px', '240px'],
+                                    closeBtn: 0,
+                                    end: function () {
+                                        parent.location.reload();
+                                    }
+                                });
                             }
-                            parent.location.reload();
                         },
                         error: function (response) {
-                            alert(response);
+                            layer.alert(response, {
+                                icon: 2,
+                                skin: 'layui-layer-molv',
+                                area: ['420px', '240px'],
+                                closeBtn: 0
+                            });
                         },
                         dataType: "json",
                         contentType: "application/json"
                     });
-                }
+                });
             });
         });
         function go_back() {

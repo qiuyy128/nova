@@ -249,8 +249,11 @@
             $('.start_app').click(function () {
                 var app_id = new Array($(this).attr('app_id'));
                 var app_env = new Array($(this).attr('app_env'));
-                var result = confirm("是否确定启动应用?");
-                if (result == true) {
+                layer.confirm('是否确定启动应用?', {
+                    icon: 3,
+                    btn: ['确定', '取消'],
+                    area: ['420px', '240px']
+                }, function () {
                     $.ajax({
                         type: "POST",
                         url: "{% url 'start_app' %}",
@@ -260,21 +263,31 @@
                         }),
                         success: function (data) {
                             if (data['rtn'] == "00") {
-                                {#                                alert(data['msg']);#}
-                                alert('请稍后，正在后台启动应用！');
-                                {#                                parent.location.reload();#}
+                                layer.alert('请稍后，正在后台启动应用！', {
+                                    icon: 1,
+                                    skin: 'layui-layer-molv',
+                                    closeBtn: 0
+                                });
                             }
                             else {
-                                alert(data['msg']);
+                                layer.alert(data['msg'], {
+                                    icon: 7,
+                                    skin: 'layui-layer-molv',
+                                    closeBtn: 0
+                                });
                             }
                         },
                         error: function (data) {
-                            alert(data['msg']);
+                            layer.alert(data['msg'], {
+                                icon: 2,
+                                skin: 'layui-layer-molv',
+                                closeBtn: 0
+                            });
                         },
                         dataType: "json",
-                        contentType: "application/json",
+                        contentType: "application/json"
                     });
-                }
+                });
             })
         });
 
@@ -282,8 +295,11 @@
             $('.stop_app').click(function () {
                 var app_id = new Array($(this).attr('app_id'));
                 var app_env = new Array($(this).attr('app_env'));
-                var result = confirm("是否确定停止应用?");
-                if (result == true) {
+                layer.confirm('是否确定停止应用?', {
+                    icon: 3,
+                    btn: ['确定', '取消'],
+                    area: ['420px', '240px']
+                }, function () {
                     $.ajax({
                         type: "POST",
                         url: "{% url 'stop_app' %}",
@@ -293,20 +309,32 @@
                         }),
                         success: function (data) {
                             if (data['rtn'] == "00") {
-                                alert(data['msg']);
+                                layer.alert(data['msg'], {
+                                    icon: 1,
+                                    skin: 'layui-layer-molv',
+                                    closeBtn: 0
+                                });
                                 {#                                parent.location.reload();#}
                             }
                             else {
-                                alert(data['msg']);
+                                layer.alert(data['msg'], {
+                                    icon: 7,
+                                    skin: 'layui-layer-molv',
+                                    closeBtn: 0
+                                });
                             }
                         },
                         error: function (data) {
-                            alert(data['msg']);
+                            layer.alert(data['msg'], {
+                                icon: 2,
+                                skin: 'layui-layer-molv',
+                                closeBtn: 0
+                            });
                         },
                         dataType: "json",
-                        contentType: "application/json",
+                        contentType: "application/json"
                     });
-                }
+                });
             })
         });
 
@@ -314,9 +342,11 @@
             $('.reload_app').click(function () {
                 var app_id = new Array($(this).attr('app_id'));
                 var app_env = new Array($(this).attr('app_env'));
-                var result = confirm("是否确定重启应用?");
-                if (result == true) {
-                    {#                    alert("请稍后!");#}
+                layer.confirm('是否确定重启应用?', {
+                    icon: 3,
+                    btn: ['确定', '取消'],
+                    area: ['420px', '240px']
+                }, function () {
                     $.ajax({
                         type: "POST",
                         url: "{% url 'reload_app' %}",
@@ -326,21 +356,32 @@
                         }),
                         success: function (data) {
                             if (data['rtn'] == "00") {
-                                {#                                alert(data['msg']);#}
-                                alert('请稍后，正在后台重启应用！');
+                                layer.alert('请稍后，正在后台重启应用！', {
+                                    icon: 1,
+                                    skin: 'layui-layer-molv',
+                                    closeBtn: 0
+                                });
                                 {#                                parent.location.reload();#}
                             }
                             else {
-                                alert(data['msg']);
+                                layer.alert(data['msg'], {
+                                    icon: 7,
+                                    skin: 'layui-layer-molv',
+                                    closeBtn: 0
+                                });
                             }
                         },
                         error: function (data) {
-                            alert(data['msg']);
+                            layer.alert(data['msg'], {
+                                icon: 2,
+                                skin: 'layui-layer-molv',
+                                closeBtn: 0
+                            });
                         },
                         dataType: "json",
-                        contentType: "application/json",
+                        contentType: "application/json"
                     });
-                }
+                });
             })
         });
 
@@ -359,12 +400,14 @@
                     }
                 }
                 if (app_id.length == 0) {
-                    alert('你还没有选择任何应用！');
+                    layer.alert('你还没有选择任何应用！');
                 }
                 else {
-                    var result = confirm("是否确定启动多个应用?");
-                    if (result == true) {
-                        {#                    alert("请稍后!");#}
+                    layer.confirm('是否确定启动多个应用?', {
+                        icon: 3,
+                        btn: ['确定', '取消'],
+                        area: ['420px', '240px']
+                    }, function () {
                         $.ajax({
                             type: "POST",
                             url: "{% url 'start_app' %}",
@@ -374,20 +417,31 @@
                             }),
                             success: function (data) {
                                 if (data['rtn'] == "00") {
-                                    {#                                alert(data['msg']);#}
-                                    alert('请稍后，正在后台启动应用！');
+                                    layer.alert('请稍后，正在后台启动应用！', {
+                                        icon: 1,
+                                        skin: 'layui-layer-molv',
+                                        closeBtn: 0
+                                    });
                                 }
                                 else {
-                                    alert(data['msg']);
+                                    layer.alert(data['msg'], {
+                                        icon: 7,
+                                        skin: 'layui-layer-molv',
+                                        closeBtn: 0
+                                    });
                                 }
                             },
                             error: function (data) {
-                                alert(data['msg']);
+                                layer.alert(data['msg'], {
+                                    icon: 2,
+                                    skin: 'layui-layer-molv',
+                                    closeBtn: 0
+                                });
                             },
                             dataType: "json",
-                            contentType: "application/json",
+                            contentType: "application/json"
                         });
-                    }
+                    });
                 }
             })
         });
@@ -407,12 +461,14 @@
                     }
                 }
                 if (app_id.length == 0) {
-                    alert('你还没有选择任何应用！');
+                    layer.alert('你还没有选择任何应用！');
                 }
                 else {
-                    var result = confirm("是否确定停止多个应用?");
-                    if (result == true) {
-                        {#                    alert("请稍后!");#}
+                    layer.confirm('是否确定停止多个应用?', {
+                        icon: 3,
+                        btn: ['确定', '取消'],
+                        area: ['420px', '240px']
+                    }, function () {
                         $.ajax({
                             type: "POST",
                             url: "{% url 'stop_app' %}",
@@ -422,20 +478,31 @@
                             }),
                             success: function (data) {
                                 if (data['rtn'] == "00") {
-                                    {#                                alert(data['msg']);#}
-                                    alert('请稍后，正在后台停止应用！');
+                                    layer.alert('请稍后，正在后台停止应用！', {
+                                        icon: 1,
+                                        skin: 'layui-layer-molv',
+                                        closeBtn: 0
+                                    });
                                 }
                                 else {
-                                    alert(data['msg']);
+                                    layer.alert(data['msg'], {
+                                        icon: 7,
+                                        skin: 'layui-layer-molv',
+                                        closeBtn: 0
+                                    });
                                 }
                             },
                             error: function (data) {
-                                alert(data['msg']);
+                                layer.alert(data['msg'], {
+                                    icon: 2,
+                                    skin: 'layui-layer-molv',
+                                    closeBtn: 0
+                                });
                             },
                             dataType: "json",
-                            contentType: "application/json",
+                            contentType: "application/json"
                         });
-                    }
+                    });
                 }
             })
         });
@@ -455,12 +522,14 @@
                     }
                 }
                 if (app_id.length == 0) {
-                    alert('你还没有选择任何应用！');
+                    layer.alert('你还没有选择任何应用！');
                 }
                 else {
-                    var result = confirm("是否确定重启多个应用?");
-                    if (result == true) {
-                        {#                    alert("请稍后!");#}
+                    layer.confirm('是否确定重启多个应用?', {
+                        icon: 3,
+                        btn: ['确定', '取消'],
+                        area: ['420px', '240px']
+                    }, function () {
                         $.ajax({
                             type: "POST",
                             url: "{% url 'reload_app' %}",
@@ -470,20 +539,31 @@
                             }),
                             success: function (data) {
                                 if (data['rtn'] == "00") {
-                                    {#                                alert(data['msg']);#}
-                                    alert('请稍后，正在后台重启应用！');
+                                    layer.alert('请稍后，正在后台重启应用！', {
+                                        icon: 1,
+                                        skin: 'layui-layer-molv',
+                                        closeBtn: 0
+                                    });
                                 }
                                 else {
-                                    alert(data['msg']);
+                                    layer.alert(data['msg'], {
+                                        icon: 7,
+                                        skin: 'layui-layer-molv',
+                                        closeBtn: 0
+                                    });
                                 }
                             },
                             error: function (data) {
-                                alert(data['msg']);
+                                layer.alert(data['msg'], {
+                                    icon: 2,
+                                    skin: 'layui-layer-molv',
+                                    closeBtn: 0
+                                });
                             },
                             dataType: "json",
-                            contentType: "application/json",
+                            contentType: "application/json"
                         });
-                    }
+                    });
                 }
             })
         });
@@ -493,8 +573,11 @@
                 var app_name = $(this).attr('app_name');
                 var app_id = new Array($(this).attr('app_id'));
                 var app_env = $(this).attr('app_env');
-                var result = confirm("是否确定回滚应用?");
-                if (result == true) {
+                layer.confirm('是否确定回滚应用?', {
+                    icon: 3,
+                    btn: ['确定', '取消'],
+                    area: ['420px', '240px']
+                }, function () {
                     $.ajax({
                         type: "POST",
                         url: "{% url 'rollback_app' %}",
@@ -505,20 +588,32 @@
                         }),
                         success: function (data) {
                             if (data['rtn'] == "00") {
-                                {#                                alert(data['msg']);#}
                                 alert('请稍后，正在后台回滚所有应用！');
+                                layer.alert('请稍后，正在后台回滚所有应用！', {
+                                    icon: 1,
+                                    skin: 'layui-layer-molv',
+                                    closeBtn: 0
+                                });
                             }
                             else {
-                                alert(data['msg']);
+                                layer.alert(data['msg'], {
+                                    icon: 7,
+                                    skin: 'layui-layer-molv',
+                                    closeBtn: 0
+                                });
                             }
                         },
                         error: function (data) {
-                            alert("回滚失败!");
+                            layer.alert("回滚失败!", {
+                                icon: 2,
+                                skin: 'layui-layer-molv',
+                                closeBtn: 0
+                            });
                         },
                         dataType: "json",
                         contentType: "application/json"
                     });
-                }
+                });
             })
         });
 
@@ -527,9 +622,11 @@
                 var app_name = $(this).attr('app_name');
                 var app_id = new Array($(this).attr('app_id'));
                 var app_env = $(this).attr('app_env');
-                var result = confirm("是否确定更新应用?");
-                if (result == true) {
-                    {#                    alert("请稍后!");#}
+                layer.confirm('是否确定更新应用?', {
+                    icon: 3,
+                    btn: ['确定', '取消'],
+                    area: ['420px', '240px']
+                }, function () {
                     $.ajax({
                         type: "POST",
                         url: "{% url 'update_app' %}",
@@ -540,55 +637,33 @@
                         }),
                         success: function (response) {
                             if (response['rtn'] == "00") {
-                                alert('请稍后，正在后台更新所有应用！');
-                                {#                                parent.location.reload();#}
+                                layer.alert('请稍后，正在后台更新所有应用！', {
+                                    icon: 1,
+                                    skin: 'layui-layer-molv',
+                                    closeBtn: 0
+                                });
                             }
                             else {
-                                alert(response['msg']);
+                                layer.alert(response['msg'], {
+                                    icon: 7,
+                                    skin: 'layui-layer-molv',
+                                    closeBtn: 0
+                                });
                             }
                         },
-                        error: function (response) {
-                            alert('更新失败！');
+                        error: function () {
+                            layer.alert("更新失败！", {
+                                icon: 2,
+                                skin: 'layui-layer-molv',
+                                closeBtn: 0
+                            });
                         },
                         dataType: "json",
-                        contentType: "application/json",
+                        contentType: "application/json"
                     });
-                }
+                });
             })
         });
-
-        {#        $(document).ready(function () {#}
-        {#            $('#app_name_select').change(function () {#}
-        {#                var app_name = $(this).children('option:selected').val();#}
-        {#                var obj = $("#app_name_select option:selected").text();#}
-        {#                alert(obj);#}
-        {#                $.ajax({#}
-        {#                        type: "GET",#}
-        {#                        url: "{% url 'apps_list' %}",#}
-        {#                        data: JSON.stringify({#}
-        {#                            app_name: app_name,#}
-        {#                            keyword: search_worlds,#}
-        {#                            page: 10#}
-        {#                        }),#}
-        {#                        success: function (response) {#}
-        {#                            if (response['rtn'] == "00") {#}
-        {#                                alert('666');#}
-        {#                                parent.location.reload();#}
-        {#                            }#}
-        {#                            else {#}
-        {#                                alert('999');#}
-        {#                            }#}
-        {#                        },#}
-        {#                        error: function (response) {#}
-        {#                            alert(response);#}
-        {#                            alert('err！');#}
-        {#                        },#}
-        {#                        dataType: "json",#}
-        {#                        contentType: "application/json",#}
-        {#                    });#}
-        {#            })#}
-        {#        });#}
-        {#    </script>#}
 
         function change_info() {
             var names = $(this).children('option:selected').val();

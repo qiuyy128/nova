@@ -1,16 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}权限不足{% endblock %}
 
-{% block content %}
-    <div class="container col-sm-8 col-md-12">
-        <div class="col-md-offset-1 console-instance-head clearfix">
-            <div class="pull-left">
-                <h3><span>权限不足</span></h3>
-            </div>
-        </div>
-
-        <div class="col-md-offset-1 margin-top-1" id=toolbar>
-            <a>权限不足，请联系管理员！</a>
-        </div>
-    </div>
+{% block js %}
+    <script>
+        layer.alert('权限不足，请联系管理员！', {
+            icon: 2,
+            skin: 'layui-layer-molv' //墨绿风格
+        });
+    </script>
 {% endblock %}

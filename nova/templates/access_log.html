@@ -311,6 +311,7 @@
                 $("#dataTables-sql tbody tr").remove();
                 var page_index = 1;
                 var page_size = Number($("#id_page_size").val());
+                var ii = layer.load();
                 $.ajax({
                     type: "POST",
                     url: "{% url 'access_log' %}",
@@ -326,6 +327,7 @@
                         page_size: page_size
                     }),
                     success: function (result) {
+                        layer.close(ii);
                         if (result.rtn == '01') {
                             alert(result.msg);
                         }
@@ -360,7 +362,12 @@
                         }
                     },
                     error: function (result) {
-                        alert('error');
+                        layer.close(ii);
+                        layer.alert('查询失败', {
+                            icon: 2,
+                            skin: 'layui-layer-molv',
+                            closeBtn: 0
+                        });
                     },
                     dataType: "json",
                     contentType: "application/json"
@@ -391,6 +398,7 @@
             var end_time = $('#id_end_time').val();
             var userAgent = $('#id_userAgent').val();
             $("#dataTables-sql tbody tr").remove();
+            var ii = layer.load();
             $.ajax({
                 type: "POST",
                 url: "{% url 'access_log' %}",
@@ -406,6 +414,7 @@
                     page_size: page_size
                 }),
                 success: function (result) {
+                    layer.close(ii);
                     if (typeof result == 'string') {
                         result = JSON.parse(result);
                     }
@@ -437,7 +446,12 @@
                     }
                 },
                 error: function (result) {
-                    alert('error');
+                    layer.close(ii);
+                    layer.alert('查询失败', {
+                        icon: 2,
+                        skin: 'layui-layer-molv',
+                        closeBtn: 0
+                    });
                 },
                 dataType: "json",
                 contentType: "application/json"

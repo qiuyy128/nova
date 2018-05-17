@@ -27,6 +27,7 @@ def _enc_(data=''):
 ENV = (
     ('product', U'生产环境'),
     ('staging', U'准生产环境'),
+    ('uat', U'用户测试环境'),
     ('test', U'测试环境'),
     ('dev', U'开发环境')
 )
@@ -103,7 +104,7 @@ class Asset(models.Model):
 
 class AppHost(models.Model):
     ip = models.CharField(max_length=25, blank=False, null=False, verbose_name=u"主机IP")
-    name = models.CharField(max_length=25, blank=False, null=False, verbose_name=u"应用名称")
+    name = models.CharField(max_length=40, blank=False, null=False, verbose_name=u"应用名称")
     port = models.IntegerField(blank=False, null=False, verbose_name=u"应用端口号")
     status = models.CharField(max_length=20, blank=False, null=False, verbose_name=u"运行状态")
     deploy_path = models.CharField(max_length=100, blank=True, null=True, verbose_name=u"部署路径")
@@ -124,7 +125,7 @@ class AppGroup(models.Model):
 
 
 class App(models.Model):
-    name = models.CharField(max_length=30, blank=False, null=False, verbose_name=u"应用名称")
+    name = models.CharField(max_length=40, blank=False, null=False, verbose_name=u"应用名称")
     port = models.IntegerField(blank=False, null=False, verbose_name=u"应用端口号")
     app_hosts = models.ManyToManyField(AppHost, blank=True, verbose_name=u"应用部署的服务器")
     status = models.CharField(max_length=20, blank=False, null=False, verbose_name=u"运行状态")

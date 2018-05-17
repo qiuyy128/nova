@@ -4,3 +4,4 @@ attachment/
 logs/
 config_file/
 sql_log/
+nova/*.pyc

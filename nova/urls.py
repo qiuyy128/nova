@@ -15,6 +15,7 @@ urlpatterns = [
     url(r'^asset/asset_group$', views.asset_group, name='asset_group'),
     url(r'^download/$', views.download, name='download'),
     url(r'^fpcy_stat/$', views.fpcy_stat, name='fpcy_stat'),
+    url(r'^ecai_stat/$', views.ecai_stat, name='ecai_stat'),
     url(r'^get_user_asset/$', views.get_user_asset, name='get_user_asset'),
     url(r'^get_asset/$', views.get_asset, name='get_asset'),
     url(r'^asset/add/$', views.asset_add, name='asset_add'),

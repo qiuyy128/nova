@@ -46,6 +46,10 @@ class MsSQL:
     def exec_non_select(self, sql, args=()):
         cur = self.__get_connect()
         try:
+            if len(args) == 0:
+                cur.execute(sql)
+            else:
+                cur.execute(sql, args)
             cur.execute(sql, args)
             cur_rows = int(cur.rowcount)
             cur.close()

@@ -5,3 +5,4 @@ logs/
 config_file/
 sql_log/
 nova/*.pyc
+script/*_stat_sql.py

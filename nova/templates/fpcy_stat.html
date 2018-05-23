@@ -63,11 +63,9 @@
                 <form class="form-inline row" name="searchBar">
                     <div class="col-sm-3 form-group">
                         <label class="control-label"><span>选择统计日期：</span></label>
-                        <div class="input-group date">
-                            <input type="text" class="form-control" id="id_stat_time">
-                                <span class="input-group-addon">
-                                    <i class="glyphicon glyphicon-calendar"></i>
-                                </span>
+                        <div class="input-group date form_stat_time">
+                            <input type="text" class="form-control" id="id_stat_time" value="{{ stat_day }}" readonly>
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                         </div>
                     </div>
                     <div class="col-sm-3 form-group">
@@ -599,9 +597,10 @@
 
     <script type="text/javascript">
         $(function () {
-            $('#id_stat_time').datetimepicker({
+            $('.form_stat_time').datetimepicker({
                 format: 'YYYY-MM-DD',//显示格式
-                locale: moment.locale('zh-cn')
+                locale: moment.locale('zh-cn'),
+                ignoreReadonly: true
             });
         });
     </script>
@@ -704,7 +703,11 @@
             $('#stat_day_query').click(function () {
                 var stat_day = $("#id_stat_time").val();
                 if (stat_day == undefined || stat_day == "" || stat_day == null) {
-                    alert('请输入正确的查询日期，如2018-01-01');
+                    layer.alert('请选择正确的查询日期!', {
+                            icon: 3,
+                            skin: 'layui-layer-molv',
+                            closeBtn: 0
+                        });
                 }
                 else {
                     window.location.href = "{% url 'fpcy_stat' %}?stat_day=" + stat_day;

@@ -370,3 +370,14 @@ class Permission(models.Model):
             ('exec_tax_agent_sql', '执行考试报名SQL exec_tax_agent_sql'),
             ('access_secret_file', '查看涉密配置文件 access_secret_file'),
         )
+
+
+class JdkBuildVersion(models.Model):
+    jdk_version = models.CharField(max_length=20, blank=False, null=False, verbose_name=u"JDK版本")
+    app_name = models.CharField(max_length=40, blank=False, null=False, verbose_name=u"应用名称")
+    env = models.CharField(max_length=40, blank=False, null=False, verbose_name=u"应用部署环境")
+    jdk_path = models.CharField(max_length=80, blank=False, null=False, verbose_name=u"jdk路径")
+    comment = models.CharField(max_length=160, blank=True, null=True, verbose_name=u"备注")
+
+    def __unicode__(self):
+        return '%s:%s' % (self.jdk_version, self.app_name)

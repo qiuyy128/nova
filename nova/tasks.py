@@ -13,7 +13,7 @@ import json
 from django.http import HttpResponseRedirect, HttpResponse
 from .run_script import RunCmd
 from nova.models import Task, AppHost, App, Asset, AppConfig, HttpStep, HttpTest, History, HttpToken, Mail, Database, \
-    Config, ServiceStep, ServiceTest
+    Config, ServiceStep, ServiceTest, JdkBuildVersion
 import logging
 from celery.utils.log import get_task_logger
 from celery.result import AsyncResult
@@ -422,8 +422,20 @@ def checkout(app_name, app_env, svn_url, log_file=''):
         target_xml = os.path.join(app_checkout_path, build_app_xml)
         shutil.copy2('%s' % source_xml, '%s' % target_xml)
         edit_ant_build_conf(target_xml, app_checkout_path)
-        ant_cmd = "cd %s;source /etc/profile;ant -f %s %s -debug -l build.log" % (
-            app_checkout_path, build_app_xml, app_name.split('tomcat-')[1])
+        # 判断需要使用的jdk版本
+        jdk_version = ''
+        try:
+            jdk_build_version = JdkBuildVersion.objects.get(app_name=app_name, env=app_env)
+            jdk_version = jdk_build_version.jdk_version
+            jdk_path = jdk_build_version.jdk_path
+        except JdkBuildVersion.DoesNotExist:
+            logger.info(u"未配置%sJDK版本，使用jdk1.6！" % app_name)
+        if jdk_version:
+            ant_cmd = "source /etc/profile;source %s;cd %s;ant -f %s %s -debug -l build.log" % (
+                jdk_path, app_checkout_path, build_app_xml, app_name.split('tomcat-')[1])
+        else:
+            ant_cmd = "source /etc/profile;cd %s;ant -f %s %s -debug -l build.log" % (
+                app_checkout_path, build_app_xml, app_name.split('tomcat-')[1])
         ant_out = os.popen(ant_cmd).read()
         with open(log_file, 'a') as f:
             f.write(u"%s\n" % ant_cmd)
@@ -577,7 +589,8 @@ def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_
                 cmd3 = '''cd /u01;tar -zxf %s;echo "export PATH=/u01/%s/bin:\$PATH" > /etc/profile.d/java.sh;
                             rm -f %s;source /etc/profile.d/java.sh''' % (jdk_name, jdk_base_name, jdk_name)
                 print cmd3
-                out, error = RunCmd(host=host_ip, port=host_port, username='root', password=password).run_command(cmd3, log_file)
+                out, error = RunCmd(host=host_ip, port=host_port, username='root', password=password).run_command(cmd3,
+                                                                                                                  log_file)
                 outs = outs + out
                 errors = errors + error
             app_war_ant_path = os.path.join(app_checkout_path, 'deploy', 'war', app_war)
@@ -859,8 +872,20 @@ def do_update_app(app_name, app_env):
         target_xml = os.path.join(app_checkout_path, build_app_xml)
         shutil.copy2('%s' % source_xml, '%s' % target_xml)
         edit_ant_build_conf(target_xml, app_checkout_path)
-        ant_cmd = "source /etc/profile;cd %s;rm -rf deploy;ant -f %s %s -debug -l build.log" % (
-            app_checkout_path, build_app_xml, app_name.split('tomcat-')[1])
+        # 判断需要使用的jdk版本
+        jdk_version = ''
+        try:
+            jdk_build_version = JdkBuildVersion.objects.get(app_name=app_name, env=app_env)
+            jdk_version = jdk_build_version.jdk_version
+            jdk_path = jdk_build_version.jdk_path
+        except JdkBuildVersion.DoesNotExist:
+            logger.info(u"未配置%sJDK版本，使用jdk1.6！" % app_name)
+        if jdk_version:
+            ant_cmd = "source /etc/profile;source %s;cd %s;rm -rf deploy;ant -f %s %s -debug -l build.log" % (
+                jdk_path, app_checkout_path, build_app_xml, app_name.split('tomcat-')[1])
+        else:
+            ant_cmd = "source /etc/profile;cd %s;rm -rf deploy;ant -f %s %s -debug -l build.log" % (
+                app_checkout_path, build_app_xml, app_name.split('tomcat-')[1])
         with open(log_file, 'a') as f:
             f.write(u"[localhost] out: %s.\n" % ant_cmd)
             ant_out = os.popen(ant_cmd).read()
@@ -1507,7 +1532,6 @@ def query_fpcy_every_day():
             logger.info(e)
             # logger.info(data_sql_yhczxfdsqk)
 
-
         logger.info(u'用户查验反馈情况表:')
         # logger.info(fpcy_sql.sql_yhcyfkqkb)
         args = (begin_time, end_time, begin_time, end_time, begin_time, end_time, begin_time, end_time,
@@ -1769,9 +1793,9 @@ Deal all,
 
 
 @shared_task
-def ecai_stat():
+def ecai_sync_data():
     logger.info('*' * 100)
-    logger.info(u'易财统计原始数据任务，开始时间：%s' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    logger.info(u'易财统计同步数据任务，开始时间：%s' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     import script.ecai_stat_sql as ecai_stat_sql
     try:
         # 连接查询库
@@ -1784,6 +1808,10 @@ def ecai_stat():
         db_info = Database.objects.get(db_name='taxagency', env=db_env)
         conn_ecai = Mysql(host=db_info.ip, port=int(db_info.port), db=db_info.db_name, user=db_info.username,
                           password=db_info.password, charset="utf8")
+        # report库
+        db_info = Database.objects.get(db_name='report', env=db_env)
+        conn_report = Mysql(host=db_info.ip, port=int(db_info.port), db=db_info.db_name, user=db_info.username,
+                            password=db_info.password, charset="utf8")
         # 连接业务主库，写入统计原始数据，需要连接写入权限的数据库
         db_env = 'product'
         # ecai库
@@ -1794,80 +1822,225 @@ def ecai_stat():
         data = {'rtn': '99', 'msg': u'连接数据库错误:' + str(e)}
         logger.info(json.dumps(data, encoding='utf-8', ensure_ascii=False))
     try:
-        sql1 = ecai_stat_sql.sql_ecai_stat1
-        # logger.info(sql1)
-        args = ('xx%', '12%', '00%', '%测试%', '11%', '22%', '23%', '24%', '一般%', '小规模%')
-        cur_list, cur_desc, cur_rows, dict_list = conn_ecai.exec_select(sql1, args)
-        logger.info(u'查询%d条记录！' % cur_rows)
-        for i in dict_list:
-            if i['accountSetId'] is not None:
-                account_set_id = i['accountSetId']
-                args = (account_set_id,)
-                sql4 = ecai_stat_sql.sql_ecai_stat4
-                cur_list, cur_desc, cur_rows, dict_list = conn_ecai_prod.exec_select(sql4, args)
-                if dict_list:
-                    # logger.info(u'存在AS_ID：%s 的记录！' % account_set_id)
-                    stat_inputFirstVouTime = dict_list[0]['inputFirstVouTime']
-                    stat_updateLastVouTime = dict_list[0]['updateLastVouTime']
-                    # 修改统计原始数据
-                    args = (account_set_id,)
-                    # 柠檬云库获取某账套最早新增凭证时间
-                    sql2 = ecai_stat_sql.sql_ecai_stat2
-                    cur_list, cur_desc, cur_rows, dict_list = conn_lemonacc.exec_select(sql2, args)
-                    # logger.info(u'查询%d条记录！' % cur_rows)
-                    if dict_list and dict_list[0]['CREATED_DATE'] != stat_inputFirstVouTime:
-                        args = (dict_list[0]['CREATED_DATE'], account_set_id)
-                        update_sql = 'UPDATE stat_customer_detail SET inputFirstVouTime = %s WHERE accountSetId=%s'
-                        cur_rows = conn_ecai_prod.exec_non_select(update_sql, args)
-                        logger.info(u'修改%d行统计原始数据inputFirstVouTime of AS_ID: %s！' % (cur_rows, account_set_id))
+        # 同步昨日后的增量数据
+        begin_day = datetime.date.today()
+        last_time = begin_day - datetime.timedelta(days=string.atoi('1'))
+        last_time = last_time.strftime('%Y-%m-%d')
 
-                    # 柠檬云库获取某账套最后动账时间
-                    sql3 = ecai_stat_sql.sql_ecai_stat3
-                    args = (account_set_id,)
-                    cur_list, cur_desc, cur_rows, dict_list = conn_lemonacc.exec_select(sql3, args)
-                    # logger.info(u'查询%d条记录！' % cur_rows)
-                    if dict_list and dict_list[0]['MODIFIED_DATE'] != stat_updateLastVouTime:
-                        args = (dict_list[0]['MODIFIED_DATE'], account_set_id)
-                        update_sql = 'UPDATE stat_customer_detail SET updateLastVouTime = %s WHERE accountSetId=%s'
-                        cur_rows = conn_ecai_prod.exec_non_select(update_sql, args)
-                        logger.info(u'修改%d行统计原始数据updateLastVouTime of AS_ID: %s！' % (cur_rows, account_set_id))
-                else:
-                    # 插入统计原始数据
-                    # 柠檬云库获取某账套最早新增凭证时间
-                    sql2 = ecai_stat_sql.sql_ecai_stat2
-                    cur_list, cur_desc, cur_rows, dict_list = conn_lemonacc.exec_select(sql2, args)
-                    # logger.info(u'查询%d条记录！' % cur_rows)
-                    if dict_list:
-                        i['inputFirstVouTime'] = dict_list[0]['CREATED_DATE']
-                    # 柠檬云库获取某账套最后动账时间
-                    sql3 = ecai_stat_sql.sql_ecai_stat3
-                    cur_list, cur_desc, cur_rows, dict_list = conn_lemonacc.exec_select(sql3, args)
-                    # logger.info(u'查询%d条记录！' % cur_rows)
-                    if dict_list:
-                        i['updateLastVouTime'] = dict_list[0]['MODIFIED_DATE']
-                    # 生成insert sql
-                    columns = i.keys()
-                    insert_sql_part = "INSERT INTO %s (%s) VALUES (" % ('stat_customer_detail', ', '.join(columns))
-                    for j in range(len(columns)):
-                        if j == len(columns) - 1:
-                            if i[columns[j]] is None:
-                                insert_sql_line_tmp = insert_sql_part + "NULL"
-                            else:
-                                insert_sql_line_tmp = insert_sql_part + "'%s'" % i[columns[j]]
+        # 同步ACC_VOUCHER
+        args = (last_time,)
+        cur_list_source, cur_desc, cur_rows, dict_list_source = conn_lemonacc.exec_select(
+            ecai_stat_sql.sql_ecai_all_hdzt_lemon, args)
+        logger.info(u'查询%d条记录.' % cur_rows)
+        columns = [x[0] for x in cur_desc]
+        sql_migrate_batch = ''
+        count = 0
+        for i in cur_list_source:
+            query = 'SELECT * FROM ACC_VOUCHER WHERE AS_ID = %s AND P_ID = %s AND V_ID=%s'
+            args = (i[0], i[1], i[2])
+            cur_list_target, cur_desc, cur_rows, dict_list_target = conn_ecai.exec_select(query, args)
+            # 同步新增数据
+            count += 1
+            i = list(i)
+            i[3] = datetime.datetime.replace(i[3], microsecond=0)
+            if cur_rows == 0:
+                sql_migrate_part = "INSERT INTO %s (%s) VALUES (" % (
+                    'acc_voucher', ', '.join(columns))
+                for j in range(len(i)):
+                    if j == len(i) - 1:
+                        if i[j] is None:
+                            sql_migrate_line_tmp = sql_migrate_part + "NULL"
                         else:
-                            if i[columns[j]] is None:
-                                insert_sql_line_tmp = insert_sql_part + "NULL, "
-                            else:
-                                insert_sql_line_tmp = insert_sql_part + "'%s', " % i[columns[j]]
-                        insert_sql_part = insert_sql_line_tmp
-                    insert_sql = insert_sql_part + ");\n"
-                    # 插入统计原始数据
-                    cur_rows = conn_ecai_prod.exec_non_select(insert_sql, args=())
-                    logger.info(u'新增%d行统计原始数据！AS_ID:%s' % (cur_rows, account_set_id))
+                            sql_migrate_line_tmp = sql_migrate_part + "'%s'" % i[j]
+                    else:
+                        if i[j] is None:
+                            sql_migrate_line_tmp = sql_migrate_part + "NULL, "
+                        else:
+                            sql_migrate_line_tmp = sql_migrate_part + "'%s', " % i[j]
+                    sql_migrate_part = sql_migrate_line_tmp
+                sql_migrate_line = sql_migrate_line_tmp + ");\n"
+                # sql_migrate_batch += sql_migrate_line
+                # # 1000条批量同步
+                # if count >= 1000:
+                #     try:
+                #         logger.info(u'需要同步的LEMON数据：')
+                #         logger.info(sql_migrate_batch)
+                #         if sql_migrate_batch != '':
+                #             conn_ecai_prod.exec_non_select(sql_migrate_batch)
+                #     except Exception as e:
+                #         logger.info(e)
+                #     sql_migrate_batch = ''
+                #     count = 0
             else:
-                pass
-        data = {'rtn': "00", 'msg': "统计易财原始数据成功"}
+                # 删除原数据
+                sql_migrate_part = "DELETE FROM ACC_VOUCHER WHERE AS_ID=%s AND P_ID=%s AND V_ID=%s;" % (
+                    i[0], i[1], i[2])
+                sql_migrate_part += "INSERT INTO %s (%s) VALUES (" % (
+                    'acc_voucher', ', '.join(columns))
+                for j in range(len(i)):
+                    if j == len(i) - 1:
+                        if i[j] is None:
+                            sql_migrate_line_tmp = sql_migrate_part + "NULL"
+                        else:
+                            sql_migrate_line_tmp = sql_migrate_part + "'%s'" % i[j]
+                    else:
+                        if i[j] is None:
+                            sql_migrate_line_tmp = sql_migrate_part + "NULL, "
+                        else:
+                            sql_migrate_line_tmp = sql_migrate_part + "'%s', " % i[j]
+                    sql_migrate_part = sql_migrate_line_tmp
+                sql_migrate_line = sql_migrate_line_tmp + ");\n"
+            # 增量时修改为按每条进行同步
+            if sql_migrate_line != '':
+                logger.info(u'需要同步的LEMON数据：')
+                logger.info(sql_migrate_line)
+                conn_ecai_prod.exec_non_select(sql_migrate_line)
+        # # 不足1000条的数据
+        # logger.info(u'需要同步的LEMON数据：')
+        # logger.info(sql_migrate_batch)
+        # if sql_migrate_batch != '':
+        #     conn_ecai_prod.exec_non_select(sql_migrate_batch)
+
+        # 同步report数据
+        args = (last_time, last_time)
+        cur_list_source, cur_desc, cur_rows, dict_list_source = conn_report.exec_select(
+            ecai_stat_sql.sql_ecai_sync_report, args)
+        logger.info(u'查询%d条记录.' % cur_rows)
+        columns = [x[0] for x in cur_desc]
+        sql_migrate = ''
+        for i in cur_list_source:
+            query = 'SELECT * FROM declare_customer_declare_tax WHERE customerDeclareTaxId = %s'
+            args = (i[0],)
+            cur_list_target, cur_desc, cur_rows, dict_list_target = conn_ecai.exec_select(query, args)
+            # 同步新增数据
+            if cur_rows == 0:
+                sql_migrate_part = "INSERT INTO %s (%s) VALUES (" % (
+                    'declare_customer_declare_tax', ', '.join(columns))
+                for j in range(len(i)):
+                    if j == len(i) - 1:
+                        if i[j] is None:
+                            sql_migrate_line_tmp = sql_migrate_part + "NULL"
+                        else:
+                            sql_migrate_line_tmp = sql_migrate_part + "'%s'" % i[j]
+                    else:
+                        if i[j] is None:
+                            sql_migrate_line_tmp = sql_migrate_part + "NULL, "
+                        else:
+                            sql_migrate_line_tmp = sql_migrate_part + "'%s', " % i[j]
+                    sql_migrate_part = sql_migrate_line_tmp
+                sql_migrate_line = sql_migrate_part + ");\n"
+                sql_migrate_tmp = sql_migrate + sql_migrate_line
+                sql_migrate = sql_migrate_tmp
+            else:
+                # 判断是否需要更新
+                update_row_flag = 'N'
+                for j in range(len(i)):
+                    if cur_list_target[0][j] != i[j]:
+                        update_row_flag = 'Y'
+                if update_row_flag == 'Y':
+                    # 删除原数据
+                    sql_delete = "DELETE FROM declare_customer_declare_tax WHERE customerDeclareTaxId = '%s';" % i[0]
+                    sql_migrate += sql_delete
+                    # 插入变化的数据
+                    sql_migrate_part = "INSERT INTO %s (%s) VALUES (" % (
+                        'declare_customer_declare_tax', ', '.join(columns))
+                    for j in range(len(i)):
+                        if j == len(i) - 1:
+                            if i[j] is None:
+                                sql_migrate_line_tmp = sql_migrate_part + "NULL"
+                            else:
+                                sql_migrate_line_tmp = sql_migrate_part + "'%s'" % i[j]
+                        else:
+                            if i[j] is None:
+                                sql_migrate_line_tmp = sql_migrate_part + "NULL, "
+                            else:
+                                sql_migrate_line_tmp = sql_migrate_part + "'%s', " % i[j]
+                        sql_migrate_part = sql_migrate_line_tmp
+                    sql_migrate_line = sql_migrate_part + ");\n"
+                    sql_migrate_tmp = sql_migrate + sql_migrate_line
+                    sql_migrate = sql_migrate_tmp
+        logger.info(u'需要同步的report数据：')
+        logger.info(sql_migrate)
+        if sql_migrate != '':
+            # 生产库执行
+            conn_ecai_prod.exec_non_select(sql_migrate)
+
+        # sql1 = ecai_stat_sql.sql_ecai_stat1
+        # # logger.info(sql1)
+        # args = ('xx%', '12%', '00%', '%测试%', '11%', '22%', '23%', '24%', '一般%', '小规模%')
+        # cur_list, cur_desc, cur_rows, dict_list = conn_ecai.exec_select(sql1, args)
+        # logger.info(u'查询%d条记录！' % cur_rows)
+        # for i in dict_list:
+        #     if i['accountSetId'] is not None:
+        #         account_set_id = i['accountSetId']
+        #         args = (account_set_id,)
+        #         sql4 = ecai_stat_sql.sql_ecai_stat4
+        #         cur_list, cur_desc, cur_rows, dict_list = conn_ecai_prod.exec_select(sql4, args)
+        #         if dict_list:
+        #             # logger.info(u'存在AS_ID：%s 的记录！' % account_set_id)
+        #             stat_inputFirstVouTime = dict_list[0]['inputFirstVouTime']
+        #             stat_updateLastVouTime = dict_list[0]['updateLastVouTime']
+        #             # 修改统计原始数据
+        #             args = (account_set_id,)
+        #             # 柠檬云库获取某账套最早新增凭证时间
+        #             sql2 = ecai_stat_sql.sql_ecai_stat2
+        #             cur_list, cur_desc, cur_rows, dict_list = conn_lemonacc.exec_select(sql2, args)
+        #             # logger.info(u'查询%d条记录！' % cur_rows)
+        #             if dict_list and dict_list[0]['CREATED_DATE'] != stat_inputFirstVouTime:
+        #                 args = (dict_list[0]['CREATED_DATE'], account_set_id)
+        #                 update_sql = 'UPDATE stat_customer_detail SET inputFirstVouTime = %s WHERE accountSetId=%s'
+        #                 cur_rows = conn_ecai_prod.exec_non_select(update_sql, args)
+        #                 logger.info(u'修改%d行统计原始数据inputFirstVouTime of AS_ID: %s！' % (cur_rows, account_set_id))
+        #
+        #             # 柠檬云库获取某账套最后动账时间
+        #             sql3 = ecai_stat_sql.sql_ecai_stat3
+        #             args = (account_set_id,)
+        #             cur_list, cur_desc, cur_rows, dict_list = conn_lemonacc.exec_select(sql3, args)
+        #             # logger.info(u'查询%d条记录！' % cur_rows)
+        #             if dict_list and dict_list[0]['MODIFIED_DATE'] != stat_updateLastVouTime:
+        #                 args = (dict_list[0]['MODIFIED_DATE'], account_set_id)
+        #                 update_sql = 'UPDATE stat_customer_detail SET updateLastVouTime = %s WHERE accountSetId=%s'
+        #                 cur_rows = conn_ecai_prod.exec_non_select(update_sql, args)
+        #                 logger.info(u'修改%d行统计原始数据updateLastVouTime of AS_ID: %s！' % (cur_rows, account_set_id))
+        #         else:
+        #             # 插入统计原始数据
+        #             # 柠檬云库获取某账套最早新增凭证时间
+        #             sql2 = ecai_stat_sql.sql_ecai_stat2
+        #             cur_list, cur_desc, cur_rows, dict_list = conn_lemonacc.exec_select(sql2, args)
+        #             # logger.info(u'查询%d条记录！' % cur_rows)
+        #             if dict_list:
+        #                 i['inputFirstVouTime'] = dict_list[0]['CREATED_DATE']
+        #             # 柠檬云库获取某账套最后动账时间
+        #             sql3 = ecai_stat_sql.sql_ecai_stat3
+        #             cur_list, cur_desc, cur_rows, dict_list = conn_lemonacc.exec_select(sql3, args)
+        #             # logger.info(u'查询%d条记录！' % cur_rows)
+        #             if dict_list:
+        #                 i['updateLastVouTime'] = dict_list[0]['MODIFIED_DATE']
+        #             # 生成insert sql
+        #             columns = i.keys()
+        #             insert_sql_part = "INSERT INTO %s (%s) VALUES (" % ('stat_customer_detail', ', '.join(columns))
+        #             for j in range(len(columns)):
+        #                 if j == len(columns) - 1:
+        #                     if i[columns[j]] is None:
+        #                         insert_sql_line_tmp = insert_sql_part + "NULL"
+        #                     else:
+        #                         insert_sql_line_tmp = insert_sql_part + "'%s'" % i[columns[j]]
+        #                 else:
+        #                     if i[columns[j]] is None:
+        #                         insert_sql_line_tmp = insert_sql_part + "NULL, "
+        #                     else:
+        #                         insert_sql_line_tmp = insert_sql_part + "'%s', " % i[columns[j]]
+        #                 insert_sql_part = insert_sql_line_tmp
+        #             insert_sql = insert_sql_part + ");\n"
+        #             # 插入统计原始数据
+        #             cur_rows = conn_ecai_prod.exec_non_select(insert_sql, args=())
+        #             logger.info(u'新增%d行统计原始数据！AS_ID:%s' % (cur_rows, account_set_id))
+        #     else:
+        #         pass
+        data = {'rtn': "00", 'msg': "易财统计同步数据成功！"}
+        logger.info('*' * 100)
+        logger.info(u'易财统计同步数据任务，结束时间:%s' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     except Exception as e:
         logger.info(e)
-        data = {'rtn': '99', 'msg': u'统计易财原始数据失败:' + str(e)}
+        data = {'rtn': '99', 'msg': u'易财统计同步数据失败:' + str(e)}
     logger.info(json.dumps(data, encoding='utf-8', ensure_ascii=False))

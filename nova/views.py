@@ -46,6 +46,7 @@ from django.http import FileResponse
 import zipfile
 import shutil
 # from ansible.runner import Runner
+import MySQLdb
 
 import sys
 import configmodule
@@ -2279,3 +2280,124 @@ def view(request):
     else:
         data = {'msg': '没有task_id！'}
         return render(request, 'message.html', data)
+
+
+def add_total_sum(data, with_sum='N', row_num=0):
+    if len(data) == 0:
+        return None
+    else:
+        if type(data) == tuple:
+            data = list(data)
+        for i in range(len(data)):
+            if type(data[i]) == tuple:
+                data[i] = list(data[i])
+            if type(data[i]) == list:
+                record = data[i]
+                for j in range(len(record)):
+                    if type(record[j]) == tuple:
+                        record[j] = list(record[j])
+                    if record[j] is not None and isinstance(record[j], decimal.Decimal):
+                        record[j] = str(record[j])
+                        if str(record[j]).find('.') == -1:
+                            record[j] = int(record[j])
+                        else:
+                            record[j] = float(record[j])
+                    if record[j] is None:
+                        record[j] = ''
+        if with_sum == 'Y':
+            data_col_len = len(data[0])
+            total = [0 for i in range(data_col_len)]
+            for i in data:
+                for j in range(len(i))[1:]:
+                    try:
+                        if i[j] != '' and i[j] is not None and str(i[j]).find('%') == -1 and isinstance(i[j], long):
+                            total[j] = total[j] + i[j]
+                        if str(i[j]).find('%') != -1:
+                            total[j] = '-'
+                    except Exception as e:
+                        logger.info(e)
+            total[0] = u'合计'
+            total[1] = row_num
+            data.insert(0, total)
+    return data
+
+
+@login_required()
+@csrf_exempt
+@permission_required('nova.access_monitor', raise_exception=True)
+def ecai_stat(request):
+    if request.method == 'GET':
+        import script.ecai_stat_sql as ecai_stat_sql
+        try:
+            # 连接查询库
+            db_env = 'slave'
+            # lemonacc库
+            db_info = Database.objects.get(db_name='lemonacc', env=db_env)
+            conn_lemonacc = MsSQL(host=db_info.ip, port=db_info.port, db=db_info.db_name, user=db_info.username,
+                                  password=db_info.password)
+            # ecai库
+            db_info = Database.objects.get(db_name='taxagency', env=db_env)
+            conn_ecai = Mysql(host=db_info.ip, port=int(db_info.port), db=db_info.db_name, user=db_info.username,
+                              password=db_info.password, charset="utf8")
+            # report库
+            db_info = Database.objects.get(db_name='report', env=db_env)
+            conn_report = Mysql(host=db_info.ip, port=int(db_info.port), db=db_info.db_name, user=db_info.username,
+                                password=db_info.password, charset="utf8")
+        except Exception as e:
+            data = {'rtn': '99', 'msg': u'连接数据库错误:' + str(e)}
+            logger.info(json.dumps(data, encoding='utf-8', ensure_ascii=False))
+        try:
+            res = request.GET
+            if 'begin_time' in res and 'end_time' in res:
+                begin_time = request.GET['begin_time']
+                end_time = request.GET['end_time']
+            else:
+                data = {'msg': '没有选择统计起、止时间！'}
+                return render(request, 'ecai_stat.html', locals())
+            logger.info('begin_time is: %s' % begin_time)
+            logger.info('end_time is: %s' % end_time)
+            # ecai统计
+            logger.info('#' * 100)
+            logger.info(u'ecai统计:')  # 易财账号统计
+            args = (begin_time, end_time, end_time, begin_time, end_time, end_time)
+            cur_list, cur_desc, cur_rows, dict_list = conn_ecai.exec_select(ecai_stat_sql.sql_ecai_zhtj, args)
+            logger.info(u'查询%d条记录！' % cur_rows)
+            data_sql_ecai_zhtj = cur_list
+
+            # 易财账套统计
+            args = (begin_time, end_time, begin_time, end_time, end_time)
+            cur_list, cur_desc, cur_rows, dict_list = conn_ecai.exec_select(ecai_stat_sql.sql_ecai_zttj, args)
+            logger.info(u'查询%d条记录！' % cur_rows)
+            data_sql_ecai_zttj = add_total_sum(cur_list, with_sum='Y', row_num=cur_rows)
+
+            # 易财账套活跃度统计
+            args = (begin_time, end_time, begin_time, end_time, begin_time, end_time, end_time)
+            cur_list, cur_desc, cur_rows, dict_list = conn_ecai.exec_select(ecai_stat_sql.sql_ecai_hyzt, args)
+            logger.info(u'查询%d条记录！' % cur_rows)
+            data_sql_ecai_hyzt = add_total_sum(cur_list, with_sum='Y', row_num=cur_rows)
+
+            # 易财票据统计
+            args = (begin_time, end_time, begin_time, end_time, begin_time, end_time, end_time)
+            cur_list, cur_desc, cur_rows, dict_list = conn_ecai.exec_select(ecai_stat_sql.sql_ecai_pjtj, args)
+            logger.info(u'查询%d条记录！' % cur_rows)
+            data_sql_ecai_pjtj = add_total_sum(cur_list, with_sum='Y', row_num=cur_rows)
+
+            # 易财申报统计(一)
+            args = (
+                begin_time, end_time, begin_time, end_time, begin_time, end_time, begin_time, end_time, begin_time,
+                end_time)
+            cur_list, cur_desc, cur_rows, dict_list = conn_ecai.exec_select(ecai_stat_sql.sql_ecai_sbtj1, args)
+            logger.info(u'查询%d条记录！' % cur_rows)
+            data_sql_ecai_sbtj1 = add_total_sum(cur_list, with_sum='Y', row_num=cur_rows)
+
+            # 易财申报统计(二)
+            args = (
+                begin_time, end_time, begin_time, end_time, begin_time, end_time, begin_time, end_time, begin_time,
+                end_time, begin_time, end_time, begin_time, end_time, begin_time, end_time)
+            cur_list, cur_desc, cur_rows, dict_list = conn_ecai.exec_select(ecai_stat_sql.sql_ecai_sbtj2, args)
+            logger.info(u'查询%d条记录！' % cur_rows)
+            data_sql_ecai_sbtj2 = add_total_sum(cur_list, with_sum='Y', row_num=cur_rows)
+        except Exception as e:
+            data = {'rtn': '99', 'msg': u'易财统计查询错误:' + str(e)}
+            logger.info(json.dumps(data, encoding='utf-8', ensure_ascii=False))
+        return render(request, 'ecai_stat.html', locals())

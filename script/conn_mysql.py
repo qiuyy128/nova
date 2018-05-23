@@ -49,7 +49,10 @@ class Mysql:
     def exec_non_select(self, sql, args=()):
         cur = self.__get_connect()
         try:
-            cur.execute(sql, args)
+            if len(args) == 0:
+                cur.execute(sql)
+            else:
+                cur.execute(sql, args)
             cur_rows = int(cur.rowcount)
             cur.close()
             self.conn.commit()
@@ -61,4 +64,3 @@ class Mysql:
         # self.conn.commit()
         self.conn.close()
         return cur_rows
-

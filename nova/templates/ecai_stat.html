@@ -1,0 +1,494 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}易财产品统计分析{% endblock %}
+{% block formcss %}
+    <link href="{% static 'css/bootstrap-datetimepicker.css' %}" rel="stylesheet" type="text/css">
+    {#    <link href="{% static 'css/row_details/style.css' %}" rel="stylesheet" type="text/css">#}
+    {#    <link href="{% static 'css/row_details/DT_bootstrap.css' %}" rel="stylesheet" type="text/css">#}
+    <style type="text/css">
+        .table thead tr th {
+            font-weight: normal;
+            color: #000000;
+        {#                    background-color: #FF9600;#}
+        }
+
+        .table th, .table td {
+            text-align: center;
+            vertical-align: middle !important;
+        }
+
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container col-xs-8 col-sm-8 col-md-12">
+        <div class="col-md-offset-1 ">
+            {#            <div class="margin-top-1">#}
+            <div class="console-instance-head clearfix">
+                <div class="pull-left">
+                    <h3><span><a href="{% url 'ecai_stat' %}">易财统计分析表</a></span></h3>
+                </div>
+            </div>
+            {#            </div>#}
+
+            <div class="margin-top-1">
+                <form class="form-inline row" name="searchBar">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label label-width" style="width: 120px">
+                            <span class="text-danger">*</span>统计时间起：
+                        </label>
+                        <div class="col-sm-3 input-group date form_begin_time">
+                            <input type="text" class="form-control" id="id_begin_time" style="width: 200px" value="{{ begin_time }}" readonly/>
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i> </span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label label-width" style="width: 120px">
+                            <span class="text-danger">*</span>统计时间止：
+                        </label>
+                        <div class="col-sm-3 input-group date form_end_time">
+                            <input type="text" class="form-control" id="id_end_time" style="width: 200px" value="{{ end_time }}" readonly/>
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                        </div>
+                    </div>
+                </form>
+                <form class="form-inline row" name="searchBar">
+                    <div class="col-sm-4 form-group">
+                        <input type="button" class="btn btn-default" id="stat_day_query" value="查询">
+                    </div>
+                </form>
+
+            </div>
+
+            <div class="margin-top-1" id="table">
+                <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                       id="dataTables-sql">
+                    <thead>
+                    <tr>
+                        <th colspan="5" style="background-color: royalblue;font-size: 24px;">易财账号统计</th>
+                    <tr>
+                        <th>机构类别</th>
+                        <th>户数</th>
+                        <th>新增户数</th>
+                        <th>用户数</th>
+                        <th>新增用户数</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for record in data_sql_ecai_zhtj %}
+                        <tr class="gradeX">
+                            {% for i in record %}
+                                <td>{{ i }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="margin-top-1" id="table">
+                <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                       id="dataTables-sql-zttj">
+                    <thead>
+                    <tr>
+                        <th colspan="12" style="background-color: royalblue;font-size: 24px;">易财账套统计</th>
+                    <tr>
+                        <th rowspan="2">序号</th>
+                        <th rowspan="2">机构名称</th>
+                        <th rowspan="2">客户总数（含删除）</th>
+                        <th colspan="3">其中</th>
+
+                        <th rowspan="2">新增有效客户数</th>
+                        <th rowspan="2">账套总数</th>
+                        <th colspan="3">其中</th>
+
+                        <th rowspan="2">新增有效账套数</th>
+                    </tr>
+                    <tr>
+                        <th>有效客户数</th>
+                        <th>停用客户数</th>
+                        <th>回收站客户数</th>
+                        <th>有效账套数</th>
+                        <th>停用列表账套数</th>
+                        <th>回收站账套数</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for record in data_sql_ecai_zttj %}
+                        <tr class="gradeX">
+                            {% for i in record %}
+                                <td>{{ i }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="margin-top-1" id="table">
+                <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                       id="dataTables-sql-hyzt">
+                    <thead>
+                    <tr>
+                        <th colspan="6" style="background-color: royalblue;font-size: 24px;">易财账套活跃度统计</th>
+                    <tr>
+                        <th>序号</th>
+                        <th>机构名称</th>
+                        <th>有效账套数</th>
+                        <th>活动账套数</th>
+                        <th>新增有效账套</th>
+                        <th>新增活动账套数</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for record in data_sql_ecai_hyzt %}
+                        <tr class="gradeX">
+                            {% for i in record %}
+                                <td>{{ i }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="margin-top-1" id="table">
+                <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                       id="dataTables-sql-pjtj">
+                    <thead>
+                    <tr>
+                        <th colspan="5" style="background-color: royalblue;font-size: 24px;">易财票据统计</th>
+                    </tr>
+                    <tr>
+                        <th>序号</th>
+                        <th>机构名称</th>
+                        <th>销售发票</th>
+                        <th>采购发票</th>
+                        <th>资金流水</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for record in data_sql_ecai_pjtj %}
+                        <tr class="gradeX">
+                            {% for i in record %}
+                                <td>{{ i }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="margin-top-1" id="table">
+                <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                       id="dataTables-sql-sbtj1">
+                    <thead>
+                    <tr>
+                        <th colspan="7" style="background-color: royalblue;font-size: 24px;">易财申报统计(一)</th>
+                    <tr>
+                        <th>序号</th>
+                        <th>机构名称</th>
+                        <th>应申报总数</th>
+                        <th>申报成功数</th>
+                        <th>零申报申报成功数</th>
+                        <th>待缴款总数</th>
+                        <th>缴款成功总数</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for record in data_sql_ecai_sbtj1 %}
+                        <tr class="gradeX">
+                            {% for i in record %}
+                                <td>{{ i }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="margin-top-1" id="table">
+                <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                       id="dataTables-sql-sbtj2">
+                    <thead>
+                    <tr>
+                        <th colspan="10" style="background-color: royalblue;font-size: 24px;">易财申报统计(二)</th>
+                    <tr>
+                        <th rowspan="2">序号</th>
+                        <th rowspan="2">机构名称</th>
+                        <th rowspan="2">应申报总数</th>
+                        <th rowspan="2">申报成功数</th>
+                        <th colspan="2">增值税一般纳税人</th>
+                        <th colspan="2">应增值税小规模申报数</th>
+                        <th colspan="2">扣缴个人所得税</th>
+                    </tr>
+                    <tr>
+                        <th>应申报数</th>
+                        <th>申报成功数</th>
+                        <th>应申报数</th>
+                        <th>申报成功数</th>
+                        <th>应申报数</th>
+                        <th>申报成功数</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for record in data_sql_ecai_sbtj2 %}
+                        <tr class="gradeX">
+                            {% for i in record %}
+                                <td>{{ i }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript" src="{% static 'js/moment-with-locales.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/bootstrap-datetimepicker.min.js' %}"></script>
+
+    <script type="text/javascript">
+        $(function () {
+            $('.form_begin_time').datetimepicker({
+                {#                format: 'YYYY-MM-DD  HH:mm:ss',//显示格式#}
+                format: 'YYYY-MM-DD',//显示格式
+                locale: moment.locale('zh-cn'),
+                ignoreReadonly: true
+            });
+            $('.form_end_time').datetimepicker({
+                format: 'YYYY-MM-DD',//显示格式
+                locale: moment.locale('zh-cn'),
+                ignoreReadonly: true
+            });
+        });
+    </script>
+
+    <script type="application/javascript">
+        $(document).ready(function () {
+            $('#stat_day_query').click(function () {
+                var begin_time = $("#id_begin_time").val();
+                var end_time = $("#id_end_time").val();
+                if (begin_time == undefined || begin_time == "" || begin_time == null) {
+                    layer.alert('请选择统计时间起日期!', {
+                            icon: 7,
+                            skin: 'layui-layer-molv',
+                            closeBtn: 0
+                        });
+                }
+                else if (end_time == undefined || end_time == "" || end_time == null) {
+                    layer.alert('请选择统计时间止日期!', {
+                            icon: 7,
+                            skin: 'layui-layer-molv',
+                            closeBtn: 0
+                        });
+                }
+                else {
+                    window.location.href = "{% url 'ecai_stat' %}?begin_time=" + begin_time + "&end_time=" + end_time;
+                    {#                    var ii = layer.load();#}
+                    {#                    $.ajax({#}
+                    {#                        type: "GET",#}
+                    {#                        url: "{% url 'ecai_stat' %}?begin_time=" + begin_time + "&end_time=" + end_time,#}
+                    {##}
+                    {#                        success: function () {#}
+                    {#                            layer.close(ii);#}
+                    {#                        },#}
+                    {#                        error: function () {#}
+                    {#                            layer.close(ii);#}
+                    {#                            layer.alert('查询失败', {#}
+                    {#                                icon: 2,#}
+                    {#                                skin: 'layui-layer-molv',#}
+                    {#                                closeBtn: 0#}
+                    {#                            });#}
+                    {#                        },#}
+                    {#                        dataType: "json",#}
+                    {#                        contentType: "application/json"#}
+                    {#                    });#}
+                }
+            });
+            $('#dataTables-sql-zttj').DataTable(
+                    {
+                        "aaSorting": [
+                            [2, "desc"],
+                            [3, "desc"]
+                        ],
+                        "searching": false,
+                        "info": false,
+                        "iDisplayLength": 10,
+                        "bLengthChange": false,
+                        language: {
+                            "sProcessing": "处理中...",
+                            "sLengthMenu": "显示 _MENU_ 项结果",
+                            "sZeroRecords": "没有匹配结果",
+                            "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+                            "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+                            "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+                            "sInfoPostFix": "",
+                            "sSearch": "搜索:",
+                            "sUrl": "",
+                            "sEmptyTable": "表中数据为空",
+                            "sLoadingRecords": "载入中...",
+                            "sInfoThousands": ",",
+                            "oPaginate": {
+                                "sFirst": "首页",
+                                "sPrevious": "上页",
+                                "sNext": "下页",
+                                "sLast": "末页"
+                            },
+                            "oAria": {
+                                "sSortAscending": ": 以升序排列此列",
+                                "sSortDescending": ": 以降序排列此列"
+                            }
+                        }
+                    }
+            );
+            $('#dataTables-sql-hyzt').DataTable(
+                    {
+                        "aaSorting": [
+                            [2, "desc"],
+                            [3, "desc"]
+                        ],
+                        "searching": false,
+                        "info": false,
+                        "iDisplayLength": 10,
+                        "bLengthChange": false,
+                        language: {
+                            "sProcessing": "处理中...",
+                            "sLengthMenu": "显示 _MENU_ 项结果",
+                            "sZeroRecords": "没有匹配结果",
+                            "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+                            "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+                            "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+                            "sInfoPostFix": "",
+                            "sSearch": "搜索:",
+                            "sUrl": "",
+                            "sEmptyTable": "表中数据为空",
+                            "sLoadingRecords": "载入中...",
+                            "sInfoThousands": ",",
+                            "oPaginate": {
+                                "sFirst": "首页",
+                                "sPrevious": "上页",
+                                "sNext": "下页",
+                                "sLast": "末页"
+                            },
+                            "oAria": {
+                                "sSortAscending": ": 以升序排列此列",
+                                "sSortDescending": ": 以降序排列此列"
+                            }
+                        }
+                    }
+            );
+            $('#dataTables-sql-pjtj').DataTable(
+                    {
+                        "aaSorting": [
+                            [2, "desc"],
+                            [3, "desc"]
+                        ],
+                        "searching": false,
+                        "info": false,
+                        "iDisplayLength": 10,
+                        "bLengthChange": false,
+                        language: {
+                            "sProcessing": "处理中...",
+                            "sLengthMenu": "显示 _MENU_ 项结果",
+                            "sZeroRecords": "没有匹配结果",
+                            "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+                            "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+                            "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+                            "sInfoPostFix": "",
+                            "sSearch": "搜索:",
+                            "sUrl": "",
+                            "sEmptyTable": "表中数据为空",
+                            "sLoadingRecords": "载入中...",
+                            "sInfoThousands": ",",
+                            "oPaginate": {
+                                "sFirst": "首页",
+                                "sPrevious": "上页",
+                                "sNext": "下页",
+                                "sLast": "末页"
+                            },
+                            "oAria": {
+                                "sSortAscending": ": 以升序排列此列",
+                                "sSortDescending": ": 以降序排列此列"
+                            }
+                        }
+                    }
+            );
+            $('#dataTables-sql-sbtj1').DataTable(
+                    {
+                        "aaSorting": [
+                            [2, "desc"],
+                            [3, "desc"]
+                        ],
+                        "searching": false,
+                        "info": false,
+                        "iDisplayLength": 10,
+                        "bLengthChange": false,
+                        language: {
+                            "sProcessing": "处理中...",
+                            "sLengthMenu": "显示 _MENU_ 项结果",
+                            "sZeroRecords": "没有匹配结果",
+                            "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+                            "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+                            "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+                            "sInfoPostFix": "",
+                            "sSearch": "搜索:",
+                            "sUrl": "",
+                            "sEmptyTable": "表中数据为空",
+                            "sLoadingRecords": "载入中...",
+                            "sInfoThousands": ",",
+                            "oPaginate": {
+                                "sFirst": "首页",
+                                "sPrevious": "上页",
+                                "sNext": "下页",
+                                "sLast": "末页"
+                            },
+                            "oAria": {
+                                "sSortAscending": ": 以升序排列此列",
+                                "sSortDescending": ": 以降序排列此列"
+                            }
+                        }
+                    }
+            );
+            $('#dataTables-sql-sbtj2').DataTable(
+                    {
+                        "aaSorting": [
+                            [2, "desc"],
+                            [3, "desc"]
+                        ],
+                        "searching": false,
+                        "info": false,
+                        "iDisplayLength": 10,
+                        "bLengthChange": false,
+                        language: {
+                            "sProcessing": "处理中...",
+                            "sLengthMenu": "显示 _MENU_ 项结果",
+                            "sZeroRecords": "没有匹配结果",
+                            "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+                            "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+                            "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+                            "sInfoPostFix": "",
+                            "sSearch": "搜索:",
+                            "sUrl": "",
+                            "sEmptyTable": "表中数据为空",
+                            "sLoadingRecords": "载入中...",
+                            "sInfoThousands": ",",
+                            "oPaginate": {
+                                "sFirst": "首页",
+                                "sPrevious": "上页",
+                                "sNext": "下页",
+                                "sLast": "末页"
+                            },
+                            "oAria": {
+                                "sSortAscending": ": 以升序排列此列",
+                                "sSortDescending": ": 以降序排列此列"
+                            }
+                        }
+                    }
+            );
+        });
+    </script>
+{% endblock %}

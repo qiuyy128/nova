@@ -54,22 +54,18 @@
                     <label class="col-sm-3 control-label label-width">
                         <span class="text-danger">*</span>开始时间：
                     </label>
-                    <div class="col-sm-3 input-group date">
-                        <input type="text" class="form-control" id="id_start_time" style="width: 260px">
-                                <span class="input-group-addon">
-                                    <i class="glyphicon glyphicon-calendar"></i>
-                                </span>
+                    <div class="col-sm-3 input-group date form_begin_time">
+                        <input type="text" class="form-control" id="id_start_time" style="width: 260px" readonly>
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label label-width">
                         <span class="text-danger">*</span>结束时间：
                     </label>
-                    <div class="col-sm-3 input-group date">
-                        <input type="text" class="form-control" id="id_end_time" style="width: 260px">
-                                <span class="input-group-addon">
-                                    <i class="glyphicon glyphicon-calendar"></i>
-                                </span>
+                    <div class="col-sm-3 input-group date form_end_time">
+                        <input type="text" class="form-control" id="id_end_time" style="width: 260px" readonly>
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                     </div>
                 </div>
             </form>
@@ -217,13 +213,15 @@
     <script type="text/javascript" src="{% static 'js/bootstrap-datetimepicker.min.js' %}"></script>
     <script type="text/javascript">
         $(function () {
-            $('#id_start_time').datetimepicker({
+            $('.form_begin_time').datetimepicker({
                 format: 'YYYY-MM-DD HH:mm:ss',//显示格式
-                locale: moment.locale('zh-cn')
+                locale: moment.locale('zh-cn'),
+                ignoreReadonly: true
             });
-            $('#id_end_time').datetimepicker({
+            $('.form_end_time').datetimepicker({
                 format: 'YYYY-MM-DD HH:mm:ss',//显示格式
-                locale: moment.locale('zh-cn')
+                locale: moment.locale('zh-cn'),
+                ignoreReadonly: true
             });
         });
 
@@ -329,7 +327,11 @@
                     success: function (result) {
                         layer.close(ii);
                         if (result.rtn == '01') {
-                            alert(result.msg);
+                            layer.alert(result.msg, {
+                                icon: 7,
+                                skin: 'layui-layer-molv',
+                                closeBtn: 0
+                            });
                         }
                         if (typeof result == 'string') {
                             result = JSON.parse(result);

@@ -1739,12 +1739,45 @@ def query_fpcy_from_mongodb(data_time, end_time, collection):
         data_list = collection.find_one({"time": {"$gte": data_time, "$lt": end_time}}, {"_id": 0, "time": 0})
         # logger.info(str(data_list).decode('string_escape'))
         # logger.info(data_list)
-        logger.info(data_list['data'])
         return data_list['data']
     except Exception as e:
-        # logger.info(u'从mongodb提取发票查验统计数据异常:' + str(e))
-        logger.info(u'从mongodb提取发票查验统计数据异常！')
+        logger.info(u'从mongodb提取发票查验统计数据异常:' + str(e))
         return None
+
+
+@login_required()
+def get_fpcy_qyjkqy_detail(request):
+    import script.fpcy_stat_sql as fpcy_sql
+    res = request.GET
+    customerId = request.GET['customerId']
+    begin_day = request.GET['stat_day']
+    stat_day = datetime.datetime.strptime(str(begin_day), '%Y-%m-%d')
+    # 统计开始与统计结束时间均取22:00:00
+    begin_time = stat_day - datetime.timedelta(hours=string.atoi('2'))
+    end_time = begin_time + datetime.timedelta(hours=string.atoi('24'))
+    # 转字符串
+    begin_time = begin_time.strftime('%Y-%m-%d %H:%M:%S')
+    end_time = end_time.strftime('%Y-%m-%d %H:%M:%S')
+    try:
+        # 查询库查询
+        db_env = 'slave'
+        # fpcy库
+        db_info = Database.objects.get(db_name='fpcy', env=db_env)
+        conn = Mysql(host=db_info.ip, port=int(db_info.port), db=db_info.db_name, user=db_info.username,
+                     password=db_info.password, charset="utf8")
+    except Exception as e:
+        data = {'rtn': 99, 'msg': u'连接数据库错误:' + str(e)}
+        logger.info(json.dumps(data, encoding='utf-8', ensure_ascii=False))
+    try:
+        args = (begin_time, end_time, customerId)
+        logger.info(args)
+        cur_list, cur_desc, cur_rows, dict_list = conn.exec_select(fpcy_sql.sql_qyjkcyqk_qkxq, args)
+        fpcy_qyjkqy_detail = cur_list
+    except Exception as e:
+        logger.info(e)
+    data = {'fpcy_qyjkqy_detail': fpcy_qyjkqy_detail}
+    logger.info(json.dumps(data, encoding='utf-8', ensure_ascii=False))
+    return HttpResponse(json.dumps(data), content_type='application/json')
 
 
 @login_required()
@@ -1903,7 +1936,8 @@ def fpcy_stat(request):
                 else:
                     page_count = (all_counts / page_size)
                 if page_index == 1:
-                    data_fpcy_yhzhdsqk = collection.find_one({"time": stat_day}, {"_id": 0, "time": 0}).get('data')[0:10]
+                    data_fpcy_yhzhdsqk = collection.find_one({"time": stat_day}, {"_id": 0, "time": 0}).get('data')[
+                                         0:10]
                 else:
                     data_start = (page_index - 1) * page_size
                     data_end = (page_index - 1) * page_size + page_size
@@ -1971,11 +2005,12 @@ def fpcy_stat(request):
         except Exception as e:
             data = {'rtn': '99', 'msg': u'查询错误:' + str(e)}
             logger.info(data)
-        if datetime.datetime.strptime(str(stat_day), '%Y-%m-%d') >= datetime.datetime.strptime(str('2018-04-20'),
+        if datetime.datetime.strptime(str(stat_day), '%Y-%m-%d') >= datetime.datetime.strptime(str('2018-05-24'),
                                                                                                '%Y-%m-%d'):
             return render(request, 'fpcy_stat.html', locals())
         else:
-            return render(request, 'fpcy_stat.20180419.html', locals())
+            # return render(request, 'fpcy_stat.20180419.html', locals())
+            return render(request, 'fpcy_stat.20180524.html', locals())
     else:
         param = json.loads(request.body)
         if param:
@@ -2168,7 +2203,7 @@ def config_ssh_public_key(request):
                         # 配置/etc/ansible/hosts文件
                         cmd = '''if [ -e %s ]; then if ( ! grep '^%s' %s ); then
                                 echo %s ansible_ssh_pass="%s" >> %s;fi;fi;''' % (
-                                ansible_hosts_file, ip, ansible_hosts_file, ip, host.password, ansible_hosts_file)
+                            ansible_hosts_file, ip, ansible_hosts_file, ip, host.password, ansible_hosts_file)
                         logger.info(cmd)
                         subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                         # 拷贝公钥至远程服务器
@@ -2223,7 +2258,7 @@ def config_ssh_public_key(request):
                     ssh_username = Config.objects.get(name='add_ssh_user', config_key='username').config_value
                     ssh_password = Config.objects.get(name='add_ssh_user', config_key='password').config_value
                     cmd = '''ansible-playbook %s -e "host=%s user=%s new_pass=%s"''' % (
-                            user_add_yml_path, host.ip, ssh_username, ssh_password)
+                        user_add_yml_path, host.ip, ssh_username, ssh_password)
                     logger.info(cmd)
                     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                     if not p.stderr:

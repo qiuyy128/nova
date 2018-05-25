@@ -1251,17 +1251,90 @@ def save_data_to_mongodb(data, data_time, collection, with_sum='N'):
         try:
             collection.insert({'data': data, 'time': data_time})
         except Exception as e:
-            print e
             logger.info(e)
         # 查询数据
         try:
             data_list = collection.find_one({"time": data_time}, {"_id": 0, "time": 0})
         except Exception as e:
-            print e
+            logger.info(e)
         logger.info(u'从mongodb取出来的数据:')
         logger.info(str(data_list).decode('string_escape'))
         # logger.info(type(data_list))
         return data_list['data']
+
+
+# 修改20180524
+def save_col_to_mongodb(data, data_time, collection, with_sum='N'):
+    data_list = []
+    if len(data) == 0:
+        return None
+    else:
+        if type(data) == tuple:
+            data = list(data)
+        logger.info(u'数据库查询出来的数据:')
+        logger.info(str(data).decode('string_escape'))
+        for i in range(len(data)):
+            if type(data[i]) == tuple:
+                data[i] = list(data[i])
+            if type(data[i]) == list:
+                record = data[i]
+                for j in range(len(record)):
+                    if type(record[j]) == tuple:
+                        record[j] = list(record[j])
+                    if record[j] is not None and isinstance(record[j], decimal.Decimal):
+                        record[j] = str(record[j])
+                        if str(record[j]).find('.') == -1:
+                            record[j] = int(record[j])
+                        else:
+                            record[j] = float(record[j])
+                    if record[j] is None:
+                        record[j] = ''
+            if type(data[i]) == dict:
+                record = data[i]
+                for (key, value) in record.items():
+                    if value is not None and isinstance(value, decimal.Decimal):
+                        record[key] = str(value)
+                        if str(value).find('.') == -1:
+                            record[key] = int(value)
+                        else:
+                            value = float(value)
+                    if value is None:
+                        record[key] = ''
+        if with_sum == 'Y':
+            total_dict = {}
+            total_list = data[0].keys()
+            for key in total_list:
+                total_dict[key] = 0
+            for record in data:
+                # for j in range(len(i))[1:]:
+                for (key, value) in record.items():
+                    try:
+                        # if value != '' and value is not None and str(value).find('%') == -1:
+                        if value != '' and value is not None and type(value) != str and type(value)!= unicode:
+                            total_dict[key] += value
+                        if str(value).find('%') != -1:
+                            total_dict[key] = '-'
+                    except Exception as e:
+                        logger.info(e)
+            total_dict['customerId'] = u'合计'
+            data.append(total_dict)
+        # 存储数据
+        logger.info(u'存储查询数据至mongodb:')
+        logger.info({'data': str(data).decode('string_escape'), 'time': data_time})
+        try:
+            collection.insert({'data': data, 'time': data_time})
+        except Exception as e:
+            logger.info(e)
+        # 查询数据
+        try:
+            data_list = collection.find_one({"time": data_time}, {"_id": 0, "time": 0})
+        except Exception as e:
+            logger.info(e)
+        logger.info(u'从mongodb取出来的数据:')
+        logger.info(str(data_list).decode('string_escape'))
+        # logger.info(type(data_list))
+        return data_list['data']
+# 修改20180524
 
 
 # 查询用户的题分信息
@@ -1584,6 +1657,7 @@ def query_fpcy_every_day():
             logger.info(e)
         # logger.info(data_sql_zcpcyqks)
 
+        # 20180524修改
         args = (begin_time, end_time, begin_time, end_time, begin_time, end_time, begin_time, end_time,
                 begin_time, end_time, begin_time, end_time)
         logger.info(u'企业接口查验情况:')
@@ -1591,27 +1665,53 @@ def query_fpcy_every_day():
         logger.info(args)
         cur_list, cur_desc, cur_rows, dict_list = conn.exec_select(fpcy_sql.sql_qyjkcyqk, args)
         logger.info(u'查询%d条记录！' % cur_rows)
-        data_sql_qyjkcyqks = list(cur_list)
-        for j in range(len(data_sql_qyjkcyqks)):
-            if type(data_sql_qyjkcyqks[j]) != list:
-                data_sql_qyjkcyqks[j] = list(data_sql_qyjkcyqks[j])
-            data_sql_qyjkcyqk = data_sql_qyjkcyqks[j]
-            data_sql_qyjkcyqk.append(data_sql_qyjkcyqk[5] * CHARGE_POINT_FEE)
+        data_sql_qyjkcyqks = dict_list
+        for line in data_sql_qyjkcyqks:
+            # 企业接口查验情况 -> 消费点数（应扣）
+            line['a10'] = line['a5'] * 15
             # 企业接口查验情况 -> 来源计费系统（charging）
-            args = (begin_time, end_time, data_sql_qyjkcyqk[0])
+            args = (begin_time, end_time, line['customerId'])
             cur_list, cur_desc, cur_rows, dict_list = conn_charging.exec_select(fpcy_sql.sql_qyjkcyqk_xfds_sk, args)
-            data_sql_qyjkcyqk.append(int(cur_list[0][1]))
+            line['a11'] = int(cur_list[0][1])
             # 企业接口查验情况 -> 企业名称（opendb）
-            args = (data_sql_qyjkcyqk[0],)
+            args = (line['customerId'],)
             cur_list, cur_desc, cur_rows, dict_list = conn_opendb.exec_select(fpcy_sql.sql_qyjkcyqk_qymc, args)
             if len(cur_list) > 0:
-                data_sql_qyjkcyqk[0] = cur_list[0][0] + cur_list[0][1]
+                line['customerId'] = line['customerId'] + '-' + cur_list[0][0] + cur_list[0][1]
         try:
+            logger.info(data_sql_qyjkcyqks)
             collection = db_mongo['fpcy_qyjkcyqk']
-            data_sql_qyjkcyqks = save_data_to_mongodb(data_sql_qyjkcyqks, stat_day, collection, with_sum='Y')
+            data_sql_qyjkcyqks = save_col_to_mongodb(data_sql_qyjkcyqks, stat_day, collection, with_sum='Y')
         except Exception as e:
             logger.info(e)
-        # logger.info(data_sql_qyjkcyqks)
+        # args = (begin_time, end_time, begin_time, end_time, begin_time, end_time, begin_time, end_time,
+        #         begin_time, end_time, begin_time, end_time)
+        # logger.info(u'企业接口查验情况:')
+        # # logger.info(fpcy_sql.sql_qyjkcyqk)
+        # logger.info(args)
+        # cur_list, cur_desc, cur_rows, dict_list = conn.exec_select(fpcy_sql.sql_qyjkcyqk, args)
+        # logger.info(u'查询%d条记录！' % cur_rows)
+        # data_sql_qyjkcyqks = list(cur_list)
+        # for j in range(len(data_sql_qyjkcyqks)):
+        #     if type(data_sql_qyjkcyqks[j]) != list:
+        #         data_sql_qyjkcyqks[j] = list(data_sql_qyjkcyqks[j])
+        #     data_sql_qyjkcyqk = data_sql_qyjkcyqks[j]
+        #     data_sql_qyjkcyqk.append(data_sql_qyjkcyqk[5] * CHARGE_POINT_FEE)
+        #     # 企业接口查验情况 -> 来源计费系统（charging）
+        #     args = (begin_time, end_time, data_sql_qyjkcyqk[0])
+        #     cur_list, cur_desc, cur_rows, dict_list = conn_charging.exec_select(fpcy_sql.sql_qyjkcyqk_xfds_sk, args)
+        #     data_sql_qyjkcyqk.append(int(cur_list[0][1]))
+        #     # 企业接口查验情况 -> 企业名称（opendb）
+        #     args = (data_sql_qyjkcyqk[0],)
+        #     cur_list, cur_desc, cur_rows, dict_list = conn_opendb.exec_select(fpcy_sql.sql_qyjkcyqk_qymc, args)
+        #     if len(cur_list) > 0:
+        #         data_sql_qyjkcyqk[0] = data_sql_qyjkcyqk[0] + '-' + cur_list[0][0] + cur_list[0][1]
+        # try:
+        #     collection = db_mongo['fpcy_qyjkcyqk']
+        #     data_sql_qyjkcyqks = save_data_to_mongodb(data_sql_qyjkcyqks, stat_day, collection, with_sum='Y')
+        # except Exception as e:
+        #     logger.info(e)
+        # # logger.info(data_sql_qyjkcyqks)
 
         args = (begin_time, end_time, begin_time, end_time, begin_time, end_time, begin_time, end_time,
                 begin_time, end_time, begin_time, end_time, begin_time, end_time, begin_time, end_time,
@@ -1826,6 +1926,7 @@ def ecai_sync_data():
         begin_day = datetime.date.today()
         last_time = begin_day - datetime.timedelta(days=string.atoi('1'))
         last_time = last_time.strftime('%Y-%m-%d')
+        logger.info('last_time is: %s' % last_time)
 
         # 同步ACC_VOUCHER
         args = (last_time,)

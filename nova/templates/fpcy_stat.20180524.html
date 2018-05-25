@@ -344,7 +344,7 @@
                        id="dataTables-sql">
                     <thead>
                     <tr>
-                        <th colspan="13" style="background-color: lawngreen;font-size: 24px;">企业接口查验情况</th>
+                        <th colspan="12" style="background-color: lawngreen;font-size: 24px;">企业接口查验情况</th>
                     <tr>
                         <th>企业名称（手机号码）</th>
                         <th>用户查验请求次数</th>
@@ -358,31 +358,14 @@
                         <th>反馈发票明细张数</th>
                         <th>消费点数（应扣）</th>
                         <th>消费点数（实扣）</th>
-                        <th>详情</th>
                     </tr>
                     </thead>
                     <tbody>
                     {% for i in data_sql_qyjkcyqks %}
                         <tr class="gradeX">
-                            {#                            {% for data_sql_qyjkcyqk in i %}#}
-                            {#                                <td>{{ data_sql_qyjkcyqk }}</td>#}
-                            {#                            {% endfor %}#}
-                            <td name="customer_id">{{ i.customerId }}</td>
-                            <td>{{ i.a1 }}</td>
-                            <td>{{ i.a2 }}</td>
-                            <td>{{ i.a3 }}</td>
-                            <td>{{ i.a4 }}</td>
-                            <td>{{ i.a5 }}</td>
-                            <td>{{ i.a6 }}</td>
-                            <td>{{ i.a7 }}</td>
-                            <td>{{ i.a8 }}</td>
-                            <td>{{ i.a9 }}</td>
-                            <td>{{ i.a10 }}</td>
-                            <td>{{ i.a11 }}</td>
-                            <td>
-                                <input type="button" class="qyjkcyqk-detail btn btn-xs" customerId="{{ i.customerId }}"
-                                       value="详情"/>
-                            </td>
+                            {% for data_sql_qyjkcyqk in i %}
+                                <td>{{ data_sql_qyjkcyqk }}</td>
+                            {% endfor %}
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -721,10 +704,10 @@
                 var stat_day = $("#id_stat_time").val();
                 if (stat_day == undefined || stat_day == "" || stat_day == null) {
                     layer.alert('请选择正确的查询日期!', {
-                        icon: 3,
-                        skin: 'layui-layer-molv',
-                        closeBtn: 0
-                    });
+                            icon: 3,
+                            skin: 'layui-layer-molv',
+                            closeBtn: 0
+                        });
                 }
                 else {
                     window.location.href = "{% url 'fpcy_stat' %}?stat_day=" + stat_day;
@@ -1016,78 +999,7 @@
                 page_index++;
                 loadData(page_index, page_size);
             }
-        });
-
-        $(document).ready(function () {
-            var obj = document.getElementsByName("customer_id");
-            for (var i = 0; i < obj.length; i++) {
-                if (obj[i].innerText.indexOf('-') != '-1') {
-                    if (String(obj[i].innerText).split('-').length > 1) {
-                        obj[i].innerText = String(obj[i].innerText).split('-')[1];
-                    }
-                    else {
-                        obj[i].innerText = String(obj[i].innerText).split('-')[0];
-                    }
-                }
-            }
-        });
-
-        $('.qyjkcyqk-detail').click(function () {
-            var customerId_fullname = $(this).attr('customerId');
-            var customerId = $(this).attr('customerId').split('-')[0];
-            var begin_time = '{{ begin_time|safe }}';
-            var end_time = '{{ end_time|safe }}';
-            console.log(begin_time);
-            console.log(end_time);
-            console.log(customerId);
-            $.ajax({
-                type: "GET",
-                url: "{% url 'get_fpcy_qyjkqy_detail' %}?customerId=" + customerId + '&stat_day=' + stat_day,
-                success: function (data) {
-                    var array = data['fpcy_qyjkqy_detail'];
-                    var table_detail = '<table style="width:100%" class="table table-striped table-bordered table-hover">';
-                    table_detail += '<thead>';
-                    table_detail += ' <tr>';
-                    table_detail += '<tr>';
-                    table_detail += ' <th>返回状态代码</th>';
-                    table_detail += ' <th>查验请求次数</th>';
-                    table_detail += ' <th>返回状态说明</th>';
-                    table_detail += ' <th>是否有效请求</th>';
-                    table_detail += ' <th>是否成功反馈</th>';
-                    table_detail += ' <th>是否计费</th>';
-                    table_detail += '</tr>';
-                    table_detail += '</thead>';
-                    table_detail += '<tbody>';
-                    for (var i = 0; i < array.length; i++) {
-                        table_detail += '<tr>';
-                        var resData = array[i];
-                        for (var j = 0; j < resData.length; j++) {
-                            table_detail += '<td>' + resData[j] + '</td>';
-                        }
-                        table_detail += '</tr>';
-                    }
-                    table_detail += '</tbody>';
-                    table_detail += '</table>';
-                    layer.open({
-                        type: 1,
-                        skin: 'layui-layer-molv', //样式类名
-                        title: '企业接口查验情况详情（' + customerId_fullname + '）',
-                        area: ['840px', '480px'], //宽高
-                        {#                                        closeBtn: 0, //不显示关闭按钮#}
-                        anim: 2, //动画类型
-                        {#                        shadeClose: true, //开启遮罩关闭#}
-                        {#                                                                        maxmin: true, //开启最大化最小化按钮#}
-                        content: table_detail
-                    });
-                },
-                error: function (data) {
-                    alert('未查询到该企业查验情况详情数据！');
-                },
-                dataType: "json",
-                contentType: "application/json"
-            });
-
-        });
-
+        })
+        ;
     </script>
 {% endblock %}

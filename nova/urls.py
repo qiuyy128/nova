@@ -27,6 +27,7 @@ urlpatterns = [
     url(r'^get_database/$', views.get_database, name='get_database'),
     url(r'^get_max_port/$', views.get_max_port, name='get_max_port'),
     url(r'^get_new_line/$', views.get_new_line, name='get_new_line'),
+    url(r'^get_fpcy_qyjkqy_detail/$', views.get_fpcy_qyjkqy_detail, name='get_fpcy_qyjkqy_detail'),
     url(r'^app/deploy/$', views.app_deploy, name='apps_deploy'),
     url(r'^app/$', views.apps, name='apps_list'),
     url(r'^log/access_log/$', views.access_log, name='access_log'),

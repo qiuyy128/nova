@@ -1,211 +1,220 @@
 {% extends 'base.html' %}
 {% block title %}应用列表{% endblock %}
 {% block content %}
-    <div class="container col-sm-8 col-md-12" xmlns="http://www.w3.org/1999/html">
-        {#        <div class="container col-sm-8 col-md-10 col-sm-offset-2  col-md-offset-2 main">#}
-        <div class="col-md-offset-1 console-instance-head clearfix">
-            <div class="pull-left">
-                <h3><span>应用列表</span></h3>
-            </div>
-        </div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-6 col-sm-8 col-md-12">
+                {#        <div class="container col-sm-8 col-md-10 col-sm-offset-2  col-md-offset-2 main">#}
+                <div class="col-md-offset-1 console-instance-head clearfix">
+                    <div class="pull-left">
+                        <h3><span>应用列表</span></h3>
+                    </div>
+                </div>
 
-        {#        <div class="col-md-offset-1 margin-top-1">#}
-        {#            <form class="form-inline" id="app_list">#}
-        {#                <div class="pull-left">#}
-        {#                    <div class="form-group">#}
-        {#                        <span>请选择：</span>#}
-        {#                        <select name="app_name"#}
-        {#                                class="form-control" id="app_name_select"#}
-        {#                                required onchange="change_info()">#}
-        {#                            <option value="">所有</option>#}
-        {#                            {% for app in apps %}#}
-        {#                                {% ifequal app.name app_name %}#}
-        {#                                    <option value="{{ app.name }}" selected>{{ app.name }}</option>#}
-        {#                                {% else %}#}
-        {#                                    <option value="{{ app.name }}">{{ app.name }}</option>#}
-        {#                                {% endifequal %}#}
-        {#                            {% endfor %}#}
-        {#                        </select>#}
-        {#                    </div>#}
-        {#                </div>#}
-        {#                <div class="pull-right">#}
-        {#                    <div class="form-inline">#}
-        {#                        <div class="form-group">#}
-        {#                            <input type="text"#}
-        {#                                   class="form-control"#}
-        {#                                   size="30" id="search_input" name="keyword"#}
-        {#                                   value="{{ keyword }}"#}
-        {#                                   placeholder="请输入关键字进行查询">#}
-        {#                        </div>#}
-        {#                    </div>#}
-        {#                </div>#}
-        {#            </form>#}
-        {#        </div>#}
+                {#        <div class="col-md-offset-1 margin-top-1">#}
+                {#            <form class="form-inline" id="app_list">#}
+                {#                <div class="pull-left">#}
+                {#                    <div class="form-group">#}
+                {#                        <span>请选择：</span>#}
+                {#                        <select name="app_name"#}
+                {#                                class="form-control" id="app_name_select"#}
+                {#                                required onchange="change_info()">#}
+                {#                            <option value="">所有</option>#}
+                {#                            {% for app in apps %}#}
+                {#                                {% ifequal app.name app_name %}#}
+                {#                                    <option value="{{ app.name }}" selected>{{ app.name }}</option>#}
+                {#                                {% else %}#}
+                {#                                    <option value="{{ app.name }}">{{ app.name }}</option>#}
+                {#                                {% endifequal %}#}
+                {#                            {% endfor %}#}
+                {#                        </select>#}
+                {#                    </div>#}
+                {#                </div>#}
+                {#                <div class="pull-right">#}
+                {#                    <div class="form-inline">#}
+                {#                        <div class="form-group">#}
+                {#                            <input type="text"#}
+                {#                                   class="form-control"#}
+                {#                                   size="30" id="search_input" name="keyword"#}
+                {#                                   value="{{ keyword }}"#}
+                {#                                   placeholder="请输入关键字进行查询">#}
+                {#                        </div>#}
+                {#                    </div>#}
+                {#                </div>#}
+                {#            </form>#}
+                {#        </div>#}
 
-        <div class="col-md-offset-1 margin-top-1">
-            <div class="clearfix">
-            </div>
-            <table class="table table-striped table-bordered table-hover"
-                   id="dataTables-app">
-                <thead>
-                <tr>
-                    <th>
-                        <input id="checkAll" type="checkbox" onclick="checkAll(this.checked)">
-                    </th>
-                    <th>ID</th>
-                    <th>服务名称</th>
-                    <th>服务器</th>
-                    <th>端口</th>
-                    <th>操作</th>
-                    <th>部署路径</th>
-                    <th>运行状态</th>
-                    <th>环境</th>
-                    <th>说明</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for app in apps %}
-                    <tr class="gradeX">
-                        {% for app_host in app.app_hosts.all %}
-                            <td width="10" class="text-center">
-                                <input id="app_select_id" name="app_select_id" type="checkbox" value={{ app_host.id }}>
-                            </td>
-                            <td>
-                                {{ app_host.id }}
-                            </td>
-                            {% if  app.app_hosts.count == 1 %}
-                                <td>
-                                    {#                                    <div style="width: 140px;word-wrap: break-word;overflow-y:hidden;">#}
-                                    <div>
-                                        <a href="{% url 'config_file' %}?app_name={{ app_host.name }}&env={{ app_host.env }}">{{ app_host.name }}</a>
-                                    </div>
-                                </td>
-                            {% else %}
-                                {#                            {% if forloop.counter == 1 %}#}
-                                {#                                    <td rowspan={{ app.app_hosts.count }}>#}
-                                <td rowspan=1>
-                                    {#                                    <div style="width: 140px;word-wrap: break-word;overflow-y:hidden;">#}
-                                    <div>
-                                        <a href="{% url 'config_file' %}?app_name={{ app_host.name }}&env={{ app_host.env }}">{{ app_host.name }}</a>
-                                    </div>
-                                    {#                                {% endif %}#}
-                                </td>
-                            {% endif %}
-                            <td>
-                                {{ app_host.ip }}
-                            </td>
-                            <td>
-                                {{ app_host.port }}
-                            </td>
-                            <td>
-                                {% if app_host.status == 'running' %}
-                                    <input app_id={{ app_host.id }} app_env={{ app_host.env }}
-                                           type="button" class="stop_app btn btn-sm btn-default" value="停止">
-                                    <input app_id={{ app_host.id }} app_env={{ app_host.env }}
-                                           type="button" class="reload_app btn btn-sm btn-default" value="重启">
-                                {% else %}
-                                    <input app_id={{ app_host.id }} app_env={{ app_host.env }}
-                                           type="button" class="start_app btn btn-sm btn-default" value="启动">
-                                {% endif %}
-                                <input app_name={{ app_host.name }} app_id={{ app_host.id }} app_env={{ app_host.env }}
-                                        type="button" class="update_app btn btn-sm btn-danger" value="更新">
-                                <input app_name={{ app_host.name }} app_id={{ app_host.id }} app_env={{ app_host.env }}
-                                        type="button" class="rollback_apps btn btn-sm btn-danger" value="回滚">
-                            </td>
-                            <td>
-                                <div name="app_deploy_path">
-                                    {#                                <div style="width: 170px;word-wrap: break-word;overflow-y:hidden;">#}
-                                    {{ app_host.deploy_path }}
-                                </div>
-                            </td>
-                            <td>
-                                {% if app_host.status == 'running' %}
-                                    <label class="label label-success mr5">
-                                        {{ app_host.status }}</label>
-                                {% else %}
-                                    <label class="label label-danger mr5">
-                                        {{ app_host.status }}</label>
-                                {% endif %}
-                            </td>
-                            <td name="app_env">
-                                {{ app_host.env }}
-                            </td>
-                            <td>
-                                {#                                <div style="width: 100px;word-wrap: break-word;overflow-y:hidden;">#}
-                                <div>
-                                    {{ app_host.comment }}
-                                </div>
-                            </td>
-                            </tr>
+                <div class="col-md-offset-1 margin-top-1">
+                    <div class="clearfix">
+                    </div>
+                    <table class="table table-striped table-bordered table-hover"
+                           id="dataTables-app">
+                        <thead>
+                        <tr>
+                            <th>
+                                <input id="checkAll" type="checkbox" onclick="checkAll(this.checked)">
+                            </th>
+                            <th>ID</th>
+                            <th>服务名称</th>
+                            <th>服务器</th>
+                            <th>端口</th>
+                            <th>操作</th>
+                            <th>部署路径</th>
+                            <th>运行状态</th>
+                            <th>环境</th>
+                            <th>说明</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for app in apps %}
+                            <tr class="gradeX">
+                                {% for app_host in app.app_hosts.all %}
+                                    <td width="10" class="text-center">
+                                        <input id="app_select_id" name="app_select_id" type="checkbox"
+                                               value={{ app_host.id }}>
+                                    </td>
+                                    <td>
+                                        {{ app_host.id }}
+                                    </td>
+                                    {% if  app.app_hosts.count == 1 %}
+                                        <td>
+                                            {#                                    <div style="width: 140px;word-wrap: break-word;overflow-y:hidden;">#}
+                                            <div>
+                                                <a href="{% url 'config_file' %}?app_name={{ app_host.name }}&env={{ app_host.env }}">{{ app_host.name }}</a>
+                                            </div>
+                                        </td>
+                                    {% else %}
+                                        {#                            {% if forloop.counter == 1 %}#}
+                                        {#                                    <td rowspan={{ app.app_hosts.count }}>#}
+                                        <td rowspan=1>
+                                            {#                                    <div style="width: 140px;word-wrap: break-word;overflow-y:hidden;">#}
+                                            <div>
+                                                <a href="{% url 'config_file' %}?app_name={{ app_host.name }}&env={{ app_host.env }}">{{ app_host.name }}</a>
+                                            </div>
+                                            {#                                {% endif %}#}
+                                        </td>
+                                    {% endif %}
+                                    <td>
+                                        {{ app_host.ip }}
+                                    </td>
+                                    <td>
+                                        {{ app_host.port }}
+                                    </td>
+                                    <td>
+                                        {% if app_host.status == 'running' %}
+                                            <input app_id={{ app_host.id }} app_env={{ app_host.env }}
+                                                   type="button" class="stop_app btn btn-sm btn-default" value="停止">
+                                            <input app_id={{ app_host.id }} app_env={{ app_host.env }}
+                                                   type="button" class="reload_app btn btn-sm btn-default" value="重启">
+                                        {% else %}
+                                            <input app_id={{ app_host.id }} app_env={{ app_host.env }}
+                                                   type="button" class="start_app btn btn-sm btn-default" value="启动">
+                                        {% endif %}
+                                        <input app_name={{ app_host.name }} app_id={{ app_host.id }}
+                                               app_env={{ app_host.env }}
+                                                       type="button" class="update_app btn btn-sm btn-danger"
+                                               value="更新">
+                                        <input app_name={{ app_host.name }} app_id={{ app_host.id }}
+                                               app_env={{ app_host.env }}
+                                                       type="button" class="rollback_apps btn btn-sm btn-danger"
+                                               value="回滚">
+                                    </td>
+                                    <td>
+                                        <div name="app_deploy_path">
+                                            {#                                <div style="width: 170px;word-wrap: break-word;overflow-y:hidden;">#}
+                                            {{ app_host.deploy_path }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if app_host.status == 'running' %}
+                                            <label class="label label-success mr5">
+                                                {{ app_host.status }}</label>
+                                        {% else %}
+                                            <label class="label label-danger mr5">
+                                                {{ app_host.status }}</label>
+                                        {% endif %}
+                                    </td>
+                                    <td name="app_env">
+                                        {{ app_host.env }}
+                                    </td>
+                                    <td>
+                                        {#                                <div style="width: 100px;word-wrap: break-word;overflow-y:hidden;">#}
+                                        <div>
+                                            {{ app_host.comment }}
+                                        </div>
+                                    </td>
+                                    </tr>
+                                {% endfor %}
                         {% endfor %}
-                {% endfor %}
-                </tbody>
-            </table>
+                        </tbody>
+                    </table>
 
-            {#            <table class="table table-fixed" width="100%" style="position: fixed; bottom: 0px;">#}
-            <table class="table table-fixed" width="100%">
-                <tr>
-                    <td>
-                        <div class="pull-left">
-                            <div>
-                                <div>
-                                    <input id="checkAll" type="checkbox" onclick="checkAll(this.checked)">
-                                    </input>
-                                    <input type="button" class="start_apps btn btn-default"
-                                           value="批量启动">
-                                    </input>
-                                    <input type="button" class="stop_apps btn btn-default"
-                                           value="批量停止">
-                                    </input>
-                                    <input type="button" class="reload_apps btn btn-default"
-                                           value="批量重启">
-                                    </input>
+                    {#            <table class="table table-fixed" width="100%" style="position: fixed; bottom: 0px;">#}
+                    <table class="table table-fixed" width="100%">
+                        <tr>
+                            <td>
+                                <div class="pull-left">
+                                    <div>
+                                        <div>
+                                            <input id="checkAll" type="checkbox" onclick="checkAll(this.checked)">
+                                            </input>
+                                            <input type="button" class="start_apps btn btn-default"
+                                                   value="批量启动">
+                                            </input>
+                                            <input type="button" class="stop_apps btn btn-default"
+                                                   value="批量停止">
+                                            </input>
+                                            <input type="button" class="reload_apps btn btn-default"
+                                                   value="批量重启">
+                                            </input>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                        {#                        <div>#}
-                        {#                            <div class="pull-right">#}
-                        {#                                <div class="pagination-info">#}
-                        {#                                    <span class="ng-binding">共有 {{ apps.number }} 条，</span>#}
-                        {#                                    <span>每页显示：#}
-                        {#                                        <select>#}
-                        {#                                        <option value="10" selected="selected">10</option>#}
-                        {#                                        <option value="20" selected="selected">20</option>#}
-                        {#                                        <option value="50" selected="selected">50</option>#}
-                        {#                                    </select>条#}
-                        {#                                    </span>#}
-                        {#                                </div>#}
-                        {#                                <ul class="pagination">#}
-                        {#                                    <li><a href="#">«</a></li>#}
-                        {#                                    {% if apps.has_previous %}#}
-                        {#                                        <li><a href="?page={{ apps.previous_page_number }}">‹</a></li>#}
-                        {#                                    {% else %}#}
-                        {#                                        <li class="disabled"><a>‹</a></li>#}
-                        {#                                    {% endif %}#}
-                        {#                                    <li><a>{{ apps.number }}</a></li>#}
-                        {#                                    {% if apps.has_next %}#}
-                        {#                                        <li><a href="?page={{ apps.next_page_number }}">›</a></li>#}
-                        {#                                    {% else %}#}
-                        {#                                        <li class="disabled"><a>›</a></li>#}
-                        {#                                    {% endif %}#}
-                        {#                                    <li class="disabled"><a href="#">»</a></li>#}
-                        {#                                </ul>#}
-                        {#                                <span#}
-                        {#                                        style="padding-left: 15px;padding-right: 15px" class="ng-hide">#}
-                        {#                                    <input type="text"#}
-                        {##}
-                        {#                                           class="form-control"#}
-                        {#                                           style="width: 40px; display: inline-block;">#}
-                        {#                                    <button#}
-                        {#                                            class="btn btn-default"#}
-                        {#                                            style="margin-left: 6px">GO#}
-                        {#                                    </button>#}
-                        {#                                </span>#}
-                        {#                            </div>#}
-                        {#                        </div>#}
-                    </td>
-                </tr>
-            </table>
+                                {#                        <div>#}
+                                {#                            <div class="pull-right">#}
+                                {#                                <div class="pagination-info">#}
+                                {#                                    <span class="ng-binding">共有 {{ apps.number }} 条，</span>#}
+                                {#                                    <span>每页显示：#}
+                                {#                                        <select>#}
+                                {#                                        <option value="10" selected="selected">10</option>#}
+                                {#                                        <option value="20" selected="selected">20</option>#}
+                                {#                                        <option value="50" selected="selected">50</option>#}
+                                {#                                    </select>条#}
+                                {#                                    </span>#}
+                                {#                                </div>#}
+                                {#                                <ul class="pagination">#}
+                                {#                                    <li><a href="#">«</a></li>#}
+                                {#                                    {% if apps.has_previous %}#}
+                                {#                                        <li><a href="?page={{ apps.previous_page_number }}">‹</a></li>#}
+                                {#                                    {% else %}#}
+                                {#                                        <li class="disabled"><a>‹</a></li>#}
+                                {#                                    {% endif %}#}
+                                {#                                    <li><a>{{ apps.number }}</a></li>#}
+                                {#                                    {% if apps.has_next %}#}
+                                {#                                        <li><a href="?page={{ apps.next_page_number }}">›</a></li>#}
+                                {#                                    {% else %}#}
+                                {#                                        <li class="disabled"><a>›</a></li>#}
+                                {#                                    {% endif %}#}
+                                {#                                    <li class="disabled"><a href="#">»</a></li>#}
+                                {#                                </ul>#}
+                                {#                                <span#}
+                                {#                                        style="padding-left: 15px;padding-right: 15px" class="ng-hide">#}
+                                {#                                    <input type="text"#}
+                                {##}
+                                {#                                           class="form-control"#}
+                                {#                                           style="width: 40px; display: inline-block;">#}
+                                {#                                    <button#}
+                                {#                                            class="btn btn-default"#}
+                                {#                                            style="margin-left: 6px">GO#}
+                                {#                                    </button>#}
+                                {#                                </span>#}
+                                {#                            </div>#}
+                                {#                        </div>#}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

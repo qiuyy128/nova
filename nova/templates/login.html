@@ -32,32 +32,34 @@
 </head>
 
 <body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-xs-6 col-sm-8 col-md-12">
+            <form class="form-signin" action="{% url 'login' %}" method="post">
+                {% csrf_token %} <!--csrf_token：生成令牌-->
+                <h2 class="form-signin-heading" align="center">自动化运维平台</h2>
+                <input type="hidden" name="next" value="{{ next }}">
 
-
-<div class="container">
-    <form class="form-signin" action="{% url 'login' %}" method="post">
-        {% csrf_token %} <!--csrf_token：生成令牌-->
-        <h2 class="form-signin-heading" align="center">自动化运维平台</h2>
-        <input type="hidden" name="next" value="{{ next }}">
-
-        <label for="inputUsername" class="sr-only">Username</label>
-        <input type="text" name="username" id="inputUsername" class="form-control" placeholder="username" required
-               autofocus>
-        <label for="inputPassword" class="sr-only">Password</label>
-        <input type="password" name="password" id="inputPassword" class="form-control" placeholder="Password" required
-               autofocus>
-        <div class="checkbox">
-            <label>
-                <input type="checkbox" value="remember-me"> 记住密码
-            </label>
+                <label for="inputUsername" class="sr-only">Username</label>
+                <input type="text" name="username" id="inputUsername" class="form-control" placeholder="username"
+                       required
+                       autofocus>
+                <label for="inputPassword" class="sr-only">Password</label>
+                <input type="password" name="password" id="inputPassword" class="form-control" placeholder="Password"
+                       required
+                       autofocus>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" value="remember-me"> 记住密码
+                    </label>
+                </div>
+                <br/>
+                <button class="btn btn-lg btn-primary btn-block" type="submit">登录</button>
+                <br/>
+            </form>
         </div>
-        <br/>
-        <button class="btn btn-lg btn-primary btn-block" type="submit">登录</button>
-        <br/>
-    </form>
-</div> <!-- /container -->
-
-
+    </div>
+</div>
 <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
 <script src="{% static 'assets/js/ie10-viewport-bug-workaround.js' %}"></script>
 </body>

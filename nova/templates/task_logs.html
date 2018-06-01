@@ -2,17 +2,21 @@
 {% block title %}log{% endblock %}
 
 {% block content %}
-    <div class="container col-sm-8 col-md-12">
-        <div class="col-md-offset-1 console-instance-head clearfix">
-            <div class="pull-left">
-                <h3><span>任务日志</span></h3>
-            </div>
-        </div>
-        <div class="col-md-offset-1 margin-top-1" id=toolbar>
-            <span id="id_log_file" style="display: none">{{ log_file }}</span>
-            <span id="id_file_size" style="display: none">{{ file_size }}</span>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-6 col-sm-8 col-md-12">
+                <div class="col-md-offset-1 console-instance-head clearfix">
+                    <div class="pull-left">
+                        <h3><span>任务日志</span></h3>
+                    </div>
+                </div>
+                <div class="col-md-offset-1 margin-top-1" id=toolbar>
+                    <span id="id_log_file" style="display: none">{{ log_file }}</span>
+                    <span id="id_file_size" style="display: none">{{ file_size }}</span>
             <pre id='log'
                  style="height: 40em;background-color:black;color:white;font-family: Courier;width: 100%;"></pre>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

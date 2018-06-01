@@ -2,114 +2,119 @@
 {% block title %}SQL提交{% endblock %}
 {% block content %}
     <!-- Container -->
-    <div class="container col-sm-8 col-md-12">
-        <div class="col-md-offset-1 console-instance-head clearfix">
-            <div class="pull-left">
-                <h3><span>SQL提交</span></h3>
-            </div>
-        </div>
-        <div class="col-md-offset-1 margin-top-1">
-            <form class="form-horizontal" action="" method="post" id="sql_submit_form">
-                <fieldset>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label"><span class="text-danger">*</span>数据库环境：</label>
-                        <div class="col-sm-4 row">
-                            <select class="form-control" id="id_database_env" name="database_env" required
-                                    onchange="change_env()">
-                                <option value="" selected="selected">请选择</option>
-                                <option value="test">test</option>
-                                <option value="staging">staging</option>
-                                <option value="product">product</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label"><span class="text-danger">*</span>sql语句：</label>
-                        <div class="col-sm-8 row">
-                                <textarea class="form-control" rows="10"
-                                          id="id_sql" placeholder="分号间隔,可以多条一起输入" name="sql"></textarea>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label">
-                            <span class="text-danger">*</span>数据库名称：
-                        </label>
-                        <div class="col-sm-8 row">
-                            <div class="form-group ng-isolate-scope" style="overflow: hidden;overflow: hidden"
-                                 action-select="" current-group="groupData">
-                                <!-- 未选择 -->
-                                <div class="col-sm-4">
-                                    <div class="select-top">
-                                        {#                                        <div class="select-lft">全部数据库</div>#}
-                                        {#                                        <div class="select-right"><a>全选</a></div>#}
-                                    </div>
-                                    <div>
-                                        <input type="text" placeholder="输入数据库名称检索"
-                                               id="search_input" name="keyword"
-                                               style="border-bottom-right-radius: 0; border-bottom-left-radius: 0; padding-left: 10px; padding-right: 24px"
-                                               class="form-control">
-                                        {#                                        <span class="glyphicon glyphicon-search input-search-icon"></span>#}
-                                    </div>
-                                    <select class="form-control" multiple="multiple" id="id_database"
-                                            style="height: 15em;"
-                                            onclick="select_database()">
-                                    </select>
-                                </div>
-                                <!-- 移如或者移出按钮的行为 -->
-                                <div class="col-sm-2 clearfix" style="width: 40px">
-                                    <button type="button" class="btn btn-primary btn-sm"
-                                            style="position: absolute; left: 50%; margin-left: -19px; top: 95px"
-                                            id="moveRight" disabled="disabled">
-                                        <i class="glyphicon glyphicon-arrow-right"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-primary btn-sm"
-                                            style="position: absolute; left: 50%; margin-left: -19px; top: 130px"
-                                            id="moveLeft" disabled="disabled">
-                                        <i class="glyphicon glyphicon-arrow-left"></i>
-                                    </button>
-                                </div>
-                                <!-- 已经选择 -->
-                                <div class="col-sm-4">
-                                    <div class="select-top">
-                                        <div class="select-lft" style="font-size: 14px; height: 32px;">已选数据库</div>
-                                        {#                                        <div class="select-right"><a>全选</a></div>#}
-                                    </div>
-                                    {#                                    <div>#}
-                                    {#                                        <input type="text" placeholder=""#}
-                                    {#                                               id="search_input" name="keyword"#}
-                                    {#                                               style="border-bottom-right-radius: 0; border-bottom-left-radius: 0; padding-left: 10px; padding-right: 24px"#}
-                                    {#                                               class="form-control">#}
-                                    {#                                        <span class="glyphicon glyphicon-search input-search-icon"></span>#}
-                                    {#                                    </div>#}
-
-                                    <select class="form-control" multiple="multiple" id="id_database_select"
-                                            name="database_name" style="height: 15em;"
-                                            required onclick="cancel_database()">
-                                    </select>
-                                </div>
-                                {#                                <div class="inline-block" style="width:180px"> 已选择数据库#}
-                                {#                                    <div multi="true" class="selector">#}
-                                {#                                        <ul class="selector-list">#}
-                                {#                                            <li class="selector-item clearfix">#}
-                                {#                                                <p class="pull-left">wx_sys</p>#}
-                                {#                                            </li>#}
-                                {#                                        </ul>#}
-                                {#                                    </div>#}
-                                {#                                </div>#}
-                            </div>
-                        </div>
-                    </div>
-
-                </fieldset>
-                <div class="form-group">
-                    <label class="col-sm-2 control-label"></label>
-                    <div class="col-sm-4 row ">
-                        <button type="button" class="sql_submit btn btn-primary">保存
-                        </button>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-6 col-sm-8 col-md-12">
+                <div class="col-md-offset-1 console-instance-head clearfix">
+                    <div class="pull-left">
+                        <h3><span>SQL提交</span></h3>
                     </div>
                 </div>
-            </form>
+                <div class="col-md-offset-1 margin-top-1">
+                    <form class="form-horizontal" action="" method="post" id="sql_submit_form">
+                        <fieldset>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label"><span class="text-danger">*</span>数据库环境：</label>
+                                <div class="col-sm-4 row">
+                                    <select class="form-control" id="id_database_env" name="database_env" required
+                                            onchange="change_env()">
+                                        <option value="" selected="selected">请选择</option>
+                                        <option value="test">test</option>
+                                        <option value="staging">staging</option>
+                                        <option value="product">product</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label"><span class="text-danger">*</span>sql语句：</label>
+                                <div class="col-sm-8 row">
+                                <textarea class="form-control" rows="10"
+                                          id="id_sql" placeholder="分号间隔,可以多条一起输入" name="sql"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">
+                                    <span class="text-danger">*</span>数据库名称：
+                                </label>
+                                <div class="col-sm-8 row">
+                                    <div class="form-group ng-isolate-scope" style="overflow: hidden;overflow: hidden"
+                                         action-select="" current-group="groupData">
+                                        <!-- 未选择 -->
+                                        <div class="col-sm-4">
+                                            <div class="select-top">
+                                                {#                                        <div class="select-lft">全部数据库</div>#}
+                                                {#                                        <div class="select-right"><a>全选</a></div>#}
+                                            </div>
+                                            <div>
+                                                <input type="text" placeholder="输入数据库名称检索"
+                                                       id="search_input" name="keyword"
+                                                       style="border-bottom-right-radius: 0; border-bottom-left-radius: 0; padding-left: 10px; padding-right: 24px"
+                                                       class="form-control">
+                                                {#                                        <span class="glyphicon glyphicon-search input-search-icon"></span>#}
+                                            </div>
+                                            <select class="form-control" multiple="multiple" id="id_database"
+                                                    style="height: 15em;"
+                                                    onclick="select_database()">
+                                            </select>
+                                        </div>
+                                        <!-- 移如或者移出按钮的行为 -->
+                                        <div class="col-sm-2 clearfix" style="width: 40px">
+                                            <button type="button" class="btn btn-primary btn-sm"
+                                                    style="position: absolute; left: 50%; margin-left: -19px; top: 95px"
+                                                    id="moveRight" disabled="disabled">
+                                                <i class="glyphicon glyphicon-arrow-right"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-primary btn-sm"
+                                                    style="position: absolute; left: 50%; margin-left: -19px; top: 130px"
+                                                    id="moveLeft" disabled="disabled">
+                                                <i class="glyphicon glyphicon-arrow-left"></i>
+                                            </button>
+                                        </div>
+                                        <!-- 已经选择 -->
+                                        <div class="col-sm-4">
+                                            <div class="select-top">
+                                                <div class="select-lft" style="font-size: 14px; height: 32px;">已选数据库
+                                                </div>
+                                                {#                                        <div class="select-right"><a>全选</a></div>#}
+                                            </div>
+                                            {#                                    <div>#}
+                                            {#                                        <input type="text" placeholder=""#}
+                                            {#                                               id="search_input" name="keyword"#}
+                                            {#                                               style="border-bottom-right-radius: 0; border-bottom-left-radius: 0; padding-left: 10px; padding-right: 24px"#}
+                                            {#                                               class="form-control">#}
+                                            {#                                        <span class="glyphicon glyphicon-search input-search-icon"></span>#}
+                                            {#                                    </div>#}
+
+                                            <select class="form-control" multiple="multiple" id="id_database_select"
+                                                    name="database_name" style="height: 15em;"
+                                                    required onclick="cancel_database()">
+                                            </select>
+                                        </div>
+                                        {#                                <div class="inline-block" style="width:180px"> 已选择数据库#}
+                                        {#                                    <div multi="true" class="selector">#}
+                                        {#                                        <ul class="selector-list">#}
+                                        {#                                            <li class="selector-item clearfix">#}
+                                        {#                                                <p class="pull-left">wx_sys</p>#}
+                                        {#                                            </li>#}
+                                        {#                                        </ul>#}
+                                        {#                                    </div>#}
+                                        {#                                </div>#}
+                                    </div>
+                                </div>
+                            </div>
+
+                        </fieldset>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label"></label>
+                            <div class="col-sm-4 row ">
+                                <button type="button" class="sql_submit btn btn-primary">保存
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
     <!-- END Content -->

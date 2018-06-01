@@ -42,67 +42,71 @@
 {% block title %}控制台{% endblock %}
 
 {% block content %}
-    {#    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">#}
-    <div class="container col-sm-8 col-md-12">
-        <div class="col-md-offset-1 console-instance-head clearfix">
-            <div class="pull-left">
-                <h3><span>概览</span></h3>
-            </div>
-        </div>
-        <div class="col-md-offset-1 margin-top-1">
-            <div class="row">
-                <div class="item-section">
-                    <div class="item-title">服务器</div>
-                    <div class="item-content">
-                        <span class="item-text">总数量</span>
-                        <a href="{% url 'asset' %}">
-                            <span class="item-number">{{ assets_count }}</span>
-                        </a>
-                    </div>
-                    <div class="item-content">
-                        <span class="item-text">RUNNING</span>
-                        <span class="item-number" style="color: #3f903f">{{ assets_count }}</span>
-                    </div>
-                    <div class="item-content">
-                        <span class="item-text">ERROR</span>
-                        <span class="item-number" style="color: #FF0000">0</span>
+    <div class="container-fluid">
+        <div class="row">
+            {#    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">#}
+            <div class="col-xs-6 col-sm-8 col-md-12">
+                <div class="col-md-offset-1 console-instance-head clearfix">
+                    <div class="pull-left">
+                        <h3><span>概览</span></h3>
                     </div>
                 </div>
+                <div class="col-md-offset-1 margin-top-1">
+                    <div class="row">
+                        <div class="item-section">
+                            <div class="item-title">服务器</div>
+                            <div class="item-content">
+                                <span class="item-text">总数量</span>
+                                <a href="{% url 'asset' %}">
+                                    <span class="item-number">{{ assets_count }}</span>
+                                </a>
+                            </div>
+                            <div class="item-content">
+                                <span class="item-text">RUNNING</span>
+                                <span class="item-number" style="color: #3f903f">{{ assets_count }}</span>
+                            </div>
+                            <div class="item-content">
+                                <span class="item-text">ERROR</span>
+                                <span class="item-number" style="color: #FF0000">0</span>
+                            </div>
+                        </div>
 
-                {#                <ul class="nav nav-pills" role="tablist">#}
-                {#                    <li role="presentation" class="active"><a href="#">RUNNING <span#}
-                {#                            class="badge">{{ assets_count }}</span></a>#}
-                {#                    </li>#}
-                {#                    <li role="presentation" class="active"><a href="#">ERROR <span class="badge">0</span></a></li>#}
-                {#                </ul>#}
-                {#                </div>#}
-                {#            <div>#}
-            </div>
-            <div class="row">
-                <div class="item-section">
-                    <div class="item-title">应用</div>
-                    <div class="item-content">
-                        <span class="item-text">总数量</span>
-                        <a href="{% url 'apps_list' %}">
-                            <span class="item-number">{{ apps_count }}</span>
-                        </a>
+                        {#                <ul class="nav nav-pills" role="tablist">#}
+                        {#                    <li role="presentation" class="active"><a href="#">RUNNING <span#}
+                        {#                            class="badge">{{ assets_count }}</span></a>#}
+                        {#                    </li>#}
+                        {#                    <li role="presentation" class="active"><a href="#">ERROR <span class="badge">0</span></a></li>#}
+                        {#                </ul>#}
+                        {#                </div>#}
+                        {#            <div>#}
                     </div>
-                    <div class="item-content">
-                        <span class="item-text">RUNNING</span>
-                        <span class="item-number" style="color: #3f903f">{{ apps_count }}</span>
-                    </div>
-                    <div class="item-content">
-                        <span class="item-text">ERROR</span>
-                        <span class="item-number" style="color: #FF0000">0</span>
-                    </div>
+                    <div class="row">
+                        <div class="item-section">
+                            <div class="item-title">应用</div>
+                            <div class="item-content">
+                                <span class="item-text">总数量</span>
+                                <a href="{% url 'apps_list' %}">
+                                    <span class="item-number">{{ apps_count }}</span>
+                                </a>
+                            </div>
+                            <div class="item-content">
+                                <span class="item-text">RUNNING</span>
+                                <span class="item-number" style="color: #3f903f">{{ apps_count }}</span>
+                            </div>
+                            <div class="item-content">
+                                <span class="item-text">ERROR</span>
+                                <span class="item-number" style="color: #FF0000">0</span>
+                            </div>
 
-                    {#                <ul class="nav nav-pills" role="tablist">#}
-                    {#                    <li role="presentation" class="active"><a href="#">RUNNING <span#}
-                    {#                            class="badge">{{ apps_count }}</span></a>#}
-                    {#                    </li>#}
-                    {#                    <li role="presentation" class="active"><a href="#">ERROR <span class="badge">0</span></a>#}
-                    {#                    </li>#}
-                    {#                </ul>#}
+                            {#                <ul class="nav nav-pills" role="tablist">#}
+                            {#                    <li role="presentation" class="active"><a href="#">RUNNING <span#}
+                            {#                            class="badge">{{ apps_count }}</span></a>#}
+                            {#                    </li>#}
+                            {#                    <li role="presentation" class="active"><a href="#">ERROR <span class="badge">0</span></a>#}
+                            {#                    </li>#}
+                            {#                </ul>#}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

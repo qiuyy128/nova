@@ -2,21 +2,26 @@
 {% block title %}配置文件{% endblock %}
 
 {% block content %}
-    <div class="container col-sm-8 col-md-12">
-        <div class="col-md-offset-1 console-instance-head clearfix">
-            <div class="pull-left">
-                <h3><span>配置文件</span></h3>
-            </div>
-        </div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-6 col-sm-8 col-md-12">
+                <div class="col-md-offset-1 console-instance-head clearfix">
+                    <div class="pull-left">
+                        <h3><span>配置文件</span></h3>
+                    </div>
+                </div>
 
-        <div class="col-md-offset-1 margin-top-1" id=toolbar>
-            <div style="font-family: Courier;font-weight: bold;">File: <span id="filename">{{ file }}</span></div>
+                <div class="col-md-offset-1 margin-top-1" id=toolbar>
+                    <div style="font-family: Courier;font-weight: bold;">File: <span id="filename">{{ file }}</span>
+                    </div>
             <textarea style="height: 40em;font-family: Courier;width: 100%;"
                       id=orig_content>{{ file_content }}</textarea>
             <textarea style="height: 40em;font-family: Courier;font-weight: bold;width: 100%;"
                       id=content>{{ file_content }}</textarea>
-            <button class="btn btn-primary" disabled="disabled" id="save" env="{{ env }}">保存</button>
-            <button class="btn btn-default" id="cancel" onclick="go_back()">取消</button>
+                    <button class="btn btn-primary" disabled="disabled" id="save" env="{{ env }}">保存</button>
+                    <button class="btn btn-default" id="cancel" onclick="go_back()">取消</button>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

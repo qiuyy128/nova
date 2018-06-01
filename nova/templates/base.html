@@ -43,7 +43,7 @@
     {% endblock %}
 </head>
 
-<body>
+<body >
 {% block header %}
     <nav class="navbar navbar-inverse navbar-fixed-top">
         <div class="container-fluid">
@@ -166,11 +166,11 @@
                     {% endif %}
                 </ul>
             </div>
-            {% block content %}
-
-            {% endblock %}
         </div>
     </div>
+{% endblock %}
+
+{% block content %}
 {% endblock %}
 
 {% block footer %}

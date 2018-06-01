@@ -2,73 +2,78 @@
 {% block title %}添加配置文件{% endblock %}
 
 {% block content %}
-    <div class="container col-sm-8 col-md-12">
-        <div class="col-md-offset-1 console-instance-head clearfix">
-            <div class="pull-left">
-                <h3><span>配置文件添加</span></h3>
-            </div>
-        </div>
-
-        <div class="col-md-offset-1 margin-top-1">
-            <form class="form-horizontal asset-add" action="{% url 'config_file_add' %}" method="post">
-                {% csrf_token %}
-                {#                                    {{ form.as_p }}#}
-                {#            使用form#}
-                {#            <table>#}
-                {#                {% for field in form %}#}
-                {#                    <tr>#}
-                {#                        <td>#}
-                {#                            <div style="padding: 10px;">{{ field.label }}</div>#}
-                {#                        </td>#}
-                {#                        <td>#}
-                {#                            {{ field }}#}
-                {#                        </td>#}
-                {#                    </tr>#}
-                {#                {% endfor %}#}
-                {#            </table>#}
-
-                <fieldset>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label">服务名称：</label>
-                        <div class="col-sm-4 row">
-                            <input class="form-control" type="text" placeholder="fdp_*或者tomcat-*" name="name">
-                        </div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-6 col-sm-8 col-md-12">
+                <div class="col-md-offset-1 console-instance-head clearfix">
+                    <div class="pull-left">
+                        <h3><span>配置文件添加</span></h3>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label">SVN路径：</label>
-                        <div class="col-sm-4 row">
-                            <input class="form-control" type="text" placeholder="svn相对路径，如adp/WebRoot"
-                                   name="svn_url">
-                        </div>
-                    </div>
+                <div class="col-md-offset-1 margin-top-1">
+                    <form class="form-horizontal asset-add" action="{% url 'config_file_add' %}" method="post">
+                        {% csrf_token %}
+                        {#                                    {{ form.as_p }}#}
+                        {#            使用form#}
+                        {#            <table>#}
+                        {#                {% for field in form %}#}
+                        {#                    <tr>#}
+                        {#                        <td>#}
+                        {#                            <div style="padding: 10px;">{{ field.label }}</div>#}
+                        {#                        </td>#}
+                        {#                        <td>#}
+                        {#                            {{ field }}#}
+                        {#                        </td>#}
+                        {#                    </tr>#}
+                        {#                {% endfor %}#}
+                        {#            </table>#}
 
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label">配置文件：</label>
-                        <div class="col-sm-4 row">
+                        <fieldset>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">服务名称：</label>
+                                <div class="col-sm-4 row">
+                                    <input class="form-control" type="text" placeholder="fdp_*或者tomcat-*" name="name">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">SVN路径：</label>
+                                <div class="col-sm-4 row">
+                                    <input class="form-control" type="text" placeholder="svn相对路径，如adp/WebRoot"
+                                           name="svn_url">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">配置文件：</label>
+                                <div class="col-sm-4 row">
                             <textarea class="form-control" type="text"
                                       placeholder="多个文件逗号间隔，如config-email.properties,config-oss.properties"
                                       name="files"></textarea>
-                        </div>
-                    </div>
+                                </div>
+                            </div>
 
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label">部署环境：</label>
-                        <div class="col-sm-4 row">
-                            <input class="form-control" type="text" placeholder="test|staging|product" name="env">
-                        </div>
-                    </div>
-                </fieldset>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">部署环境：</label>
+                                <div class="col-sm-4 row">
+                                    <input class="form-control" type="text" placeholder="test|staging|product"
+                                           name="env">
+                                </div>
+                            </div>
+                        </fieldset>
 
-                <div class="form-group">
-                    <label class="col-sm-2 control-label"></label>
-                    <div class="col-sm-4 row ">
-                        <input type="submit" class="btn btn-primary" value="保存">
-                        </input>
-                    </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label"></label>
+                            <div class="col-sm-4 row ">
+                                <input type="submit" class="btn btn-primary" value="保存">
+                                </input>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-            </form>
+                <!-- END Content -->
+            </div>
         </div>
-        <!-- END Content -->
     </div>
 {% endblock %}

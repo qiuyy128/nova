@@ -2,17 +2,20 @@
 {% load static %}
 {% block title %}发票查验分布区域{% endblock %}
 {% block content %}
-    {#    <div class="container col-sm-8 col-sm-offset-2 col-md-10 col-md-offset-2 main">#}
-    <div class="container col-sm-8 col-md-12">
-        <div class="col-md-offset-1 console-instance-head clearfix">
-            <div class="pull-left">
-                <h3><span>今日增值税查验区域分布</span></h3>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-6 col-sm-8 col-md-12">
+                <div class="col-md-offset-1 console-instance-head clearfix">
+                    <div class="pull-left">
+                        <h3><span>今日增值税查验区域分布</span></h3>
+                    </div>
+                </div>
+                <div class="col-md-offset-1 margin-top-1">
+                    <span>该图展示为今日实时统计数据！</span>
+                </div>
+                <div class="col-md-offset-1 margin-top-1" id="map" style="width:800px;height: 500px;">
+                </div>
             </div>
-        </div>
-        <div class="col-md-offset-1 margin-top-1">
-            <span>该图展示为今日实时统计数据！</span>
-        </div>
-        <div class="col-md-offset-1 margin-top-1" id="map" style="width:800px;height: 500px;">
         </div>
     </div>
 {% endblock %}

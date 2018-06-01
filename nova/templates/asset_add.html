@@ -2,110 +2,115 @@
 {% block title %}添加主机{% endblock %}
 
 {% block content %}
-    <div class="container col-sm-8 col-md-12">
-        <div class="col-md-offset-1 console-instance-head clearfix">
-            <div class="pull-left">
-                <h3><span>服务器添加</span></h3>
-            </div>
-        </div>
-        <form class="col-md-offset-1 margin-top-1 form-horizontal asset-add" action="{% url 'asset_add' %}" method="post">
-            {% csrf_token %}
-            {#                        {{ form.as_p }}#}
-            <table>
-                {% for field in form %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-6 col-sm-8 col-md-12">
+                <div class="col-md-offset-1 console-instance-head clearfix">
+                    <div class="pull-left">
+                        <h3><span>服务器添加</span></h3>
+                    </div>
+                </div>
+                <form class="col-md-offset-1 margin-top-1 form-horizontal asset-add" action="{% url 'asset_add' %}"
+                      method="post">
+                    {% csrf_token %}
+                    {#                        {{ form.as_p }}#}
+                    <table>
+                        {% for field in form %}
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">{{ field.label }}：</label>
+                                <div class="col-sm-4 row">
+                                    {{ field }}
+                                </div>
+                            </div>
+
+                        {% endfor %}
+                    </table>
+
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">{{ field.label }}：</label>
-                        <div class="col-sm-4 row">
-                            {{ field }}
+                        <label class="col-sm-2 control-label"></label>
+                        <div class="col-sm-4 row ">
+                            <button class="btn btn-primary">保存
+                            </button>
                         </div>
                     </div>
-
-                {% endfor %}
-            </table>
-
-            <div class="form-group">
-                <label class="col-sm-2 control-label"></label>
-                <div class="col-sm-4 row ">
-                    <button class="btn btn-primary">保存
-                    </button>
-                </div>
+                </form>
+                {#                <form class="asset-add" action="{% url 'asset_add' %}" method="post">#}
+                {#            {% csrf_token %}#}
+                {#            <fieldset class="module aligned">#}
+                {#                <legend>服务器添加</legend>#}
+                {#                <div class="form-row">#}
+                {#                    <div>#}
+                {#                        <label>服务器 IP:</label>#}
+                {#                        <input class="vTextField" name="ip" type="text"/>#}
+                {#                    </div>#}
+                {#                </div>#}
+                {#                <div class="form-row">#}
+                {#                    <div>#}
+                {#                        <label>主机名称:</label>#}
+                {#                        <input class="vTextField" name="hostname" type="text"/>#}
+                {#                    </div>#}
+                {#                </div>#}
+                {#                <div class="form-row">#}
+                {#                    <div>#}
+                {#                        <label>主机登录名:</label>#}
+                {#                        <input class="vTextField" name="username" type="text"/>#}
+                {#                    </div>#}
+                {#                </div>#}
+                {#                <div class="form-row">#}
+                {#                    <div>#}
+                {#                        <label>主机端口:</label>#}
+                {#                        <input class="vTextField" name="port" type="text"/>#}
+                {#                    </div>#}
+                {#                </div>#}
+                {#                <div class="form-row">#}
+                {#                    <div>#}
+                {#                        <label>密码:</label>#}
+                {#                        <input class="vTextField" name="password" type="text"/>#}
+                {#                    </div>#}
+                {#                </div>#}
+                {#                <div class="form-row">#}
+                {#                    <div>#}
+                {#                        <label>所属主机组:</label>#}
+                {#                        {{ form.asset_groups }}#}
+                {#                    </div>#}
+                {#                </div>#}
+                {#                <div class="form-row">#}
+                {#                    <div>#}
+                {#                        <label>主机类型:</label>#}
+                {#                        {{ form.asset_type }}#}
+                {#                    </div>#}
+                {#                </div>#}
+                {#                <div class="form-row">#}
+                {#                    <div>#}
+                {#                        <label>运行环境:</label>#}
+                {#                        {{ form.env }}#}
+                {#                    </div>#}
+                {#                </div>#}
+                {#                <div class="form-row">#}
+                {#                    <div>#}
+                {#                        <label>部署的应用:</label>#}
+                {#                        <input class="vTextField" name="configs" type="text"/>#}
+                {#                    </div>#}
+                {#                </div>#}
+                {##}
+                {#                <div class="form-row field-is_active">#}
+                {#                    <div class="checkbox-row">#}
+                {#                        <input checked="checked" id="id_is_active" name="is_active" type="checkbox"/><label#}
+                {#                            class="vCheckboxLabel" for="id_is_active">是否激活</label>#}
+                {#                    </div>#}
+                {#                </div>#}
+                {#                <div class="form-row">#}
+                {#                    <label name="comment">备注:</label>#}
+                {#                    <input class="vTextField" type="text" name="comment">#}
+                {#                </div>#}
+                {#                <div class="submit-row">#}
+                {#                    <button type="submit" class="btn">save</button>#}
+                {#                    <button class="btn">cancle</button>#}
+                {#                </div>#}
+                {#            </fieldset>#}
+                {#        </form>#}
+                <!-- END Content -->
             </div>
-        </form>
-        {#                <form class="asset-add" action="{% url 'asset_add' %}" method="post">#}
-        {#            {% csrf_token %}#}
-        {#            <fieldset class="module aligned">#}
-        {#                <legend>服务器添加</legend>#}
-        {#                <div class="form-row">#}
-        {#                    <div>#}
-        {#                        <label>服务器 IP:</label>#}
-        {#                        <input class="vTextField" name="ip" type="text"/>#}
-        {#                    </div>#}
-        {#                </div>#}
-        {#                <div class="form-row">#}
-        {#                    <div>#}
-        {#                        <label>主机名称:</label>#}
-        {#                        <input class="vTextField" name="hostname" type="text"/>#}
-        {#                    </div>#}
-        {#                </div>#}
-        {#                <div class="form-row">#}
-        {#                    <div>#}
-        {#                        <label>主机登录名:</label>#}
-        {#                        <input class="vTextField" name="username" type="text"/>#}
-        {#                    </div>#}
-        {#                </div>#}
-        {#                <div class="form-row">#}
-        {#                    <div>#}
-        {#                        <label>主机端口:</label>#}
-        {#                        <input class="vTextField" name="port" type="text"/>#}
-        {#                    </div>#}
-        {#                </div>#}
-        {#                <div class="form-row">#}
-        {#                    <div>#}
-        {#                        <label>密码:</label>#}
-        {#                        <input class="vTextField" name="password" type="text"/>#}
-        {#                    </div>#}
-        {#                </div>#}
-        {#                <div class="form-row">#}
-        {#                    <div>#}
-        {#                        <label>所属主机组:</label>#}
-        {#                        {{ form.asset_groups }}#}
-        {#                    </div>#}
-        {#                </div>#}
-        {#                <div class="form-row">#}
-        {#                    <div>#}
-        {#                        <label>主机类型:</label>#}
-        {#                        {{ form.asset_type }}#}
-        {#                    </div>#}
-        {#                </div>#}
-        {#                <div class="form-row">#}
-        {#                    <div>#}
-        {#                        <label>运行环境:</label>#}
-        {#                        {{ form.env }}#}
-        {#                    </div>#}
-        {#                </div>#}
-        {#                <div class="form-row">#}
-        {#                    <div>#}
-        {#                        <label>部署的应用:</label>#}
-        {#                        <input class="vTextField" name="configs" type="text"/>#}
-        {#                    </div>#}
-        {#                </div>#}
-        {##}
-        {#                <div class="form-row field-is_active">#}
-        {#                    <div class="checkbox-row">#}
-        {#                        <input checked="checked" id="id_is_active" name="is_active" type="checkbox"/><label#}
-        {#                            class="vCheckboxLabel" for="id_is_active">是否激活</label>#}
-        {#                    </div>#}
-        {#                </div>#}
-        {#                <div class="form-row">#}
-        {#                    <label name="comment">备注:</label>#}
-        {#                    <input class="vTextField" type="text" name="comment">#}
-        {#                </div>#}
-        {#                <div class="submit-row">#}
-        {#                    <button type="submit" class="btn">save</button>#}
-        {#                    <button class="btn">cancle</button>#}
-        {#                </div>#}
-        {#            </fieldset>#}
-        {#        </form>#}
-        <!-- END Content -->
+        </div>
     </div>
 {% endblock %}

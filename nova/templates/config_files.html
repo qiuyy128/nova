@@ -2,24 +2,27 @@
 {% block title %}config files{% endblock %}
 
 {% block content %}
-    <div class="container col-sm-8 col-md-12" xmlns="http://www.w3.org/1999/html">
-        {#        <div class="container col-sm-8 col-md-10 col-sm-offset-2  col-md-offset-2 main">#}
-        <div class="col-md-offset-1 console-instance-head clearfix">
-            <div class="pull-left">
-                <h3><span>config files</span></h3>
-            </div>
-        </div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-6 col-sm-8 col-md-12">
+                <div class="col-md-offset-1 console-instance-head clearfix">
+                    <div class="pull-left">
+                        <h3><span>config files</span></h3>
+                    </div>
+                </div>
 
-        <div class="col-md-offset-1 margin-top-1">
-            <div id=toolbar>
-                {#    <button id=open>&#x1f4c2;</button>#}
-                <output type="width: 300px; font-family: Courier;font-weight: bold;"
-                        id=name>{{ file }}</output>
-                <output id=type></output>
-            </div>
+                <div class="col-md-offset-1 margin-top-1">
+                    <div id=toolbar>
+                        {#    <button id=open>&#x1f4c2;</button>#}
+                        <output type="width: 300px; font-family: Courier;font-weight: bold;"
+                                id=name>{{ file }}</output>
+                        <output id=type></output>
+                    </div>
             <textarea style="height: 40em;font-family: Courier;font-weight: bold;width: 100%;"
-                id=content>{{ file_content }}
+                      id=content>{{ file_content }}
             </textarea>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

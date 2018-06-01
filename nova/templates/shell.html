@@ -15,43 +15,47 @@
             margin-left: -15px;
         }
     </style>
-    <div class="container col-sm-8 col-md-12">
-        <div class="col-md-offset-1 console-instance-head clearfix">
-            <div class="pull-left">
-                <h3><span>执行命令</span></h3>
-            </div>
-        </div>
-        <div class="col-md-offset-1 margin-top-1">
-            <form class="form-horizontal" action="{% url 'shell' %}" method="post" id="command_form">
-                {% csrf_token %}
-                <span id="id_file_size" style="display: none">{{ file_size }}</span>
-                <span id="id_command_file" style="display: none">{{ command_file }}</span>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label label-width"><span>Command：</span></label>
-                    <div class="col-sm-3 row">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-6 col-sm-8 col-md-12">
+                <div class="col-md-offset-1 console-instance-head clearfix">
+                    <div class="pull-left">
+                        <h3><span>执行命令</span></h3>
+                    </div>
+                </div>
+                <div class="col-md-offset-1 margin-top-1">
+                    <form class="form-horizontal" action="{% url 'shell' %}" method="post" id="command_form">
+                        {% csrf_token %}
+                        <span id="id_file_size" style="display: none">{{ file_size }}</span>
+                        <span id="id_command_file" style="display: none">{{ command_file }}</span>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label label-width"><span>Command：</span></label>
+                            <div class="col-sm-3 row">
                         <textarea class="form-control" rows="2" id="id_command"
                                   placeholder="输入command命令"
                                   name="command" style="width: 1000px;"></textarea>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label label-width"><span>服务器IP：</span></label>
-                    <div class="col-sm-3 row">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label label-width"><span>服务器IP：</span></label>
+                            <div class="col-sm-3 row">
                         <textarea class="form-control" rows="2" id="id_asset_ip"
                                   name="command" style="width: 1000px;">{{ asset_ip }}</textarea>
-                    </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-sm-3">
+                                <input id="id_command_exec" class="btn btn-default" type="button" value="执行">
+                                </input>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                <div class="form-group">
-                    <div class="col-sm-3">
-                        <input id="id_command_exec" class="btn btn-default" type="button" value="执行">
-                        </input>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <div class="col-md-offset-1 margin-top-1">
+                <div class="col-md-offset-1 margin-top-1">
             <pre id='log'
                  style="height: 40em;background-color:black;color:white;font-family: Courier;width: 100%;"></pre>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}
@@ -106,9 +110,9 @@
                     }),
                     success: function (data) {
                         if (data['rtn'] == '00') {
-{#                            $("#log").append('command:\n        ');#}
-{#                            $("#log").append(data['command']);#}
-{#                            $("#log").append('\n执行成功!\n');#}
+                            {#                            $("#log").append('command:\n        ');#}
+                            {#                            $("#log").append(data['command']);#}
+                            {#                            $("#log").append('\n执行成功!\n');#}
                             setTimeout(function () {
                                 clearInterval(t);
                             }, 3000);

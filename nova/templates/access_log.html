@@ -42,130 +42,133 @@
 {% endblock %}
 
 {% block content %}
-    <div class="container col-sm-8 col-md-12">
-        <div class="col-md-offset-1 console-instance-head clearfix">
-            <div class="pull-left">
-                <h3><span>访问日志分析</span></h3>
-            </div>
-        </div>
-        <div class="col-md-offset-1 margin-top-1">
-            <form class="form-inline row" name="searchBar">
-                <div class="form-group">
-                    <label class="col-sm-3 control-label label-width">
-                        <span class="text-danger">*</span>开始时间：
-                    </label>
-                    <div class="col-sm-3 input-group date form_begin_time">
-                        <input type="text" class="form-control" id="id_start_time" style="width: 260px" readonly>
-                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-6 col-sm-8 col-md-12">
+                <div class="col-md-offset-1 console-instance-head clearfix">
+                    <div class="pull-left">
+                        <h3><span>访问日志分析</span></h3>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label label-width">
-                        <span class="text-danger">*</span>结束时间：
-                    </label>
-                    <div class="col-sm-3 input-group date form_end_time">
-                        <input type="text" class="form-control" id="id_end_time" style="width: 260px" readonly>
-                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
-                    </div>
-                </div>
-            </form>
-            <form class="form-inline row" name="searchBar">
-                <div class="form-group">
-                    <label class="col-sm-3 control-label label-width"><span>refer关键字：</span></label>
-                    <div class="col-sm-3 input-group">
-                        <input type="text" id="id_refer" name="refer" placeholder="输入refer关键字模糊查询"
-                               class="form-control" style="width: 300px">
-                    </div>
+                <div class="col-md-offset-1 margin-top-1">
+                    <form class="form-inline row" name="searchBar">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label label-width">
+                                <span class="text-danger">*</span>开始时间：
+                            </label>
+                            <div class="col-sm-3 input-group date form_begin_time">
+                                <input type="text" class="form-control" id="id_start_time" style="width: 260px"
+                                       readonly>
+                                <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label label-width">
+                                <span class="text-danger">*</span>结束时间：
+                            </label>
+                            <div class="col-sm-3 input-group date form_end_time">
+                                <input type="text" class="form-control" id="id_end_time" style="width: 260px" readonly>
+                                <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                            </div>
+                        </div>
+                    </form>
+                    <form class="form-inline row" name="searchBar">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label label-width"><span>refer关键字：</span></label>
+                            <div class="col-sm-3 input-group">
+                                <input type="text" id="id_refer" name="refer" placeholder="输入refer关键字模糊查询"
+                                       class="form-control" style="width: 300px">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label label-width"><span>IP地址：</span></label>
+                            <div class="col-sm-3 input-group">
+                                <input type="text" id="id_ip" name="ip" placeholder="输入IP地址精确查询"
+                                       class="form-control" style="width: 300px">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label label-width"><span>访问状态：</span></label>
+                            <div class="col-sm-3 input-group">
+                                <input type="text" id="id_status" name="status" placeholder="输入访问状态值精确查询"
+                                       class="form-control" style="width: 300px">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label label-width"><span>请求URL：</span></label>
+                            <div class="col-sm-3 input-group">
+                                <input type="text" id="id_request" name="request" placeholder="输入请求URL关键字模糊查询"
+                                       class="form-control" style="width: 300px">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label label-width"><span>userAgent：</span></label>
+                            <div class="col-sm-3 input-group">
+                                <input type="text" id="id_userAgent" name="userAgent" placeholder="输入userAgent关键字模糊查询"
+                                       class="form-control" style="width: 300px">
+                            </div>
+                        </div>
+                    </form>
+                    <form class="form-inline row" name="searchBar">
+                        <div class="form-group">
+                            <div class="col-sm-3">
+                                <input type="button" class="btn btn-primary" id="id_query" value="查询">
+                            </div>
+                        </div>
+                    </form>
                 </div>
 
-                <div class="form-group">
-                    <label class="col-sm-3 control-label label-width"><span>IP地址：</span></label>
-                    <div class="col-sm-3 input-group">
-                        <input type="text" id="id_ip" name="ip" placeholder="输入IP地址精确查询"
-                               class="form-control" style="width: 300px">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label label-width"><span>访问状态：</span></label>
-                    <div class="col-sm-3 input-group">
-                        <input type="text" id="id_status" name="status" placeholder="输入访问状态值精确查询"
-                               class="form-control" style="width: 300px">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label label-width"><span>请求URL：</span></label>
-                    <div class="col-sm-3 input-group">
-                        <input type="text" id="id_request" name="request" placeholder="输入请求URL关键字模糊查询"
-                               class="form-control" style="width: 300px">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-sm-2 control-label label-width"><span>userAgent：</span></label>
-                    <div class="col-sm-3 input-group">
-                        <input type="text" id="id_userAgent" name="userAgent" placeholder="输入userAgent关键字模糊查询"
-                               class="form-control" style="width: 300px">
-                    </div>
-                </div>
-            </form>
-            <form class="form-inline row" name="searchBar">
-                <div class="form-group">
-                    <div class="col-sm-3">
-                        <input type="button" class="btn btn-primary" id="id_query" value="查询">
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <div class="col-md-offset-1 margin-top-1" id="table">
-            <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
-                   id="dataTables-sql">
-                <thead>
-                <tr>
-                    <th>时间</th>
-                    <th>IP</th>
-                    <th>request</th>
-                    <th>status</th>
-                    <th>userAgent</th>
-                    <th>refer</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for access_log in access_logs %}
-                    <tr class="gradeX">
-                        <td>{{ access_log.time|date:"Y-m-d H:i:s" }}</td>
-                        <td>{{ access_log.ip }}</td>
-                        <td>
-                            <div class="request-width">
-                                {{ access_log.request }}
-                            </div>
-                        </td>
-                        <td>{{ access_log.status }}</td>
-                        <td>
-                            <div class="refer-width">
-                                {{ access_log.userAgent }}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="refer-width">
-                                {{ access_log.refer }}
-                            </div>
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-            <table class="table table-fixed" width="100%" style=" bottom: 0px;">
-                <tr>
-                    <td>
-                        <div>
-                            <div class="pull-right">
-                                <div class="pagination-info">
-                                    <span id="summary">共有 {{ all_counts }} 条，</span>
-                                    <span>第</span>
-                                    <span id="id_page_index">{{ page_index }}</span>
-                                    <span>/</span>
-                                    <span id="id_page_count">{{ page_count }}</span>
-                                    <span>页，</span>
+                <div class="col-md-offset-1 margin-top-1" id="table">
+                    <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
+                           id="dataTables-sql">
+                        <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>IP</th>
+                            <th>request</th>
+                            <th>status</th>
+                            <th>userAgent</th>
+                            <th>refer</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for access_log in access_logs %}
+                            <tr class="gradeX">
+                                <td>{{ access_log.time|date:"Y-m-d H:i:s" }}</td>
+                                <td>{{ access_log.ip }}</td>
+                                <td>
+                                    <div class="request-width">
+                                        {{ access_log.request }}
+                                    </div>
+                                </td>
+                                <td>{{ access_log.status }}</td>
+                                <td>
+                                    <div class="refer-width">
+                                        {{ access_log.userAgent }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="refer-width">
+                                        {{ access_log.refer }}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <table class="table table-fixed" width="100%" style=" bottom: 0px;">
+                        <tr>
+                            <td>
+                                <div>
+                                    <div class="pull-right">
+                                        <div class="pagination-info">
+                                            <span id="summary">共有 {{ all_counts }} 条，</span>
+                                            <span>第</span>
+                                            <span id="id_page_index">{{ page_index }}</span>
+                                            <span>/</span>
+                                            <span id="id_page_count">{{ page_count }}</span>
+                                            <span>页，</span>
                                                 <span>每页显示：
                                                     <select id="id_page_size" name="page_size"
                                                             onchange="change_page_size()">
@@ -179,14 +182,14 @@
                                                         {% endfor %}
                                                     </select>条
                                                 </span>
-                                </div>
+                                        </div>
 
-                                <ul id="id_pagination" class="pagination">
-                                    <li id="first_page"><a>«</a></li>
-                                    <li id="previous_page"><a>‹</a></li>
-                                    <li id="next_page"><a>›</a></li>
-                                    <li id="last_page"><a>»</a></li>
-                                </ul>
+                                        <ul id="id_pagination" class="pagination">
+                                            <li id="first_page"><a>«</a></li>
+                                            <li id="previous_page"><a>‹</a></li>
+                                            <li id="next_page"><a>›</a></li>
+                                            <li id="last_page"><a>»</a></li>
+                                        </ul>
 
                                 <span style="padding-left: 15px;padding-right: 15px">
                                     <input type="text" id="id_page" name="page"
@@ -198,12 +201,13 @@
                                            value="GO">
                                     </input>
                                 </span>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            </table>
-
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

@@ -3,25 +3,29 @@
 {% block title %}Console{% endblock %}
 
 {% block content %}
-    <div class="container col-sm-8 col-md-12" xmlns="http://www.w3.org/1999/html">
-        <div class="col-md-offset-1 console-instance-head clearfix">
-            <div class="pull-left">
-                <h3>
-                    <span>任务名称—</span>
-                    <span>{{ task_name }}</span>
-                </h3>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-6 col-sm-8 col-md-12">
+                <div class="col-md-offset-1 console-instance-head clearfix">
+                    <div class="pull-left">
+                        <h3>
+                            <span>任务名称—</span>
+                            <span>{{ task_name }}</span>
+                        </h3>
+                    </div>
+                </div>
+                <div class="col-md-offset-1 margin-top-1">
+                    <span>Started by user {{ task_exec_user }}</span></p>
+                    <span>控制台输出：</span>
+                </div>
+                <div class="col-md-offset-1 margin-top-1" id=toolbar>
+                    <span id="id_log_file" style="display: none">{{ file_path }}</span>
+                    <span id="id_task_id" style="display: none">{{ task_id }}</span>
+                    <span id="id_file_size" style="display: none">{{ file_size }}</span>
+                    <pre style="width: 100%;" id='log'>{% for line in task_logs %}{{ line }}{% endfor %}</pre>
+                    <div id="spinner"><img src="{% static 'images/spinner.gif' %}"></div>
+                </div>
             </div>
-        </div>
-        <div class="col-md-offset-1 margin-top-1">
-            <span>Started by user {{ task_exec_user }}</span></p>
-            <span>控制台输出：</span>
-        </div>
-        <div class="col-md-offset-1 margin-top-1" id=toolbar>
-            <span id="id_log_file" style="display: none">{{ file_path }}</span>
-            <span id="id_task_id" style="display: none">{{ task_id }}</span>
-            <span id="id_file_size" style="display: none">{{ file_size }}</span>
-            <pre style="width: 100%;" id='log'>{% for line in task_logs %}{{ line }}{% endfor %}</pre>
-            <div id="spinner"><img src="{% static 'images/spinner.gif' %}"></div>
         </div>
     </div>
 {% endblock %}

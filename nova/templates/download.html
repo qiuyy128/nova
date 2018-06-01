@@ -2,110 +2,116 @@
 {% block title %}download{% endblock %}
 
 {% block content %}
-    <div class="container col-sm-8 col-md-12">
-        <div class="col-md-offset-1 console-instance-head clearfix">
-            <div class="pull-left">
-                <h3><span>文件下载</span></h3>
-            </div>
-        </div>
-
-        <div class="col-md-offset-1 margin-top-1" id=toolbar>
-            <form class="form-horizontal" method="post" action="" enctype="multipart/form-data">
-                {% csrf_token %}
-
-                <div class=" form-group">
-                    <label class="col-sm-2 control-label">服务器环境：</label>
-                    <div class="col-sm-4 row">
-                        <select class="form-control" id="id_env" name="asset_env" required
-                                onchange="change_env()">
-                            <option value="" selected="selected">请选择</option>
-                            <option value="test">test</option>
-                            <option value="staging">staging</option>
-                            <option value="product">product</option>
-                        </select>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-6 col-sm-8 col-md-12">
+                <div class="col-md-offset-1 console-instance-head clearfix">
+                    <div class="pull-left">
+                        <h3><span>文件下载</span></h3>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="col-sm-2 control-label">
-                        <span class="text-danger">*</span>文件路径：
-                    </label>
-                    <div class="col-sm-4 row">
-                        <input class="form-control" id="id_file_path" maxlength="300" name="file_path" type="text"
-                               placeholder="请输入文件路径" required/>
-                    </div>
-                </div>
+                <div class="col-md-offset-1 margin-top-1" id=toolbar>
+                    <form class="form-horizontal" method="post" action="" enctype="multipart/form-data">
+                        {% csrf_token %}
 
-                <div class="form-group">
-                    <label class="col-sm-2 control-label">
-                        <span class="text-danger">*</span>服务器IP：
-                    </label>
-                    <div class="col-sm-8 row">
-                        <div class="form-group ng-isolate-scope" style="overflow: hidden;overflow: hidden"
-                             action-select="" current-group="groupData">
-                            <!-- 未选择 -->
-                            <div class="col-sm-4">
-                                <div class="select-top">
-                                    <div class="select-lft ng-binding">全部服务器</div>
-                                </div>
-                                <div>
-                                    <input type="text" placeholder="输入服务器名称"
-                                           id="search_input" name="keyword" value="{{ keyword }}"
-                                           style="border-bottom-right-radius: 0; border-bottom-left-radius: 0; padding-left: 10px; padding-right: 24px"
-                                           class="form-control">
-                                </div>
-                                <select class="form-control" multiple="multiple" id="id_assets" style="height: 20em;"
-                                        name="assets_name"
-                                        required onclick="select_asset()">
-                                    {% for asset in assets %}
-                                        <option value="{{ asset.ip }}">{{ asset.ip }}</option>
-                                    {% endfor %}
+                        <div class=" form-group">
+                            <label class="col-sm-2 control-label">服务器环境：</label>
+                            <div class="col-sm-4 row">
+                                <select class="form-control" id="id_env" name="asset_env" required
+                                        onchange="change_env()">
+                                    <option value="" selected="selected">请选择</option>
+                                    <option value="test">test</option>
+                                    <option value="staging">staging</option>
+                                    <option value="product">product</option>
                                 </select>
-
                             </div>
-                            {#                            <!-- 移如或者移出按钮的行为 -->#}
-                            {#                            <div class="col-sm-2 clearfix" style="width: 40px">#}
-                            {#                                <button type="button" class="btn btn-primary btn-sm"#}
-                            {#                                        style="position: absolute; left: 50%; margin-left: -19px; top: 55px"#}
-                            {#                                        id="moveRight" disabled="disabled">#}
-                            {#                                    <i class="glyphicon glyphicon-arrow-right"></i>#}
-                            {#                                </button>#}
-                            {#                                <button type="button" class="btn btn-primary btn-sm"#}
-                            {#                                        style="position: absolute; left: 50%; margin-left: -19px; top: 90px"#}
-                            {#                                        id="moveLeft" disabled="disabled">#}
-                            {#                                    <i class="glyphicon glyphicon-arrow-left"></i>#}
-                            {#                                </button>#}
-                            {#                            </div>#}
-                            {#                            <!-- 已经选择 -->#}
-                            {#                            <div class="col-sm-4">#}
-                            {#                                <div class="select-top">#}
-                            {#                                    <div class="select-lft">已选服务器</div>#}
-                            {#                                </div>#}
-                            {#                                <div>#}
-                            {#                                    <input type="text" placeholder=""#}
-                            {#                                           id="search_input" name="keyword" value="{{ keyword }}"#}
-                            {#                                           style="border-bottom-right-radius: 0; border-bottom-left-radius: 0; padding-left: 10px; padding-right: 24px"#}
-                            {#                                           class="form-control">#}
-                            {#                                </div>#}
-                            {##}
-                            {#                                <select class="form-control" multiple="multiple" id="id_assets_select"#}
-                            {#                                        style="height: 20em"#}
-                            {#                                        name="asset_select_name"#}
-                            {#                                        required onclick="cancel_asset()">#}
-                            {#                                </select>#}
-                            {#                            </div>#}
                         </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-sm-2 control-label"></label>
-                    <div class="col-sm-4 row ">
-                        <button type="submit" class="down_submit btn btn-primary">下载</button>
-                        <button class="btn btn-white" type="reset">取消</button>
-                    </div>
-                </div>
-            </form>
 
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                <span class="text-danger">*</span>文件路径：
+                            </label>
+                            <div class="col-sm-4 row">
+                                <input class="form-control" id="id_file_path" maxlength="300" name="file_path"
+                                       type="text"
+                                       placeholder="请输入文件路径" required/>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                <span class="text-danger">*</span>服务器IP：
+                            </label>
+                            <div class="col-sm-8 row">
+                                <div class="form-group ng-isolate-scope" style="overflow: hidden;overflow: hidden"
+                                     action-select="" current-group="groupData">
+                                    <!-- 未选择 -->
+                                    <div class="col-sm-4">
+                                        <div class="select-top">
+                                            <div class="select-lft ng-binding">全部服务器</div>
+                                        </div>
+                                        <div>
+                                            <input type="text" placeholder="输入服务器名称"
+                                                   id="search_input" name="keyword" value="{{ keyword }}"
+                                                   style="border-bottom-right-radius: 0; border-bottom-left-radius: 0; padding-left: 10px; padding-right: 24px"
+                                                   class="form-control">
+                                        </div>
+                                        <select class="form-control" multiple="multiple" id="id_assets"
+                                                style="height: 20em;"
+                                                name="assets_name"
+                                                required onclick="select_asset()">
+                                            {% for asset in assets %}
+                                                <option value="{{ asset.ip }}">{{ asset.ip }}</option>
+                                            {% endfor %}
+                                        </select>
+
+                                    </div>
+                                    {#                            <!-- 移如或者移出按钮的行为 -->#}
+                                    {#                            <div class="col-sm-2 clearfix" style="width: 40px">#}
+                                    {#                                <button type="button" class="btn btn-primary btn-sm"#}
+                                    {#                                        style="position: absolute; left: 50%; margin-left: -19px; top: 55px"#}
+                                    {#                                        id="moveRight" disabled="disabled">#}
+                                    {#                                    <i class="glyphicon glyphicon-arrow-right"></i>#}
+                                    {#                                </button>#}
+                                    {#                                <button type="button" class="btn btn-primary btn-sm"#}
+                                    {#                                        style="position: absolute; left: 50%; margin-left: -19px; top: 90px"#}
+                                    {#                                        id="moveLeft" disabled="disabled">#}
+                                    {#                                    <i class="glyphicon glyphicon-arrow-left"></i>#}
+                                    {#                                </button>#}
+                                    {#                            </div>#}
+                                    {#                            <!-- 已经选择 -->#}
+                                    {#                            <div class="col-sm-4">#}
+                                    {#                                <div class="select-top">#}
+                                    {#                                    <div class="select-lft">已选服务器</div>#}
+                                    {#                                </div>#}
+                                    {#                                <div>#}
+                                    {#                                    <input type="text" placeholder=""#}
+                                    {#                                           id="search_input" name="keyword" value="{{ keyword }}"#}
+                                    {#                                           style="border-bottom-right-radius: 0; border-bottom-left-radius: 0; padding-left: 10px; padding-right: 24px"#}
+                                    {#                                           class="form-control">#}
+                                    {#                                </div>#}
+                                    {##}
+                                    {#                                <select class="form-control" multiple="multiple" id="id_assets_select"#}
+                                    {#                                        style="height: 20em"#}
+                                    {#                                        name="asset_select_name"#}
+                                    {#                                        required onclick="cancel_asset()">#}
+                                    {#                                </select>#}
+                                    {#                            </div>#}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label"></label>
+                            <div class="col-sm-4 row ">
+                                <button type="submit" class="down_submit btn btn-primary">下载</button>
+                                <button class="btn btn-white" type="reset">取消</button>
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

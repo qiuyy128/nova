@@ -12,28 +12,16 @@
                 </div>
 
                 <div class="col-md-offset-1 margin-top-1">
-                    <form class="form-horizontal asset-add" action="{% url 'config_file_add' %}" method="post">
+                    {#                    <form class="form-horizontal config-add" action="{% url 'config_file_add' %}" method="post">#}
+                    <form id="form-config-add" class="form-horizontal" action="" method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-                        {#                                    {{ form.as_p }}#}
-                        {#            使用form#}
-                        {#            <table>#}
-                        {#                {% for field in form %}#}
-                        {#                    <tr>#}
-                        {#                        <td>#}
-                        {#                            <div style="padding: 10px;">{{ field.label }}</div>#}
-                        {#                        </td>#}
-                        {#                        <td>#}
-                        {#                            {{ field }}#}
-                        {#                        </td>#}
-                        {#                    </tr>#}
-                        {#                {% endfor %}#}
-                        {#            </table>#}
-
                         <fieldset>
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">服务名称：</label>
                                 <div class="col-sm-4 row">
-                                    <input class="form-control" type="text" placeholder="fdp_*或者tomcat-*" name="name">
+                                    <input class="form-control" type="text" placeholder="fdp_*或者tomcat-*"
+                                           id="id_app_name" name="name"
+                                           value="{{ app_name }}">
                                 </div>
                             </div>
 
@@ -41,16 +29,14 @@
                                 <label class="col-sm-2 control-label">SVN路径：</label>
                                 <div class="col-sm-4 row">
                                     <input class="form-control" type="text" placeholder="svn相对路径，如adp/WebRoot"
-                                           name="svn_url">
+                                           id="id_svn_url" name="svn_url">
                                 </div>
                             </div>
 
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">配置文件：</label>
                                 <div class="col-sm-4 row">
-                            <textarea class="form-control" type="text"
-                                      placeholder="多个文件逗号间隔，如config-email.properties,config-oss.properties"
-                                      name="files"></textarea>
+                                    <input id="id_files" name="files" type="file" multiple="multiple" required/>
                                 </div>
                             </div>
 
@@ -58,7 +44,7 @@
                                 <label class="col-sm-2 control-label">部署环境：</label>
                                 <div class="col-sm-4 row">
                                     <input class="form-control" type="text" placeholder="test|staging|product"
-                                           name="env">
+                                           id="id_env" name="env" value="{{ env }}">
                                 </div>
                             </div>
                         </fieldset>
@@ -66,8 +52,8 @@
                         <div class="form-group">
                             <label class="col-sm-2 control-label"></label>
                             <div class="col-sm-4 row ">
-                                <input type="submit" class="btn btn-primary" value="保存">
-                                </input>
+                                <button type="submit" class="add_config_file btn btn-primary">保存
+                                </button>
                             </div>
                         </div>
                     </form>

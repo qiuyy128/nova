@@ -14,8 +14,7 @@
                     <form class="form-inline">
                         {#                <div class="pull-left">#}
                         <div class="form-group">
-                            {#                        <a href="{% url 'config_file_add' %}" target="_blank" class="btn btn-default btn-warning">新增配置文件</a>#}
-                            <a href="{% url 'config_file_add' %}" class="btn btn-default btn-warning">新增配置文件</a>
+                            <a href="{% url 'config_file_add' %}?app_name={{ app_name }}&env={{ env }}" class="btn btn-default btn-warning">新增配置文件</a>
                             {#                    </div>#}
                         </div>
                     </form>

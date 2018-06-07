@@ -273,7 +273,18 @@ def do_start_app(app_id):
             deploy_path = app_host.deploy_path.encode('utf-8')
             logs_path = os.path.join(deploy_path, 'logs')
             catalina_path = os.path.join(deploy_path, 'bin', 'catalina.sh')
-            cmd = 'cd %s;%s start;sleep %d' % (logs_path, catalina_path, int(STARTUP_APP_SLEEP))
+            # 判断需要使用的jdk版本
+            jdk_version = ''
+            try:
+                jdk_build_version = JdkBuildVersion.objects.get(app_name=app_name, env=app_env)
+                jdk_version = jdk_build_version.jdk_version
+                jdk_path = jdk_build_version.jdk_path
+            except JdkBuildVersion.DoesNotExist:
+                logger.info(u"未配置%sJDK版本，使用jdk1.6！" % app_name)
+            if jdk_version:
+                cmd = 'source %s;cd %s;%s start;sleep %d' % (jdk_path, logs_path, catalina_path, int(STARTUP_APP_SLEEP))
+            else:
+                cmd = 'cd %s;%s start;sleep %d' % (logs_path, catalina_path, int(STARTUP_APP_SLEEP))
         app_asset = Asset.objects.get(ip=app_host.ip)
         print 'Start %s on %s:' % (app_name, app_asset.ip), cmd
         out, error = RunCmd(host=app_asset.ip, port=app_asset.port, username=app_asset.username,
@@ -547,6 +558,8 @@ def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_
                 tomcat_name = Configs.TOMCAT_7_NAME
             if tomcat_version == 'Tomcat6':
                 tomcat_name = Configs.TOMCAT_6_NAME
+            if tomcat_version == 'Tomcat8':
+                tomcat_name = Configs.TOMCAT_8_NAME
             tomcat_local_path = os.path.join(attachment_path, '%s') % tomcat_name
             remote_path = '/u01'
             tomcat_remote_path = os.path.join(remote_path, tomcat_name)
@@ -572,9 +585,15 @@ def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_
             if tomcat_version == 'Tomcat7':
                 jdk_name = Configs.JDK_7_NAME
                 jdk_base_name = Configs.JDK_7_BASENAME
+                jdk_profile_name = '/etc/profile.d/java.1.7.sh'
             if tomcat_version == 'Tomcat6':
                 jdk_name = Configs.JDK_6_NAME
                 jdk_base_name = Configs.JDK_6_BASENAME
+                jdk_profile_name = '/etc/profile.d/java.1.6.sh'
+            if tomcat_version == 'Tomcat8':
+                jdk_name = Configs.JDK_8_NAME
+                jdk_base_name = Configs.JDK_8_BASENAME
+                jdk_profile_name = '/etc/profile.d/java.1.8.sh'
             jdk_local_path = os.path.join(attachment_path, '%s') % jdk_name
             jdk_remote_path = os.path.join(remote_path, '%s') % jdk_base_name
             jdk_remote_tar_path = os.path.join(remote_path, '%s') % jdk_name
@@ -586,8 +605,8 @@ def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_
                 RunCmd(host=host_ip, port=host_port, username='root', password=password).upload_file(jdk_local_path,
                                                                                                      jdk_remote_tar_path,
                                                                                                      log_file)
-                cmd3 = '''cd /u01;tar -zxf %s;echo "export PATH=/u01/%s/bin:\$PATH" > /etc/profile.d/java.sh;
-                            rm -f %s;source /etc/profile.d/java.sh''' % (jdk_name, jdk_base_name, jdk_name)
+                cmd3 = '''cd /u01;tar -zxf %s;echo "export PATH=/u01/%s/bin:\$PATH" > %s;rm -f %s;source %s''' % (
+                    jdk_name, jdk_base_name, jdk_profile_name, jdk_name, jdk_profile_name)
                 print cmd3
                 out, error = RunCmd(host=host_ip, port=host_port, username='root', password=password).run_command(cmd3,
                                                                                                                   log_file)
@@ -913,8 +932,14 @@ def do_update_app(app_name, app_env):
                 logs_path = os.path.join(deploy_path, 'logs')
                 catalina_path = os.path.join(deploy_path, 'bin', 'catalina.sh')
                 tag = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-                cmd2 = "cd %s;if [ -e 'catalina.out' ] ;then mv catalina.out catalina.out.%s.bak;fi;%s start;sleep %d" % (
-                    logs_path, tag, catalina_path, int(STARTUP_APP_SLEEP))
+                if jdk_version:
+                    cmd2 = """source %s;cd %s;
+                        if [ -e 'catalina.out' ] ;then mv catalina.out catalina.out.%s.bak;fi;%s start;sleep %d""" % (
+                        jdk_path, logs_path, tag, catalina_path, int(STARTUP_APP_SLEEP))
+                else:
+                    cmd2 = """cd %s;
+                        if [ -e 'catalina.out' ] ;then mv catalina.out catalina.out.%s.bak;fi;%s start;sleep %d""" % (
+                        logs_path, tag, catalina_path, int(STARTUP_APP_SLEEP))
                 out, error = RunCmd(host=app_host_asset.ip, port=app_host_asset.port, username=app_host_asset.username,
                                     password=app_host_asset.password).run_command(cmd2, log_file)
                 outs = outs + out

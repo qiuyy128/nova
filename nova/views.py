@@ -735,34 +735,68 @@ def upload_file(request):
     return render(request, 'upload.html', {'form': form})
 
 
+# @csrf_exempt
 @login_required()
 def config_file_add(request):
+    current_url = request.get_full_path()
+    logger.info(current_url)
     if request.method == 'POST':
-        config_file_form = AppConfigForm(request.POST)
-        if config_file_form.is_valid():
-            form_data = config_file_form.clean()
-            env = form_data['env']
-            app_name = form_data['name']
-            svn_url = form_data['svn_url']
+        logger.info(request.POST)
+        logger.info(request.FILES)
+        form = AppConfigForm(request.POST, request.FILES)
+        logger.info(form)
+        if form.is_valid():
+            form_data = form.clean()
+            env = form_data.get('env')
+            app_name = form_data.get('name')
+            svn_url = form_data.get('svn_url')
+            files = request.FILES.getlist('files')
             if app_name.find('tomcat-') == 0:
                 config_file_path = os.path.join(config_files_path, env, app_name.split('tomcat-')[-1],
                                                 urllib.url2pathname(svn_url))
             if app_name.find('fdp_') == 0:
                 config_file_path = os.path.join(config_files_path, env, app_name, urllib.url2pathname(svn_url))
-            config_file_form.save()
-            # 自动在服务器上创建文件夹
-            logger.info(u'自动在服务器上创建应用配置文件路径:%s' % config_file_path)
-            if not os.path.exists(config_file_path):
-                os.makedirs(config_file_path)
-            msg = u"添加应用配置文件路径成功"
+            try:
+                # 自动在服务器上创建文件夹
+                logger.info(u'自动在服务器上创建应用配置文件路径:%s' % config_file_path)
+                if not os.path.exists(config_file_path):
+                    os.makedirs(config_file_path)
+                upload_path = config_file_path
+                # 上传
+                file_name = ''
+                for f in files:
+                    file_name += f.name + ','
+                    file_path = os.path.join(upload_path, f.name)
+                    with open(file_path, 'wb+') as destination:
+                        for chunk in f.chunks():
+                            destination.write(chunk)
+                        destination.close()
+                file_name = file_name[:-1]
+                msg = u"添加应用配置文件路径成功"
+                try:
+                    app_config = AppConfig.objects.get(name=app_name, svn_url=svn_url, env=env)
+                    app_config.files = app_config.files + ',' + file_name
+                    app_config.save()
+                except AppConfig.DoesNotExist:
+                    AppConfig.objects.create(name=app_name, svn_url=svn_url, files=file_name, env=env)
+            except Exception as e:
+                msg = u'添加应用配置文件路径失败！' + str(e)
             logger.info(msg)
-            return HttpResponseRedirect(reverse('config_file'))
+            data = {'msg': msg}
+            return HttpResponse(json.dumps(data))
+            # return render(request, 'message.html', data)
+            # url = 'config_file' + '?app_name=' + app_name + '&env=' + env
+            # return HttpResponseRedirect(url)
         else:
-            data = {'msg': '添加应用配置文件路径失败！'}
+            data = {'msg': '应用配置文件无效！'}
             return render(request, 'message.html', data)
     else:
         form = AppConfigForm()
-        return render(request, 'config_file_add.html', {'form': form})
+        res = request.GET
+        if 'app_name' in res and 'env' in res:
+            app_name = request.GET.get('app_name')
+            env = request.GET.get('env')
+        return render(request, 'config_file_add.html', locals())
 
 
 @login_required
@@ -795,9 +829,7 @@ def config_file(request):
                           'files': files
                           }
         app_config_list.append(app_config_dic)
-    # logger.info(app_config_list)
-    data = {'app_config_list': app_config_list, 'current_url': current_url}
-    return render(request, 'config_file.html', context=data)
+    return render(request, 'config_file.html', locals())
 
 
 @login_required

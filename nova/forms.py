@@ -42,9 +42,13 @@ class TaskForm(forms.ModelForm):
         ]
 
 
-class AppConfigForm(forms.ModelForm):
-    class Meta:
-        model = AppConfig
-        fields = [
-            "name", "svn_url", "files", "env"
-        ]
+class AppConfigForm(forms.Form):
+    name = forms.CharField(label='name', max_length=30)
+    svn_url = forms.CharField(label='svn_url', max_length=200)
+    files = forms.FileField()
+    env = forms.CharField(label='env', max_length=25)
+    # class Meta:
+    #     model = AppConfig
+    #     fields = [
+    #         "name", "svn_url", "files", "env"
+    #     ]

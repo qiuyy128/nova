@@ -344,6 +344,7 @@ def app_deploy(request):
             app_type = json.loads(request.body)['app_type']
             app_env = json.loads(request.body)['app_env']
             tomcat_version = json.loads(request.body)['tomcat_version']
+            jdk_version = json.loads(request.body)['jdk_version']
             app_name = json.loads(request.body)['app_name']
             svn_url = json.loads(request.body)['svn_url']
             app_port = json.loads(request.body)['app_port']
@@ -356,7 +357,7 @@ def app_deploy(request):
             app_asset = app_asset[:-1]
             logger.info(u"开始部署:" + app_name + " on %s:%s" % (app_asset, deploy_path))
             from .tasks import do_deploy_app
-            result = do_deploy_app.delay(app_name, app_env, tomcat_version, app_port, deploy_path, svn_url, app_assets)
+            result = do_deploy_app.delay(app_name, app_env, tomcat_version, jdk_version, app_port, deploy_path, svn_url, app_assets)
             logger.info('Task:%s' % result)
             logger.info('Task Status:%s' % result.status)
             task_name = u'部署%s:' % app_env + app_name

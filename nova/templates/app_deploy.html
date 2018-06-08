@@ -24,7 +24,7 @@
                                         <option value="tomcat">tomcat</option>
                                     </select>
                                 </div>
-                                <div class="col-sm-4 row">
+                                <div class="col-sm-3 row">
                                     <select class="form-control margin-left-1 " id="id_tomcat" name="tomcat_version"
                                             required
                                             onchange="change_env()">
@@ -32,6 +32,16 @@
                                         <option value="Tomcat7">Tomcat7</option>
                                         <option value="Tomcat6">Tomcat6</option>
                                         <option value="Tomcat8">Tomcat8</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-3 row">
+                                    <select class="form-control margin-left-1 " id="id_jdk" name="jdk_version"
+                                            required
+                                            onchange="change_env()">
+                                        <option value="" selected="selected">请选择</option>
+                                        <option value="JDK7">JDK7</option>
+                                        <option value="JDK6">JDK6</option>
+                                        <option value="JDK8">JDK8</option>
                                     </select>
                                 </div>
                             </div>
@@ -52,9 +62,9 @@
 
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">服务svn地址：</label>
-                                <div class="col-sm-8 row">
-                            <textarea class="form-control" rows="10" id="id_svn_url" placeholder="单行输入，分号间隔"
-                                      name="svn_url"></textarea>
+                                <div class="col-sm-10 row">
+                                    <textarea class="form-control" rows="10" id="id_svn_url" placeholder="多个地址多行输入，回车间隔"
+                                              name="svn_url"></textarea>
                                 </div>
                             </div>
 
@@ -207,6 +217,7 @@
     <script type="text/javascript">
         $(document).ready(function () {
             $("#id_tomcat").hide();
+            $("#id_jdk").hide();
         });
 
         function change_type() {
@@ -214,9 +225,11 @@
             var type = $("#id_type").val();
             if (type == 'tomcat') {
                 $("#id_tomcat").show();
+                $("#id_jdk").show();
             }
             else {
                 $("#id_tomcat").hide();
+                $("#id_jdk").hide();
             }
             $('#id_assets').empty();
             $.ajax({
@@ -347,6 +360,7 @@
                 var app_type = $("#id_type").val();
                 var app_env = $("#id_env").val();
                 var tomcat_version = $("#id_tomcat").val();
+                var jdk_version = $("#id_jdk").val();
                 var app_name = $("#id_app_name").val();
                 var svn_url = $("#id_svn_url").val();
                 var app_port = $("#id_app_port").val();
@@ -379,6 +393,7 @@
                                 app_type: app_type,
                                 app_env: app_env,
                                 tomcat_version: tomcat_version,
+                                jdk_version: jdk_version,
                                 app_name: app_name,
                                 svn_url: svn_url,
                                 app_port: app_port,

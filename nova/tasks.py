@@ -26,6 +26,7 @@ from script.conn_mysql import Mysql
 from script.conn_mssql import MsSQL
 from script.conn_mongodb import Mongodb
 import decimal
+import re
 
 import sys
 import configmodule
@@ -353,14 +354,28 @@ def do_reload_app(app_id):
         outs += u'开始重启%s on %s, port: %s\n' % (app_host.name, app_host.ip, app_host.port)
         app_name = app_host.name
         deploy_path = app_host.deploy_path
+        app_env = app_host.env
         if app_name == 'mysql':
             cmd = 'service mysqld restart'
         if app_name.find('fdp_') == 0:
             cmd = 'pm2 reload %s' % app_name
         if app_name.find('tomcat-') == 0:
-            cmd = "ps -ef|grep %s|grep -v grep|awk '{print $2}'|xargs kill -9;\
-                cd %slogs/;%sbin/catalina.sh start;sleep %d" % (
-                deploy_path, deploy_path, deploy_path, int(STARTUP_APP_SLEEP))
+            # 判断需要使用的jdk版本
+            jdk_version = ''
+            try:
+                jdk_build_version = JdkBuildVersion.objects.get(app_name=app_name, env=app_env)
+                jdk_version = jdk_build_version.jdk_version
+                jdk_path = jdk_build_version.jdk_path
+            except JdkBuildVersion.DoesNotExist:
+                logger.info(u"未配置%sJDK版本，使用jdk1.6！" % app_name)
+            if jdk_version:
+                cmd = "source %s;ps -ef|grep %s|grep -v grep|awk '{print $2}'|xargs kill -9;\
+                    cd %slogs/;%sbin/catalina.sh start;sleep %d" % (
+                    jdk_path, deploy_path, deploy_path, deploy_path, int(STARTUP_APP_SLEEP))
+            else:
+                cmd = "ps -ef|grep %s|grep -v grep|awk '{print $2}'|xargs kill -9;\
+                    cd %slogs/;%sbin/catalina.sh start;sleep %d" % (
+                    deploy_path, deploy_path, deploy_path, int(STARTUP_APP_SLEEP))
         app_asset = Asset.objects.get(ip=app_host.ip)
         out, error = RunCmd(host=app_asset.ip, port=app_asset.port, username=app_asset.username,
                             password=app_asset.password).run_command(cmd, log_file)
@@ -384,13 +399,13 @@ def checkout(app_name, app_env, svn_url, log_file=''):
     app_env = app_env.encode('utf-8')
     svn_url = svn_url.encode('utf-8')
     svn_checkout_path = os.path.join(svn_checkout_paths, app_env)
-    print svn_url
+    logger.info(svn_url)
     if app_name.find('fdp_') == 0:
         app_name_compress = '%s.tar.gz' % app_name
         app_checkout_path = os.path.join(svn_checkout_path, app_name)
         app_checkout_compress_path = os.path.join(svn_checkout_path, '%s') % app_name_compress
         # svn签出版本
-        print '=' * 80
+        logger.info('=' * 80)
         # r = svn.remote.RemoteClient(svn_url)
         # commit_revision = r.info()['commit_revision']
         # r.checkout('%s' % svn_checkout_path)
@@ -417,7 +432,8 @@ def checkout(app_name, app_env, svn_url, log_file=''):
         app_war = '%s.war' % app_name.split('tomcat-')[1]
         app_checkout_path = os.path.join(svn_checkout_path, app_war_name)
         # checkout app
-        for i in svn_url.split(';'):
+        # for i in svn_url.split(';'):
+        for i in re.split('\n|;', svn_url):
             i = i.strip()
             svn_basename = os.path.basename(i)
             tomcat_checkout_path = os.path.join(app_checkout_path, svn_basename)
@@ -459,7 +475,7 @@ def checkout(app_name, app_env, svn_url, log_file=''):
 
 
 @shared_task
-def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_url, app_host_ips):
+def do_deploy_app(app_name, app_env, tomcat_version, jdk_version, app_port, deploy_path, svn_url, app_host_ips):
     logger.info(u'部署 %s on %s, env: %s' % (app_name, app_host_ips, app_env))
     attachment_path = os.path.join(base_path, '%s') % ATTACHMENT_PATH
     deploy_path = deploy_path.encode('utf-8')
@@ -582,15 +598,15 @@ def do_deploy_app(app_name, app_env, tomcat_version, app_port, deploy_path, svn_
             outs = outs + out
             errors = errors + error
             # install jdk.
-            if tomcat_version == 'Tomcat7':
+            if jdk_version == 'JDK7':
                 jdk_name = Configs.JDK_7_NAME
                 jdk_base_name = Configs.JDK_7_BASENAME
                 jdk_profile_name = '/etc/profile.d/java.1.7.sh'
-            if tomcat_version == 'Tomcat6':
+            if jdk_version == 'JDK6':
                 jdk_name = Configs.JDK_6_NAME
                 jdk_base_name = Configs.JDK_6_BASENAME
                 jdk_profile_name = '/etc/profile.d/java.1.6.sh'
-            if tomcat_version == 'Tomcat8':
+            if jdk_version == 'JDK8':
                 jdk_name = Configs.JDK_8_NAME
                 jdk_base_name = Configs.JDK_8_BASENAME
                 jdk_profile_name = '/etc/profile.d/java.1.8.sh'
@@ -744,7 +760,19 @@ def do_rollback_app(app_name, app_env):
                 if out:
                     outs += out
                 # 启动
-                cmd = "cd %s;%sbin/catalina.sh start;sleep %d" % (app_logs, deploy_path, int(STARTUP_APP_SLEEP))
+                # 判断需要使用的jdk版本
+                jdk_version = ''
+                try:
+                    jdk_build_version = JdkBuildVersion.objects.get(app_name=app_name, env=app_env)
+                    jdk_version = jdk_build_version.jdk_version
+                    jdk_path = jdk_build_version.jdk_path
+                except JdkBuildVersion.DoesNotExist:
+                    logger.info(u"未配置%sJDK版本，使用jdk1.6！" % app_name)
+                if jdk_version:
+                    cmd = "source %s;cd %s;%sbin/catalina.sh start;sleep %d" % (
+                        jdk_path, app_logs, deploy_path, int(STARTUP_APP_SLEEP))
+                else:
+                    cmd = "cd %s;%sbin/catalina.sh start;sleep %d" % (app_logs, deploy_path, int(STARTUP_APP_SLEEP))
                 out, error = RunCmd(host=app_asset.ip, port=app_asset.port, username=app_asset.username,
                                     password=app_asset.password).run_command(cmd, log_file)
                 if error:
@@ -854,7 +882,8 @@ def do_update_app(app_name, app_env):
         app_war = '%s.war' % app_name.split('tomcat-')[1]
         app_checkout_path = os.path.join(svn_checkout_path, app_path)
         # check update app
-        for i in svn_url.split(';'):
+        # for i in svn_url.split(';'):
+        for i in re.split('\n|;', svn_url):
             i = i.strip()
             svn_basename = os.path.basename(i)
             tomcat_checkout_path = os.path.join(app_checkout_path, svn_basename)

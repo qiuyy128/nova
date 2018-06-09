@@ -1,10 +1,10 @@
 # nova
 自动化运维管理平台，基于Django1.10，python2.7版本.<br>
-`项目来源于各种环境版本的自动化发布；后来逐渐添加了堡垒机的部分功能如webssh自动连接服务器；数据库脚本的提交、审核；web监控与自定义服务监控；nginx日志的查询统计；`<br>
+`项目来源于各种环境版本的自动化发布；后来逐渐添加了堡垒机的部分功能如webssh自动连接服务器；数据库脚本的提交、审核；web监控与自定义服务监控；nginx日志的查询统计；业务系统的统计报表`<br>
  `django 1.10 + Mysql + Celery + Mongodb + GateOne.`<br>
 
-    集成GateOne, 服务器ssh连接，服务自动化部署，版本发布，任务管理与日志，数据库脚本执行，web监控，自定义服务监控，
-    nginx日志查询统计, 集成ansible。
+    集成GateOne, 服务器ssh连接，服务自动化部署，版本发布，任务管理与日志，数据库脚本执行，web监控，自定义服务监控，邮件发送，
+    nginx日志查询统计, 集成ansible执行shell命令, SSH公钥配置。
 
 用户的管理使用了django的admin后台来创建与管理，用户权限通过用户组来分配权限。
 
@@ -78,12 +78,22 @@ shell命令集成ansible.<br>
 # 效果图
 部署的应用列表<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获.JPG)
-服务器列表<br>
+服务器列表，可以执行命令<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获2.JPG)
+使用ansible批量执行命令，查看结果<br>
+![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获22.JPG)
+超级用户拥有配置SSH公钥权限<br>
+![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获2-2.JPG)
+一键配置SSH公钥，并验证配置结果<br>
+![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获23.JPG)
 应用从svn初始化部署，目前是从svn直接部署<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获3.JPG)
-应用每个环境不同应用的配置文件添加与查看
+应用列表中点击应用名称查看对应环境的配置文件与添加<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获4.JPG)
+点击新增配置文件，配置各配置文件的SVN路径，并上传配置文件<br>
+![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获24.JPG)
+点击配置文件名称，可以查看增配置文件内容，并支持在线修改<br>
+![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获25.JPG)
 SQL提交<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获5.JPG)
 SQL审核<br>
@@ -92,7 +102,7 @@ WEB监控<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获7.JPG)
 监控历史曲线图<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获8.JPG)
-自定义服务监控
+自定义服务监控<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获9.JPG)
 操作任务列表<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获10.JPG)
@@ -100,6 +110,8 @@ WEB监控<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获11.JPG)
 附件上传至阿里云OSS存储<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获12.JPG)
+服务器文件下载<br>
+![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获21.JPG)
 nginx访问日志查询统计，支持单项条件与组合条件查询（使用多进程每天定时处理nginx日志并存储至Mongodb）<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获13.JPG)
 nginx访问日志查询统计<br>

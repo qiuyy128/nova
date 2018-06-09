@@ -76,8 +76,6 @@ shell命令集成ansible.<br>
 附件目录attachment下的文件如jdk，tomcat，nodejs，ant等因为太大没有上传到github<br>
 
 # 效果图
-部署的应用列表<br>
-![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获.JPG)
 服务器列表，可以执行命令<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获2.JPG)
 使用ansible批量执行命令，查看结果<br>
@@ -88,6 +86,8 @@ shell命令集成ansible.<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获23.JPG)
 应用从svn初始化部署，目前是从svn直接部署<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获3.JPG)
+部署的应用列表<br>
+![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获.JPG)
 应用列表中点击应用名称查看对应环境的配置文件与添加<br>
 ![image](https://raw.githubusercontent.com/qiuyy128/nova/master/screenshoot/捕获4.JPG)
 点击新增配置文件，配置各配置文件的SVN路径，并上传配置文件<br>

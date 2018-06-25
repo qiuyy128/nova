@@ -736,22 +736,22 @@ def upload_file(request):
     return render(request, 'upload.html', {'form': form})
 
 
-# @csrf_exempt
+@csrf_exempt
 @login_required()
 def config_file_add(request):
     current_url = request.get_full_path()
-    logger.info(current_url)
     if request.method == 'POST':
-        logger.info(request.POST)
-        logger.info(request.FILES)
         form = AppConfigForm(request.POST, request.FILES)
-        logger.info(form)
         if form.is_valid():
             form_data = form.clean()
             env = form_data.get('env')
             app_name = form_data.get('name')
             svn_url = form_data.get('svn_url')
             files = request.FILES.getlist('files')
+            # 权限判断
+            if env == 'product' and not User.has_perm(request.user, 'nova.operate_product'):
+                data = {'rtn': '97', 'msg': '没有生产环境操作权限，请联系管理员!'}
+                return HttpResponse(json.dumps(data))
             if app_name.find('tomcat-') == 0:
                 config_file_path = os.path.join(config_files_path, env, app_name.split('tomcat-')[-1],
                                                 urllib.url2pathname(svn_url))
@@ -773,24 +773,22 @@ def config_file_add(request):
                             destination.write(chunk)
                         destination.close()
                 file_name = file_name[:-1]
-                msg = u"添加应用配置文件路径成功"
+                data = {'rtn': '00', 'msg': u'添加应用配置文件路径成功'}
                 try:
                     app_config = AppConfig.objects.get(name=app_name, svn_url=svn_url, env=env)
-                    app_config.files = app_config.files + ',' + file_name
-                    app_config.save()
+                    if file_name not in app_config.files:
+                        app_config.files = app_config.files + ',' + file_name
+                        app_config.save()
+                    else:
+                        logger.info(u'配置文件%s已存在！', file_name)
                 except AppConfig.DoesNotExist:
                     AppConfig.objects.create(name=app_name, svn_url=svn_url, files=file_name, env=env)
             except Exception as e:
-                msg = u'添加应用配置文件路径失败！' + str(e)
-            logger.info(msg)
-            data = {'msg': msg}
-            return HttpResponse(json.dumps(data))
-            # return render(request, 'message.html', data)
-            # url = 'config_file' + '?app_name=' + app_name + '&env=' + env
-            # return HttpResponseRedirect(url)
+                data = {'rtn': '98', 'msg': u'添加应用配置文件路径失败！' + str(e)}
+            logger.info(data)
         else:
-            data = {'msg': '应用配置文件无效！'}
-            return render(request, 'message.html', data)
+            data = {'rtn': '99', 'msg': u'应用配置文件无效！'}
+        return HttpResponse(json.dumps(data))
     else:
         form = AppConfigForm()
         res = request.GET

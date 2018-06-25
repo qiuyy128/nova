@@ -32,52 +32,48 @@
                 <div class="col-md-offset-1 ">
                     <div style="margin-top: 50px !important;">
                         <div class="console-instance-head clearfix">
-                            <div class="pull-left">
-                                <h3><span><a href="{% url 'fpcy_stat' %}">乐税发票查验产品统计分析表</a></span></h3>
-                            </div>
+                                <h5><a href="{% url 'fpcy_stat' %}">乐税发票查验产品统计分析表</a></h5>
                         </div>
                     </div>
-
                     <div class="margin-top-1">
-                        <form class="form-inline row" name="searchBar">
-                            <div class="col-sm-3 form-group">
-                                <label class="control-label"><span>统计开始时间：</span></label>
-                                <span>{{ begin_time }}</span>
+                        <form class="form-inline">
+                            <div class="form-group">
+                                <label class="control-label label-width"><span>统计开始时间：</span></label>
+                                <div class="input-group date">
+                                    <input type="text" class="form-control" value="{{ begin_time }}"
+                                           readonly>
+                                </div>
                             </div>
-                            <div class="col-sm-3 form-group">
-                                <label class="control-label"><span>统计结束时间：</span></label>
-                                <span>{{ end_time }}</span>
+                            <div class="form-group">
+                                <label class="control-label label-width"><span>统计结束时间：</span></label>
+                                <div class="input-group date">
+                                    <input type="text" class="form-control" value="{{ end_time }}"
+                                           readonly>
+                                </div>
                             </div>
-                            <div class="col-sm-3 form-group">
-                                <label class="control-label">
-                        <span>
-                            <a href="{% url 'fpcy_stat' %}?stat_day={{ last_time }}">前一日统计数据</a>
-                        </span>
-                                </label>
-                                <label class="pull-right">
-                        <span>
-                            <a href="https://www.baiwang.com/admin/cloudinterface/notice/list.html"
-                               target="_blank">日常公告</a>
-                        </span>
-                                </label>
+                            <div class="pull-right">
+                                <a class="btn btn-default"
+                                   href="{% url 'fpcy_stat' %}?stat_day={{ last_time }}">前一日统计数据</a>
+                                <a class="btn btn-default"
+                                   href="https://www.baiwang.com/admin/cloudinterface/notice/list.html"
+                                   target="_blank">日常公告</a>
                             </div>
                         </form>
-                        <form class="form-inline row" name="searchBar">
-                            <div class="col-sm-3 form-group">
-                                <label class="control-label"><span>选择统计日期：</span></label>
+                        <form class="form-inline">
+                            <div class="form-group">
+                                <label class="control-label label-width"><span>选择统计日期：</span></label>
                                 <div class="input-group date form_stat_time">
                                     <input type="text" class="form-control" id="id_stat_time" value="{{ stat_day }}"
                                            readonly>
-                                    <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                                        <span class="input-group-addon"><i
+                                                class="glyphicon glyphicon-calendar"></i></span>
                                 </div>
                             </div>
-                            <div class="col-sm-3 form-group">
+                            <div class="form-group">
                                 <input type="button" class="btn btn-default" id="stat_day_query" value="查询">
                             </div>
                         </form>
-
                     </div>
-
                     <div class="margin-top-1" id="table">
                         <table width="100%" class="table table-striped table-bordered table-hover" name="editable"
                                id="dataTables-sql">

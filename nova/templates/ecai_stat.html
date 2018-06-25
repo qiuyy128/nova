@@ -26,40 +26,36 @@
             <div class="col-xs-6 col-sm-8 col-md-12">
                 <div class="col-md-offset-1 ">
                     <div class="console-instance-head clearfix">
-                        <div class="pull-left">
-                            <h3><span><a href="{% url 'ecai_stat' %}">易财统计分析表</a></span></h3>
-                        </div>
+                            <h5>易财统计分析表</h5>
                     </div>
-
                     <div class="margin-top-1">
-                        <form class="form-inline row" name="searchBar">
+                        <form class="form-inline">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label label-width" style="width: 120px">
+                                <label class="control-label label-width">
                                     <span class="text-danger">*</span>统计时间起：
                                 </label>
-                                <div class="col-sm-3 input-group date form_begin_time">
-                                    <input type="text" class="form-control" id="id_begin_time" style="width: 200px"
+                                <div class="input-group date form_begin_time">
+                                    <input type="text" class="form-control" id="id_begin_time"
                                            value="{{ begin_time }}" readonly/>
                                     <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i> </span>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label label-width" style="width: 120px">
+                                <label class="control-label label-width">
                                     <span class="text-danger">*</span>统计时间止：
                                 </label>
-                                <div class="col-sm-3 input-group date form_end_time">
-                                    <input type="text" class="form-control" id="id_end_time" style="width: 200px"
+                                <div class="input-group date form_end_time">
+                                    <input type="text" class="form-control" id="id_end_time"
                                            value="{{ end_time }}" readonly/>
                                     <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                                 </div>
                             </div>
                         </form>
-                        <form class="form-inline row" name="searchBar">
-                            <div class="col-sm-4 form-group">
+                        <form class="form-inline">
+                            <div class="form-group">
                                 <input type="button" class="btn btn-default" id="stat_day_query" value="查询">
                             </div>
                         </form>
-
                     </div>
 
                     <div class="margin-top-1" id="table">

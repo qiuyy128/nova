@@ -357,7 +357,8 @@ def app_deploy(request):
             app_asset = app_asset[:-1]
             logger.info(u"开始部署:" + app_name + " on %s:%s" % (app_asset, deploy_path))
             from .tasks import do_deploy_app
-            result = do_deploy_app.delay(app_name, app_env, tomcat_version, jdk_version, app_port, deploy_path, svn_url, app_assets)
+            result = do_deploy_app.delay(app_name, app_env, tomcat_version, jdk_version, app_port, deploy_path, svn_url,
+                                         app_assets)
             logger.info('Task:%s' % result)
             logger.info('Task Status:%s' % result.status)
             task_name = u'部署%s:' % app_env + app_name
@@ -716,10 +717,13 @@ def upload_file(request):
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             f = request.FILES['file']
+            id_number = request.POST.get('title')
             file_name = request.POST.get('title') + '.' + f.name.split('.')[-1]
-            app = request.POST.get('app')
+            app_name = request.POST.get('app_name')
             env = request.POST.get('env')
             fjlx = request.POST.get('fjlx')
+            ksnd = request.POST.get('ksnd')
+            operation = request.POST.get('operation')
             upload_path = os.path.join(base_path, 'upload')
             # 修改文件名
             file_path = os.path.join(upload_path, file_name)
@@ -727,10 +731,75 @@ def upload_file(request):
                 for chunk in f.chunks():
                     destination.write(chunk)
                 destination.close()
-            UploadFile.objects.create(file_name=file_name, file_type=fjlx, file_path=file_path, env=env, app_name=app,
-                                      upload_time=timezone.now(), result='待上传至OSS')
-            data = {'msg': '上传成功！'}
-            return render(request, 'message.html', data)
+            if operation == 'insert':
+                if User.has_perm(request.user, 'nova.upload_oss_file'):
+                    try:
+                        db_info = Database.objects.get(db_name=app_name, env=env)
+                    except Database.DoesNotExist:
+                        data = {'rtn': '94', 'msg': u'未找到该数据库配置！'}
+                        return HttpResponse(json.dumps(data))
+                    # 连接数据库
+                    try:
+                        if db_info.type == 'mysql':
+                            conn = Mysql(host=db_info.ip, port=int(db_info.port), db=db_info.db_name,
+                                         user=db_info.username,
+                                         password=db_info.password, charset="utf8")
+                    except Exception as e:
+                        data = {'rtn': '95', 'msg': '连接数据库错误:' + str(e)}
+                        return HttpResponse(json.dumps(data))
+                    logger.info('upload file:%s' % file_name)
+                    try:
+                        accessKey = OssBucketApp.objects.get(name=app_name, env=env).accesskey_set.get()
+                        auth = oss2.Auth(accessKey.accessKeyID, _dec_(data=accessKey.accessKeySecret))
+                        logger.info(u'认证成功.')
+                        endpoint = ENDPOINT
+                    except Exception as e:
+                        logger.info(e)
+                        data = {'rtn': '96', 'msg': '上传失败，OSS认证失败:' + str(e)}
+                        return HttpResponse(json.dumps(data))
+                    # 判断使用cname访问
+                    if len(accessKey.cname) > 1:
+                        bucket = oss2.Bucket(auth, accessKey.cname, accessKey.ossBucketName, is_cname=True)
+                    else:
+                        bucket = oss2.Bucket(auth, endpoint, accessKey.ossBucketName)
+                    try:
+                        # 上传object文件
+                        local_path = file_path
+                        if fjlx == '1':
+                            key = 'KSBM/XGKS/FJ-' + file_name
+                        elif fjlx == '2':
+                            key = 'KSBM/XGKS/TX-' + file_name
+                        elif fjlx == '3':
+                            key = 'KSBM/XGKS/MSFJ-' + file_name
+                        with open(local_path, 'rb') as file_obj:
+                            bucket.put_object(key, file_obj)
+                        signature_url = bucket.sign_url('GET', key, 60 * 60 * 24 * 365 * 500)  # 获取object签名
+                        signature_url = signature_url.replace('%2F', '/').replace('%28', '(').replace('%29', ')')
+                        msg = u"上传成功，签名URL为：%s" % signature_url
+                        logger.info(msg)
+                        try:
+                            UploadFile.objects.create(file_name=file_name, file_type=fjlx, file_path=signature_url,
+                                                      env=env,
+                                                      app_name=app_name, upload_time=timezone.now(), result='上传成功')
+                        except Exception as e:
+                            logger.info(e)
+                        data = {'rtn': "00", 'msg': msg}
+                        return HttpResponse(json.dumps(data))
+                    except Exception as e:
+                        logger.info(e)
+                        data = {'rtn': "97", 'msg': "上传失败:" + str(e)}
+                        return HttpResponse(json.dumps(data))
+                else:
+                    data = {'rtn': "98", 'msg': "没有权限，请联系管理员！"}
+                    return HttpResponse(json.dumps(data))
+            else:
+                UploadFile.objects.create(file_name=file_name, file_type=fjlx, file_path=file_path, env=env,
+                                          app_name=app_name,
+                                          upload_time=timezone.now(), result='待上传至OSS')
+                data = {'rtn': '00', 'msg': u'上传成功，请联系管理员至文件上传列表页进行处理！'}
+        else:
+            data = {'rtn': '99', 'msg': u'附件上传输入无效！'}
+        return HttpResponse(json.dumps(data))
     else:
         form = UploadFileForm()
     return render(request, 'upload.html', {'form': form})

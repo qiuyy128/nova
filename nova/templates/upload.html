@@ -5,70 +5,192 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-xs-6 col-sm-8 col-md-12">
-                <div class="col-md-offset-1 console-instance-head clearfix">
-                    <div class="pull-left">
-                        <h3><span>考试报名附件上传</span></h3>
+                <div class="col-md-offset-1 ">
+                    <div class="console-title clearfix">
+                        <h5>附件上传</h5>
                     </div>
-                </div>
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a data-toggle="tab" href="#update_ksbm_file">考试报名附件修改</a></li>
+                        <li><a data-toggle="tab" href="#hk_candidate ">香港考生附件附件新增</a></li>
+                    </ul>
 
-                <div class="col-md-offset-1 margin-top-1" id=toolbar>
-                    <form class="form-horizontal" method="post" action="" enctype="multipart/form-data">
-                        {% csrf_token %}
 
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">系统名称：</label>
-                            <div class="col-sm-4 row">
-                                <select class="form-control" id="id_app" name="app" required onchange="change_env()">
-                                    <option value="" selected="selected">请选择</option>
-                                    <option value="ksbm">考试报名</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">部署环境：</label>
-                            <div class="col-sm-4 row">
-                                <select class="form-control" id="id_env" name="env" required onchange="change_env()">
-                                    <option value="" selected="selected">请选择</option>
-                                    <option value="test">test</option>
-                                    <option value="staging">staging</option>
-                                    <option value="product">product</option>
-                                </select>
-                            </div>
-                        </div>
+                    <div class="margin-top-1" id=toolbar>
+                        <form id="id_form" class="form-horizontal" method="post" action=""
+                              enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <fieldset>
+                                <div class="form-group">
+                                    <div class="tab-content">
+                                        <div class="tab-pane active" id="update_ksbm_file">
+                                            <label class="col-sm-4 control-label" style="color: red"><strong>修改考试报名已有的附件(请上传JPG/pdf格式附件)！</strong></label>
+                                            <div class="col-sm-4 row">
+                                                <input class="form-control" id="id_operation" maxlength="50"
+                                                       name="operation"
+                                                       type="text" value="update" style="display: none"/>
+                                            </div>
+                                        </div>
+                                        <div class="tab-pane" id="hk_candidate">
+                                            <label class="col-sm-4 control-label"
+                                                   style="color: red">香港考生首次上传附件(请上传JPG/pdf格式附件)！</label>
+                                            <div class="col-sm-4 row">
+                                                <input class="form-control" id="id_operation" maxlength="50"
+                                                       name="operation"
+                                                       type="text" value="insert" style="display: none"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">系统名称：</label>
+                                    <div class="col-sm-4 row">
+                                        <select class="form-control" id="id_app_name" name="app_name" required
+                                                onchange="change_env()">
+                                            <option value="" selected="selected">请选择</option>
+                                            <option value="ksbm">考试报名</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">部署环境：</label>
+                                    <div class="col-sm-4 row">
+                                        <select class="form-control" id="id_env" name="env" required
+                                                onchange="change_env()">
+                                            <option value="" selected="selected">请选择</option>
+                                            <option value="test">test</option>
+                                            <option value="staging">staging</option>
+                                            <option value="product">product</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">考试年度：</label>
+                                    <div class="col-sm-4 row">
+                                        <input class="form-control" id="id_ksnd" maxlength="50" name="ksnd"
+                                               type="text"
+                                               placeholder="请输入考试年度，如2018年输入18" required/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">附件类型：</label>
+                                    <div class="col-sm-4 row">
+                                        <select class="form-control" id="id_fjlx" name="fjlx" required>
+                                            <option value="" selected="selected">请选择</option>
+                                            <option value="1">毕业证</option>
+                                            <option value="2">头像</option>
+                                            <option value="3">免试附件</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label"><span id="id_label_title">证件号码：</span></label>
+                                    <div class="col-sm-4 row">
+                                        <input class="form-control" id="id_title" maxlength="50" name="title"
+                                               type="text"
+                                               placeholder="请输入证件号码" required/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">上传附件：</label>
+                                    <div class="col-sm-4 row">
+                                        <input id="id_file" name="file" type="file" required/>
+                                    </div>
+                                </div>
+                            </fieldset>
 
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">附件类型：</label>
-                            <div class="col-sm-4 row">
-                                <select class="form-control" id="id_fjlx" name="fjlx" required>
-                                    <option value="" selected="selected">请选择</option>
-                                    <option value="1">毕业证</option>
-                                    <option value="2">头像</option>
-                                </select>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label"></label>
+                                <div class="col-sm-4 row ">
+                                    <button type="button" class="upload_ksbm_file btn btn-primary">保存
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">证件号码：</label>
-                            <div class="col-sm-4 row">
-                                <input class="form-control" id="id_title" maxlength="50" name="title" type="text"
-                                       placeholder="请输入证件号码" required/>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">上传附件：</label>
-                            <div class="col-sm-4 row">
-                                <input id="id_file" name="file" type="file" required/>
-                            </div>
-                        </div>
-                    </form>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label"></label>
-                        <div class="col-sm-4 row ">
-                            <input type="submit" class="btn btn-primary" value="保存">
-                            </input>
-                        </div>
+                        </form>
+                        {#                        <div class="form-group">#}
+                        {#                            <label class="col-sm-2 control-label"></label>#}
+                        {#                            <div class="col-sm-4 row ">#}
+                        {#                                <input type="submit" class="btn btn-primary" value="保存">#}
+                        {#                                </input>#}
+                        {#                            </div>#}
+                        {#                        </div>#}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        $(function () {
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                // 获取已激活的标签页的名称
+                var activeTab = $(e.target).text();
+                // 获取前一个激活的标签页的名称
+                var previousTab = $(e.relatedTarget).text();
+                if (activeTab == '香港考生附件附件新增') {
+                    $('#id_label_title').text('上传后的文件名前缀');
+                    $('#id_title').attr('placeholder', '请输入上传后的文件名前缀；如文件名为1234.jpg输入1234');
+                }
+                if (activeTab == '考试报名附件修改') {
+                    $('#id_label_title').text('证件号码');
+                    $('#id_title').attr('placeholder', '请输入证件号码');
+                }
+            });
+        });
+        $(document).ready(function () {
+            $('.upload_ksbm_file').click(function () {
+                var formData = new FormData(document.getElementById('id_form'));
+                layer.confirm('是否确定上传?', {
+                    icon: 3,
+                    btn: ['确定', '取消'],
+                    area: ['420px', '240px']
+                }, function () {
+                    $.ajax({
+                        url: "{% url 'upload' %}",
+                        type: "POST",
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        success: function (data) {
+                            if (typeof data == 'string') {
+                                data = JSON.parse(data);
+                            }
+                            console.log(data);
+                            if (data['rtn'] == '00') {
+                                layer.alert(data['msg'], {
+                                    icon: 1,
+                                    skin: 'layui-layer-molv',
+                                    closeBtn: 0,
+                                    end: function () {
+                                        parent.location.reload();
+                                    }
+                                });
+                            }
+                            else {
+                                layer.alert(data['msg'], {
+                                    icon: 7,
+                                    skin: 'layui-layer-molv',
+                                    closeBtn: 0,
+                                    end: function () {
+                                        parent.location.reload();
+                                    }
+                                });
+                            }
+                        },
+                        error: function (data) {
+                            layer.alert(data['msg'], {
+                                icon: 2,
+                                skin: 'layui-layer-molv',
+                                closeBtn: 0,
+                                end: function () {
+                                    parent.location.reload();
+                                }
+                            });
+                        }
+                    });
+                });
+            })
+        })
+    </script>
 {% endblock %}

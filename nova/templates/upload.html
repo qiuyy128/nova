@@ -11,7 +11,7 @@
                     </div>
                     <ul class="nav nav-tabs">
                         <li class="active"><a data-toggle="tab" href="#update_ksbm_file">考试报名附件修改</a></li>
-                        <li><a data-toggle="tab" href="#hk_candidate ">香港考生附件附件新增</a></li>
+                        <li><a data-toggle="tab" href="#hk_candidate ">香港考生附件新增</a></li>
                     </ul>
 
 
@@ -128,7 +128,7 @@
                 var activeTab = $(e.target).text();
                 // 获取前一个激活的标签页的名称
                 var previousTab = $(e.relatedTarget).text();
-                if (activeTab == '香港考生附件附件新增') {
+                if (activeTab == '香港考生附件新增') {
                     $('#id_label_title').text('上传后的文件名前缀');
                     $('#id_title').attr('placeholder', '请输入上传后的文件名前缀；如文件名为1234.jpg输入1234');
                 }

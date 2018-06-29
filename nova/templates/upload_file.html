@@ -30,10 +30,12 @@
                                 <td>{{ upload_file.id }}</td>
                                 <td>{{ upload_file.file_name }}</td>
                                 <td>
-                                    {% if upload_file.file_type == 1 %}
+                                    {% if upload_file.file_type == '1' %}
                                         毕业照
-                                    {% else %}
+                                    {% elif upload_file.file_type == '2' %}
                                         头像
+                                    {% else %}
+                                        免试附件
                                     {% endif %}
                                 </td>
                                 <td>{{ upload_file.file_path }}</td>

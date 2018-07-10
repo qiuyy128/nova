@@ -33,7 +33,13 @@
                                 <td>{{ task.status }}</td>
                                 <td>{{ task.start_time|date:"Y-m-d H:i:s" }}</td>
                                 <td>{{ task.end_time|date:"Y-m-d H:i:s" }}</td>
-                                <td>{{ task.result }}</td>
+                                {% if '成功' not in task.result %}
+                                    <td name="task_name"><a
+                                            href="{% url 'view' %}?task_name={{ task.name }}">{{ task.result }}</a></td>
+                                {% else %}
+                                    <td>{{ task.result }}</td>
+                                {% endif %}
+
                                 <td>{{ task.execute_user }}</td>
                             </tr>
                         {% endfor %}

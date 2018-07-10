@@ -2399,6 +2399,7 @@ def read_file(file_path):
 @permission_required('nova.access_monitor', raise_exception=True)
 def view(request):
     res = request.GET
+    logger.info(res)
     if 'task_id' in res:
         task_id = request.GET['task_id']
         file_path = os.path.join(base_path, 'logs', 'task_log', task_id)
@@ -2408,6 +2409,20 @@ def view(request):
             task_logs = read_file(file_path)
             file_size = os.path.getsize(file_path)
             return render(request, 'view.html', locals())
+        except Exception as e:
+            logger.info(e)
+            data = {'msg': str(e)}
+            return render(request, 'message.html', data)
+    elif 'task_name' in res:
+        task_name = request.GET['task_name']
+        logger.info(task_name)
+        env = task_name.split(':')[0][2:]
+        app_name = task_name.split(':')[-1].split('tomcat-')[-1]
+        file_path = os.path.join(base_path, 'svn', env, app_name, 'build.log')
+        try:
+            task_logs = read_file(file_path)
+            file_size = os.path.getsize(file_path)
+            return render(request, 'build_log.html', locals())
         except Exception as e:
             logger.info(e)
             data = {'msg': str(e)}

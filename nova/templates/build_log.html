@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}BuildFile{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-6 col-sm-8 col-md-12">
+                <div class="col-md-offset-1 console-instance-head clearfix">
+                    <div class="pull-left">
+                        <h3>
+                            <span>Build file—</span>
+                            <span>{{ env }}:</span>
+                            <span>{{ app_name }}</span>
+                        </h3>
+                    </div>
+                </div>
+                <div class="col-md-offset-1 margin-top-1" id=toolbar>
+                    <span id="id_log_file" style="display: none">{{ file_path }}</span>
+                    <span id="id_file_size" style="display: none">{{ file_size }}</span>
+                    <pre style="width: 100%;" id='log'>{% for line in task_logs %}{{ line }}{% endfor %}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        var seek = Number($("#id_file_size").text());
+        var log_file = $("#id_log_file").text();
+        console.log(seek);
+        function errmsg() {
+            alert("请联系管理员！");
+        }
+        window.scrollTo(0, document.body.scrollHeight);
+        $(function () {
+            $.ajax({
+                url: "{% url 'get_new_line' %}",
+                type: 'POST',
+                data: JSON.stringify({
+                    file: log_file,
+                    seek: seek
+                }),
+                success: function (data) {
+                    seek = data['seek'];
+                    var list = data['lines'];
+                    if (list.length != 0) {
+                        var div = document.getElementById('log');
+                        for (var i = 0; i < list.length; i++) {
+                            var line = list[i];
+                            $("#log").append(line);
+                            div.scrollTop = div.scrollHeight;
+                            window.scrollTo(0, document.body.scrollHeight);
+                        }
+                    }
+                },
+                error: function () {
+                    errmsg();
+                    return false;
+                },
+                dataType: "json",
+                contentType: "application/json"
+            });
+        });
+    </script>
+{% endblock %}

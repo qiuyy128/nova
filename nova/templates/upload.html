@@ -26,8 +26,7 @@
                                             <label class="col-sm-4 control-label" style="color: red"><strong>修改考试报名已有的附件(请上传JPG/pdf格式附件)！</strong></label>
                                             <div class="col-sm-4 row">
                                                 <input class="form-control" id="id_operation" maxlength="50"
-                                                       name="operation"
-                                                       type="text" value="update" style="display: none"/>
+                                                       name="operation" type="text" style="display: none"/>
                                             </div>
                                         </div>
                                         <div class="tab-pane" id="hk_candidate">
@@ -35,8 +34,7 @@
                                                    style="color: red">香港考生首次上传附件(请上传JPG/pdf格式附件)！</label>
                                             <div class="col-sm-4 row">
                                                 <input class="form-control" id="id_operation" maxlength="50"
-                                                       name="operation"
-                                                       type="text" value="insert" style="display: none"/>
+                                                       name="operation" type="text" style="display: none"/>
                                             </div>
                                         </div>
                                     </div>
@@ -45,7 +43,7 @@
                                     <label class="col-sm-2 control-label">系统名称：</label>
                                     <div class="col-sm-4 row">
                                         <select class="form-control" id="id_app_name" name="app_name" required
-                                                onchange="change_env()">
+                                                onchange="change_app()">
                                             <option value="" selected="selected">请选择</option>
                                             <option value="ksbm">考试报名</option>
                                         </select>
@@ -131,10 +129,12 @@
                 if (activeTab == '香港考生附件新增') {
                     $('#id_label_title').text('上传后的文件名前缀');
                     $('#id_title').attr('placeholder', '请输入上传后的文件名前缀；如文件名为1234.jpg输入1234');
+                    $('#id_operation').val('insert');
                 }
                 if (activeTab == '考试报名附件修改') {
                     $('#id_label_title').text('证件号码');
                     $('#id_title').attr('placeholder', '请输入证件号码');
+                    $('#id_operation').val('update');
                 }
             });
         });

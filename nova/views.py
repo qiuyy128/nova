@@ -2521,7 +2521,7 @@ def ecai_stat(request):
             data_sql_ecai_zttj = add_total_sum(cur_list, with_sum='Y', row_num=cur_rows)
 
             # 易财账套活跃度统计
-            args = (begin_time, end_time, begin_time, end_time, begin_time, end_time, end_time)
+            args = (begin_time, end_time, begin_time, end_time, begin_time, end_time, begin_time, end_time, end_time)
             cur_list, cur_desc, cur_rows, dict_list = conn_ecai.exec_select(ecai_stat_sql.sql_ecai_hyzt, args)
             logger.info(u'查询%d条记录！' % cur_rows)
             data_sql_ecai_hyzt = add_total_sum(cur_list, with_sum='Y', row_num=cur_rows)

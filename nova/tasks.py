@@ -86,13 +86,23 @@ def edit_ant_build_conf(file_name, app_name):
     if not os.path.exists(file_name):
         print file_name, 'does not exists'
         exit(1)
+    app_base_name = 'tomcat-' + os.path.basename(app_name)
+    app_env_name = os.path.basename(os.path.dirname(app_name))
+    svn_url = App.objects.get(name=app_base_name, env=app_env_name).svn_url
+    svn_url_list = re.split('\n|;', svn_url)
+    for i in svn_url_list:
+        i = i.strip()
+    jar_names_list = []
+    for i in svn_url_list:
+        jar_names_list.append(i.split('/')[-1])
     with open(file_name) as f:
         lines = f.readlines()
         biz_strings = ""
         adp_strings = ""
         frame_strings = ""
         add_jar_strings = ""
-        jar_names = sorted(os.listdir(app_name))
+        # jar_names = sorted(os.listdir(app_name))
+        jar_names = jar_names_list
         # 打包qxgl时'adp-security'需要放在'adp-sms'后面
         if 'adp-security' in jar_names:
             jar_names.remove('adp-security')
@@ -1364,7 +1374,7 @@ def save_col_to_mongodb(data, data_time, collection, with_sum='N'):
                 for (key, value) in record.items():
                     try:
                         # if value != '' and value is not None and str(value).find('%') == -1:
-                        if value != '' and value is not None and type(value) != str and type(value)!= unicode:
+                        if value != '' and value is not None and type(value) != str and type(value) != unicode:
                             total_dict[key] += value
                         if str(value).find('%') != -1:
                             total_dict[key] = '-'

@@ -1263,8 +1263,13 @@ def sql_exec(request):
                     elif len(re.findall(r'[ |\n|\r\n]?(?i)delete[ |\n|\r\n]+', sql_command, re.S)) > 0:
                         if sql_command != '' and sql_command != '\n' and sql_command != '\r\n':
                             try:
-                                sql_select = re.sub(r'[ |\n|\r\n]?(?i)(delete)[ |\n|\r\n]+', 'SELECT * ', sql_command,
-                                                    flags=re.S)
+                                if '*' in re.search(r'(?i)delete(.+?)from', sql_command, re.S).group(0):
+                                    sql_select = re.sub(
+                                        r'[ |\n|\r\n]*?(?i)(delete)[ |\n|\r\n]+(.*?)(?i)from[ |\n|\r\n]+(.+?)',
+                                        'SELECT \g<2> FROM \g<3>', sql_command, flags=re.S)
+                                else:
+                                    sql_select = re.sub(r'[ |\n|\r\n]?(?i)(delete)[ |\n|\r\n]+', 'SELECT * ',
+                                                        sql_command, flags=re.S)
                                 logger.info('sql_select of delete is:%s' % sql_select)
                                 del_tab_name = re.match(
                                     r'(.+?)[ |\n|\r\n]+(?i)from[ |\n|\r\n]+(.+?)[ |\n|\r\n]+(?i)where[ |\n|\r\n]+',

@@ -90,10 +90,9 @@ def edit_ant_build_conf(file_name, app_name):
     app_env_name = os.path.basename(os.path.dirname(app_name))
     svn_url = App.objects.get(name=app_base_name, env=app_env_name).svn_url
     svn_url_list = re.split('\n|;', svn_url)
-    for i in svn_url_list:
-        i = i.strip()
     jar_names_list = []
     for i in svn_url_list:
+        i = i.strip()
         jar_names_list.append(i.split('/')[-1])
     with open(file_name) as f:
         lines = f.readlines()

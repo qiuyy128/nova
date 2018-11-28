@@ -82,13 +82,14 @@ def create_path(path):
         os.makedirs('%s' % path)
 
 
-def edit_ant_build_conf(file_name, app_name):
+def edit_ant_build_conf(file_name, app_name, svn_url=''):
     if not os.path.exists(file_name):
         print file_name, 'does not exists'
         exit(1)
-    app_base_name = 'tomcat-' + os.path.basename(app_name)
-    app_env_name = os.path.basename(os.path.dirname(app_name))
-    svn_url = App.objects.get(name=app_base_name, env=app_env_name).svn_url
+    # app_base_name = 'tomcat-' + os.path.basename(app_name)
+    # app_env_name = os.path.basename(os.path.dirname(app_name))
+    # svn_url = App.objects.get(name=app_base_name, env=app_env_name).svn_url
+    # 重新改为传入svn_url，因未部署时App表中没有数据
     svn_url_list = re.split('\n|;', svn_url)
     jar_names_list = []
     for i in svn_url_list:
@@ -457,7 +458,7 @@ def checkout(app_name, app_env, svn_url, log_file=''):
         source_xml = os.path.join(svn_checkout_paths, 'build.xml.orig')
         target_xml = os.path.join(app_checkout_path, build_app_xml)
         shutil.copy2('%s' % source_xml, '%s' % target_xml)
-        edit_ant_build_conf(target_xml, app_checkout_path)
+        edit_ant_build_conf(target_xml, app_checkout_path, svn_url)
         # 判断需要使用的jdk版本
         jdk_version = ''
         try:
@@ -928,7 +929,7 @@ def do_update_app(app_name, app_env):
         source_xml = os.path.join(svn_checkout_paths, 'build.xml.orig')
         target_xml = os.path.join(app_checkout_path, build_app_xml)
         shutil.copy2('%s' % source_xml, '%s' % target_xml)
-        edit_ant_build_conf(target_xml, app_checkout_path)
+        edit_ant_build_conf(target_xml, app_checkout_path, svn_url)
         # 判断需要使用的jdk版本
         jdk_version = ''
         try:

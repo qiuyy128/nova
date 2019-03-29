@@ -38,7 +38,9 @@ urlpatterns = [
     url(r'^app/update/$', views.update_app, name='update_app'),
     url(r'^app/config_file/$', views.config_file, name='config_file'),
     url(r'^app/config_file/add/$', views.config_file_add, name='config_file_add'),
-    url(r'^app/config_file/(?P<app_name>[\w\-]+)/(?P<env>[\w]+)/(?P<file_path>.+)/(?P<file_name>.+)/editor/$',
+    # url(r'^app/config_file/(?P<app_name>[\w\-]+)/(?P<env>[\w]+)/(?P<file_path>.+)/(?P<file_name>.+)/editor/$',
+    #     views.config_file_editor, name='config_file_editor'),
+    url(r'^app/config_file/editor/(?P<app_name>[\w\-]+)/(?P<env>[\w]+)/(?P<file_path>.+)/$',
         views.config_file_editor, name='config_file_editor'),
     url(r'^app/save_config_file/$', views.save_config_file, name='save_config_file'),
     url(r'^help/$', views.help, name='help'),
@@ -60,4 +62,5 @@ urlpatterns = [
     url(r'^sql_exec/$', views.sql_exec, name='sql_exec'),
     url(r'^shell/$', views.shell, name='shell'),
     url(r'^view/$', views.view, name='view'),
+    url(r'^ecctaaDeploy$', views.ecctaaDeploy, name='ecctaaDeploy'),
 ]

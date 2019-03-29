@@ -107,10 +107,10 @@ def edit_ant_build_conf(file_name, app_name, svn_url=''):
         if 'adp-security' in jar_names:
             jar_names.remove('adp-security')
             jar_names.append('adp-security')
-        # dzpt打包时adp-bill需要放在最前面
-        if 'adp-bill' in jar_names:
-            jar_names.remove('adp-bill')
-            jar_names.insert(0, 'adp-bill')
+        # # dzpt打包时adp-bill需要放在最前面
+        # if 'adp-bill' in jar_names:
+        #     jar_names.remove('adp-bill')
+        #     jar_names.insert(0, 'adp-bill')
         # 中税协因'adp-ws'引用了'adp-ywlc'，故'adp-ywlc'需要先打包
         if 'adp-ws' in jar_names and 'adp-ywlc' in jar_names:
             adp_wx_index = jar_names.index('adp-ws')
@@ -840,6 +840,23 @@ def do_update_app(app_name, app_env):
             svn_out = os.popen(svn_cmd).read()
             f.write(u'[localhost] out: %s' % svn_out)
             f.write(u'[localhost] out: 文件已经更新到 %s\n' % app_checkout_path)
+        # 替换配置文件 add on 2019-03-05
+        app_configs = AppConfig.objects.filter(name=app_name, env=app_env)
+        if app_configs:
+            app_config_files = {}
+            for app_config in app_configs:
+                files = app_config.files.split(',')
+                app_config_files[app_config.svn_url] = files
+            for key in app_config_files:
+                for filename in app_config_files[key]:
+                    if key[0] == '/':
+                        file_path = key[1:]
+                    config_file = os.path.join(config_files_path, app_env, app_name, file_path, filename)
+                    target_config_file = os.path.join(app_checkout_path, file_path, filename)
+                    shutil.copy2('%s' % config_file, '%s' % target_config_file)
+                    with open(log_file, 'a') as f:
+                        f.write(u"[localhost] out: copy %s to %s.\n" % (config_file, target_config_file))
+        # 替换配置文件 add on 2019-03-05
         cmd = 'cd %s;tar -zcf %s %s' % (svn_checkout_path, app_name_compress, app_name)
         out = os.popen(cmd).read()
         print out
@@ -866,12 +883,20 @@ def do_update_app(app_name, app_env):
                 app_name, app_name, app_source_path, release_cmd)
         else:
             release_cmd = "fis3 release production -c"
-            cmd2 = """cd %s;rm -rf %s.bak;mv %s %s.bak;tar -zxf %s;rm -f %s;
-                rm -f %s/fdp-config-local.js %s/fis-conf.js;
-                cp -p %s.bak/fdp-config-local.js %s/;cp -p %s.bak/fis-conf.js %s/;
-                cd %s;%s;""" % (
-                deploy_path, app_name, app_name, app_name, app_name_compress, app_name_compress, app_name, app_name,
-                app_name, app_name, app_name, app_name, app_source_path, release_cmd)
+            # 有特殊配置文件使用其 add on 2019-03-05
+            app_configs = AppConfig.objects.filter(name=app_name, env=app_env)
+            if app_configs:
+                cmd2 = """cd %s;rm -rf %s.bak;mv %s %s.bak;tar -zxf %s;rm -f %s;cd %s;%s;""" % (
+                    deploy_path, app_name, app_name, app_name, app_name_compress, app_name_compress, app_source_path,
+                    release_cmd)
+            else:
+                # 有特殊配置文件使用其 add on 2019-03-05
+                cmd2 = """cd %s;rm -rf %s.bak;mv %s %s.bak;tar -zxf %s;rm -f %s;
+                    rm -f %s/fdp-config-local.js %s/fis-conf.js;
+                    cp -p %s.bak/fdp-config-local.js %s/;cp -p %s.bak/fis-conf.js %s/;
+                    cd %s;%s;""" % (
+                    deploy_path, app_name, app_name, app_name, app_name_compress, app_name_compress, app_name, app_name,
+                    app_name, app_name, app_name, app_name, app_source_path, release_cmd)
         out, error = RunCmd(host=app_source_asset.ip, port=app_source_asset.port, username=app_source_asset.username,
                             password=app_source_asset.password).run_command(cmd2, log_file)
         outs = outs + out
@@ -911,18 +936,18 @@ def do_update_app(app_name, app_env):
 
         # 替换配置文件
         app_configs = AppConfig.objects.filter(name=app_name, env=app_env)
-        app_config_files = {}
-        for app_config in app_configs:
-            files = app_config.files.split(',')
-            app_config_files[app_config.svn_url] = files
-        # print app_name, 'config_files:', app_config_files
-        for key in app_config_files:
-            for file in app_config_files[key]:
-                config_file = os.path.join(config_files_path, app_env, app_name.split('tomcat-')[1], key, file)
-                target_config_file = os.path.join(app_checkout_path, key, file)
-                shutil.copy2('%s' % config_file, '%s' % target_config_file)
-                with open(log_file, 'a') as f:
-                    f.write(u"[localhost] out: copy %s to %s.\n" % (config_file, target_config_file))
+        if app_configs:
+            app_config_files = {}
+            for app_config in app_configs:
+                files = app_config.files.split(',')
+                app_config_files[app_config.svn_url] = files
+            for key in app_config_files:
+                for filename in app_config_files[key]:
+                    config_file = os.path.join(config_files_path, app_env, app_name.split('tomcat-')[1], key, filename)
+                    target_config_file = os.path.join(app_checkout_path, key, filename)
+                    shutil.copy2('%s' % config_file, '%s' % target_config_file)
+                    with open(log_file, 'a') as f:
+                        f.write(u"[localhost] out: copy %s to %s.\n" % (config_file, target_config_file))
         # 替换配置文件
         # ant打包
         build_app_xml = 'build_%s.xml' % app_name.split('tomcat-')[1]

@@ -14,7 +14,8 @@
                     <form class="form-inline">
                         {#                <div class="pull-left">#}
                         <div class="form-group">
-                            <a href="{% url 'config_file_add' %}?app_name={{ app_name }}&env={{ env }}" class="btn btn-default btn-warning">新增配置文件</a>
+                            <a href="{% url 'config_file_add' %}?app_name={{ app_name }}&env={{ env }}"
+                               class="btn btn-default btn-warning">新增配置文件</a>
                             {#                    </div>#}
                         </div>
                     </form>
@@ -32,21 +33,19 @@
                         <tbody>
                         {% for app_config in app_config_list %}
                             <tr>
-                                {% for file in app_config.files %}
-                                    <td>
-                                        {{ app_config.name }}
-                                    </td>
-                                    <td>
-                                        {{ app_config.svn_url }}
-                                    </td>
-                                    <td>
-                                        <a href="{% url 'config_file_editor' app_name=app_config.name env=app_config.env file_path=app_config.svn_url file_name=file %}">{{ file }}</a>
-                                    </td>
-                                    <td>
-                                        {{ app_config.env }}
-                                    </td>
-                                    </tr>
-                                {% endfor %}
+                                <td>
+                                    {{ app_config.name }}
+                                </td>
+                                <td>
+                                    {{ app_config.file_path }}
+                                </td>
+                                <td>
+                                    <a href="{% url 'config_file_editor' app_name=app_config.name env=app_config.env file_path=app_config.file_path %}">{{ app_config.file }}</a>
+                                </td>
+                                <td>
+                                    {{ app_config.env }}
+                                </td>
+                            </tr>
                         {% endfor %}
                         </tbody>
                     </table>

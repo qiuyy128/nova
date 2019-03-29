@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% block title %}信息服务平台版本发布{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-6 col-sm-8 col-md-12">
+                <div class="col-md-offset-1 console-instance-head clearfix">
+                    <div class="pull-left">
+                        <h3><span>中税协信息服务平台jar包发布</span></h3>
+                    </div>
+                </div>
+                <div class="col-md-offset-1 margin-top-1">
+                    <form action="{% url 'ecctaaDeploy' %}" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label><span>regular jars：</span></label>
+                        </div>
+                        <div>
+                            <input id="id_regular_select" name="id_regular_select" type="checkbox"
+                                   onclick="chk(this.checked)"
+                                   value="biz-hygl.jar">biz-hygl.jar
+                            <input id="id_regular_select" name="id_regular_select" type="checkbox"
+                                   onclick="chk(this.checked)"
+                                   value="biz-jzgl.jar">biz-jzgl.jar
+                            <input id="id_regular_select" name="id_regular_select" type="checkbox"
+                                   onclick="chk(this.checked)"
+                                   value="biz-mspx.jar">biz-mspx.jar
+                            <input id="id_regular_select" name="id_regular_select" type="checkbox"
+                                   onclick="chk(this.checked)"
+                                   value="biz-swsgl.jar">biz-swsgl.jar
+                            <input id="id_regular_select" name="id_regular_select" type="checkbox"
+                                   onclick="chk(this.checked)"
+                                   value="biz-hybb.jar">biz-hybb.jar
+                            <input id="id_regular_select" name="id_regular_select" type="checkbox"
+                                   onclick="chk(this.checked)"
+                                   value="biz-cxgl.jar">biz-cxgl.jar
+                            <input id="id_regular_select" name="id_regular_select" type="checkbox"
+                                   onclick="chk(this.checked)"
+                                   value="biz-pjgl.jar">biz-pjgl.jar
+                            <input id="id_regular_select" name="id_regular_select" type="checkbox"
+                                   onclick="chk(this.checked)"
+                                   value="biz-hzgy.jar">biz-hzgy.jar
+                            <input id="id_regular_select" name="id_regular_select" type="checkbox"
+                                   onclick="chk(this.checked)"
+                                   value="biz-djbb.jar">biz-djbb.jar
+                        </div>
+                        <div class="form-group">
+                            <label><span>special jars：</span></label>
+                        </div>
+                        <div>
+                            <input id="id_special_select" name="id_special_select" type="checkbox"
+                                   onclick="chk2(this.checked)"
+                                   value="adp-app.jar">adp-app.jar
+                            <input id="id_special_select" name="id_special_select" type="checkbox"
+                                   onclick="chk2(this.checked)"
+                                   value="adp-ieds.jar">adp-ieds.jar
+                            <input id="id_special_select" name="id_special_select" type="checkbox"
+                                   onclick="chk2(this.checked)"
+                                   value="adp-portal.jar">adp-portal.jar
+                            <input id="id_special_select" name="id_special_select" type="checkbox"
+                                   onclick="chk2(this.checked)"
+                                   value="adp-sms.jar">adp-sms.jar
+                            <input id="id_special_select" name="id_special_select" type="checkbox"
+                                   onclick="chk2(this.checked)"
+                                   value="adp-security.jar">adp-security.jar
+                            <input id="id_special_select" name="id_special_select" type="checkbox"
+                                   onclick="chk2(this.checked)"
+                                   value="adp-ws.jar">adp-ws.jar
+                            <input id="id_special_select" name="id_special_select" type="checkbox"
+                                   onclick="chk2(this.checked)"
+                                   value="adp-ywlc.jar">adp-ywlc.jar
+                        </div>
+                        <div class="form-group">
+                            <label><span>[jar_ecctaa]</span></label>
+                        </div>
+                        <div class="form-group">
+                            <label><span id="id_regular_patch">ecctaa_regular_patch =</span></label>
+                        </div>
+                        <div class="form-group">
+                            <label><span id="id_special_patch">ecctaa_special_patch =</span></label>
+                        </div>
+                        <label><span id="id_add_lib">ecctaa_add_lib =</span></label>
+                    </form>
+                    <input type="button" class="deploy_test btn btn-default" value="发布测试">
+                    </input>
+                    <input type="button" class="deploy_staging btn btn-default" value="发布上线验证">
+                    </input>
+                    <input type="button" class="deploy_product btn btn-default" value="发布生产">
+                    </input>
+                    <input type="button" class="deploy_user_test btn btn-default" value="发布用户测试">
+                    </input>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        function chk(c) {
+            var obj = document.getElementsByName('id_regular_select');
+            var regular_patch = 'ecctaa_regular_patch = ';
+            for (var i in obj) {
+                if (obj[i].checked) {
+                    regular_patch += obj[i].value + ',';
+                }
+            }
+            regular_patch = regular_patch.substr(0, regular_patch.length - 1);
+            $('#id_regular_patch').text(regular_patch);
+        }
+        function chk2(c) {
+            var obj = document.getElementsByName('id_special_select');
+            var special_patch = 'ecctaa_special_patch = ';
+            for (var i in obj) {
+                if (obj[i].checked) {
+                    special_patch += obj[i].value + ',';
+                }
+            }
+            special_patch = special_patch.substr(0, special_patch.length - 1);
+            $('#id_special_patch').text(special_patch);
+        }
+        $(document).ready(function () {
+            $('.deploy_test').click(function () {
+                var config_eccta_ini = "[jar_ecctaa]\n#ecctaa_regular_patch = biz-hygl.jar,biz-jzgl.jar,biz-mspx.jar,biz-swsgl.jar,biz-hybb.jar\n"
+                        + $('#id_regular_patch').text()
+                        + "\n#ecctaa_special_patch = adp-app.jar,adp-ieds.jar,adp-portal.jar,adp-sms.jar,adp-security.jar,adp-ws.jar,adp-ywlc.jar\n"
+                        + $('#id_special_patch').text()
+                        + "\necctaa_add_lib =\n\n[doc_info]\ncreate_time = " + new Date().toLocaleString();
+                layer.confirm('请确认是否已登陆Jenkins，如未登陆请取消，登陆Jenkins后再执行！', {
+                    icon: 3,
+                    btn: ['确定', '取消'],
+                    area: ['420px', '240px']
+                }, function () {
+                    $.ajax({
+                        type: "POST",
+                        url: "{% url 'ecctaaDeploy' %}",
+                        data: JSON.stringify({
+                            config_eccta_ini: config_eccta_ini
+                        }),
+                        success: function () {
+                            window.location.href = "http://10.126.3.11:8082/view/税协平台/job/税协平台-内部测试/";
+                        },
+                        error: function () {
+                            layer.alert('ERROR', {
+                                icon: 2,
+                                skin: 'layui-layer-molv',
+                                closeBtn: 0
+                            });
+                        },
+                        dataType: "json",
+                        contentType: "application/json"
+                    });
+                });
+            });
+            $('.deploy_staging').click(function () {
+                var config_eccta_ini = "[jar_ecctaa]\n#ecctaa_regular_patch = biz-hygl.jar,biz-jzgl.jar,biz-mspx.jar,biz-swsgl.jar,biz-hybb.jar\n"
+                        + $('#id_regular_patch').text()
+                        + "\n#ecctaa_special_patch = adp-app.jar,adp-ieds.jar,adp-portal.jar,adp-sms.jar,adp-security.jar,adp-ws.jar,adp-ywlc.jar\n"
+                        + $('#id_special_patch').text()
+                        + "\necctaa_add_lib =\n\n[doc_info]\ncreate_time = " + new Date().toLocaleString();
+                layer.confirm('请确认是否已登陆Jenkins，如未登陆请取消，登陆Jenkins后再执行！', {
+                    icon: 3,
+                    btn: ['确定', '取消'],
+                    area: ['420px', '240px']
+                }, function () {
+                    $.ajax({
+                        type: "POST",
+                        url: "{% url 'ecctaaDeploy' %}",
+                        data: JSON.stringify({
+                            config_eccta_ini: config_eccta_ini
+                        }),
+                        success: function () {
+                            window.location.href = "http://10.126.3.11:8082/view/税协平台/job/上线验证-税协平台/";
+                        },
+                        error: function () {
+                            layer.alert('ERROR', {
+                                icon: 2,
+                                skin: 'layui-layer-molv',
+                                closeBtn: 0
+                            });
+                        },
+                        dataType: "json",
+                        contentType: "application/json"
+                    });
+                });
+            });
+            $('.deploy_product').click(function () {
+                var config_eccta_ini = "[jar_ecctaa]\n#ecctaa_regular_patch = biz-hygl.jar,biz-jzgl.jar,biz-mspx.jar,biz-swsgl.jar,biz-hybb.jar\n"
+                        + $('#id_regular_patch').text()
+                        + "\n#ecctaa_special_patch = adp-app.jar,adp-ieds.jar,adp-portal.jar,adp-sms.jar,adp-security.jar,adp-ws.jar,adp-ywlc.jar\n"
+                        + $('#id_special_patch').text()
+                        + "\necctaa_add_lib =\n\n[doc_info]\ncreate_time = " + new Date().toLocaleString();
+                layer.confirm('请确认是否已登陆Jenkins，如未登陆请取消，登陆Jenkins后再执行！', {
+                    icon: 3,
+                    btn: ['确定', '取消'],
+                    area: ['420px', '240px']
+                }, function () {
+                    $.ajax({
+                        type: "POST",
+                        url: "{% url 'ecctaaDeploy' %}",
+                        data: JSON.stringify({
+                            config_eccta_ini: config_eccta_ini
+                        }),
+                        success: function () {
+                            window.location.href = "http://10.126.3.11:8082/view/税协平台/job/生产-税协平台/";
+                        },
+                        error: function () {
+                            layer.alert('ERROR', {
+                                icon: 2,
+                                skin: 'layui-layer-molv',
+                                closeBtn: 0
+                            });
+                        },
+                        dataType: "json",
+                        contentType: "application/json"
+                    });
+                });
+            });
+            $('.deploy_user_test').click(function () {
+                var config_eccta_ini = "[jar_ecctaa]\n#ecctaa_regular_patch = biz-hygl.jar,biz-jzgl.jar,biz-mspx.jar,biz-swsgl.jar,biz-hybb.jar\n"
+                        + $('#id_regular_patch').text()
+                        + "\n#ecctaa_special_patch = adp-app.jar,adp-ieds.jar,adp-portal.jar,adp-sms.jar,adp-security.jar,adp-ws.jar,adp-ywlc.jar\n"
+                        + $('#id_special_patch').text()
+                        + "\necctaa_add_lib =\n\n[doc_info]\ncreate_time = " + new Date().toLocaleString();
+                layer.confirm('请确认是否已登陆Jenkins，如未登陆请取消，登陆Jenkins后再执行！', {
+                    icon: 3,
+                    btn: ['确定', '取消'],
+                    area: ['420px', '240px']
+                }, function () {
+                    $.ajax({
+                        type: "POST",
+                        url: "{% url 'ecctaaDeploy' %}",
+                        data: JSON.stringify({
+                            config_eccta_ini: config_eccta_ini
+                        }),
+                        success: function () {
+                            window.location.href = "http://10.126.3.11:8082/view/税协平台/job/税协平台-用户测试/";
+                        },
+                        error: function () {
+                            layer.alert('ERROR', {
+                                icon: 2,
+                                skin: 'layui-layer-molv',
+                                closeBtn: 0
+                            });
+                        },
+                        dataType: "json",
+                        contentType: "application/json"
+                    });
+                });
+            });
+        });
+    </script>
+{% endblock %}

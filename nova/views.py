@@ -374,7 +374,10 @@ def app_deploy(request):
 
         if request.method == 'GET':
             app_host = AppHost.objects.aggregate(max_port=Max('port'))
-            app_host['max_port'] = int(app_host['max_port']) + 1
+            if app_host['max_port']:
+                app_host['max_port'] = int(app_host['max_port']) + 1
+            else:
+                app_host['max_port'] = 1000
             assets = Asset.objects.all().values('ip')
             return render(request, 'app_deploy.html', locals())
     else:
@@ -817,15 +820,19 @@ def config_file_add(request):
             app_name = form_data.get('name')
             svn_url = form_data.get('svn_url')
             files = request.FILES.getlist('files')
+            if svn_url[0] == '/':
+                svn_url_real = svn_url[1:]
+            else:
+                svn_url_real = svn_url
             # 权限判断
             if env == 'product' and not User.has_perm(request.user, 'nova.operate_product'):
                 data = {'rtn': '97', 'msg': '没有生产环境操作权限，请联系管理员!'}
                 return HttpResponse(json.dumps(data))
             if app_name.find('tomcat-') == 0:
                 config_file_path = os.path.join(config_files_path, env, app_name.split('tomcat-')[-1],
-                                                urllib.url2pathname(svn_url))
+                                                urllib.url2pathname(svn_url_real))
             if app_name.find('fdp_') == 0:
-                config_file_path = os.path.join(config_files_path, env, app_name, urllib.url2pathname(svn_url))
+                config_file_path = os.path.join(config_files_path, env, app_name, urllib.url2pathname(svn_url_real))
             try:
                 # 自动在服务器上创建文件夹
                 logger.info(u'自动在服务器上创建应用配置文件路径:%s' % config_file_path)
@@ -890,24 +897,31 @@ def config_file(request):
     # 改为从数据库查询
     app_config_list = []
     for app_config in app_configs:
-        files = app_config.files.split(',')
-        app_config_dic = {'name': app_config.name,
-                          'env': app_config.env,
-                          'svn_url': app_config.svn_url,
-                          'files': files
-                          }
-        app_config_list.append(app_config_dic)
+        files_list = app_config.files.split(',')
+        for i in files_list:
+            if app_config.svn_url[0] == '/':
+                app_config_dic = {'name': app_config.name,
+                                  'env': app_config.env,
+                                  'file_path': os.path.join(app_config.svn_url[1:], i),
+                                  'file': i}
+            else:
+                app_config_dic = {'name': app_config.name,
+                                  'env': app_config.env,
+                                  'file_path': os.path.join(app_config.svn_url, i),
+                                  'file': i}
+            app_config_list.append(app_config_dic)
     return render(request, 'config_file.html', locals())
 
 
 @login_required
 @permission_required('nova.access_file', raise_exception=True)
-def config_file_editor(request, app_name, env, file_path, file_name):
+def config_file_editor(request, app_name, env, file_path):
     logger.info('User is:%s; Request env is:%s' % (request.user.username, env.upper()))
     if 'product' == env and not User.has_perm(request.user, 'nova.operate_product'):
         return render(request, 'deny.html')
     else:
-        file_name = file_name.encode('utf-8')
+        file_path = file_path.encode('utf-8')
+        file_name = os.path.basename(file_path)
         if app_name.find('tomcat-') == 0:
             app_config_files_path = os.path.join(config_files_path, env, '%s') % app_name.split('tomcat-')[-1]
         if app_name.find('fdp_') == 0:
@@ -917,7 +931,9 @@ def config_file_editor(request, app_name, env, file_path, file_name):
             # return render(request, 'message.html', data)
             # 提供adp-ieds.jar配置文件查看功能
             file_name = 'spring-config-ieds.xml'
-        app_config_file = os.path.join(app_config_files_path, urllib.url2pathname(file_path), file_name)
+        if file_path[0] == '/':
+            file_path = file_path[1:]
+        app_config_file = os.path.join(app_config_files_path, urllib.url2pathname(file_path))
         logger.info("Edit app_config_file:%s" % app_config_file)
         if (file_name == 'config-oss.properties' or file_name == 'config-mysql.properties'
             or file_name == 'quartz.properties' or file_name == 'config-sqlserver.properties'
@@ -930,7 +946,7 @@ def config_file_editor(request, app_name, env, file_path, file_name):
                 fo = open(app_config_file, "rb")
                 data = {'file': app_config_file, 'env': env, 'file_content': fo.read()}
             except IOError:
-                msg = '该配置文件%s在服务器上不存在，请先在服务器上配置！' % file_name
+                msg = '该配置文件%s在服务器上不存在，请先在服务器上配置！' % file_path
                 data = {'msg': msg}
                 return render(request, 'message.html', data)
         return render(request, 'config_file_editor.html', data)
@@ -1145,8 +1161,18 @@ def sql_exec(request):
                     logger.info(u'该SQL包含UNION关键字.')
                     data = {'rtn': '98', 'msg': u'该SQL有包含UNION非法字符，无法执行，请联系管理员!'}
                     return HttpResponse(json.dumps(data))
-                # 新增操作不限制
-                if len(re.findall(r'(| |\n|\r\n)(?i)insert( |\n|\r\n)', sql_command, re.S)) > 0:
+                # add 20190226 支持变更表结构
+                if len(re.findall(r'(| |\n|\r\n)(?i)alter table( |\n|\r\n)', sql_command, re.S)) > 0 or len(
+                        re.findall(r'(| |\n|\r\n)(?i)create table( |\n|\r\n)', sql_command, re.S)) > 0:
+                    logger.info(u'该SQL为变更表结构语句.')
+                    if not User.has_perm(request.user, 'nova.exec_change_table'):
+                        data = {'rtn': '98', 'msg': '没有变更表结构权限，请联系管理员!'}
+                        return HttpResponse(json.dumps(data))
+                    sql_recovery_tmp = "-- 该SQL为原SQL,不是回滚SQL,请注意！\r\n%s" % sql_command
+                    sql_recovery = sql_recovery + sql_recovery_tmp + ";\n"
+                # add 20190226 支持变更表结构
+                #  新增操作不限制
+                elif len(re.findall(r'(| |\n|\r\n)(?i)insert( |\n|\r\n)', sql_command, re.S)) > 0:
                     logger.info(u'该SQL为INSERT语句.')
                     sql_recovery_tmp = "-- 该SQL为原SQL,不是回滚SQL,请注意！\r\n%s" % sql_command
                     sql_recovery = sql_recovery + sql_recovery_tmp + ";\n"
@@ -1524,7 +1550,7 @@ def task_log(request):
         return render(request, 'task_logs.html', context=data)
     except Exception as e:
         logger.info(e)
-        data = json.dumps({'rtn': "99", 'msg': "无法打开日志文件，请联系管理员!!!"})
+        data = {'rtn': "99", 'msg': "无法打开日志文件，请联系管理员!!!"}
         return render(request, 'message.html', data)
 
 
@@ -1730,7 +1756,8 @@ def access_log(request):
     try:
         db_info = Database.objects.get(db_name=db_name, env=db_env)
     except Database.DoesNotExist:
-        data = {'rtn': '99', 'msg': u'未找到该数据库配置！'}
+        data = {'rtn': '99', 'msg': u'未找到数据库app_log配置！'}
+        return render(request, 'message.html', data)
     logger.info('db_info is:%s' % db_info)
     # 连接数据库
     try:
@@ -2556,3 +2583,25 @@ def ecai_stat(request):
             data = {'rtn': '99', 'msg': u'易财统计查询错误:' + str(e)}
             logger.info(json.dumps(data, encoding='utf-8', ensure_ascii=False))
         return render(request, 'ecai_stat.html', locals())
+
+
+@csrf_exempt
+def ecctaaDeploy(request):
+    logger.info('User is:%s;Request is: deploy ecctaa jars.' % request.user.username)
+    if request.method == 'POST':
+        config_eccta_ini = json.loads(request.body)['config_eccta_ini']
+        logger.info(config_eccta_ini)
+        with open('/tmp/config.ecctaa.ini', 'wb') as f:
+            f.write(config_eccta_ini)
+        ecctaa_asset = Asset.objects.get(ip='10.126.3.34')
+        try:
+            RunCmd(host=ecctaa_asset.ip, port=ecctaa_asset.port, username=ecctaa_asset.username,
+                   password=ecctaa_asset.password).upload_file('/tmp/config.ecctaa.ini',
+                                                               '/ecctaa_deploy/config.ecctaa.ini',
+                                                               log_file='/tmp/upload.ecctaa.log')
+        except Exception as e:
+            logger.info(e)
+        data = {'rtn': '00', 'msg': config_eccta_ini}
+        return HttpResponse(json.dumps(data))
+    else:
+        return render(request, 'deploy_ecctaa.html')

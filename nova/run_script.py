@@ -10,6 +10,11 @@ import os
 import configmodule
 import socket
 import logging
+
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 APP_IP = socket.gethostbyname(socket.gethostname())
 
 # Get an instance of a logger
@@ -79,9 +84,17 @@ class RunCmd(object):
             if log_file:
                 with open(log_file, 'a') as f:
                     if stderr:
-                        f.write("[%s@%s:%s] error: %s\n" % (self.__username, self.__host, self.__port, stderr))
+                        try:
+                            f.write("[%s@%s:%s] error: %s\n" % (self.__username, self.__host, self.__port, stderr))
+                        except Exception as e:
+                            logger.info(str(e))
+                            logger.info(str(stderr))
                     if stdout:
-                        f.write("[%s@%s:%s] out: %s\n" % (self.__username, self.__host, self.__port, stdout))
+                        try:
+                            f.write("[%s@%s:%s] out: %s\n" % (self.__username, self.__host, self.__port, stdout))
+                        except Exception as e:
+                            logger.info(str(e))
+                            logger.info(str(stdout))
             return stdout, stderr
 
     def file_exist(self, remote_path, create=''):

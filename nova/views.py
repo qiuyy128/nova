@@ -2342,6 +2342,7 @@ def config_ssh_public_key(request):
                         # cmd = '''sshpass -p "%s" ssh-copy-id -i ~/.ssh/id_rsa.pub "%s -p%s -o StrictHostKeyChecking=no"''' % (host.password, asset_ip, asset_port)
                         ssh_add_key_path = os.path.join(base_path, 'script', 'ssh_addkey.yml')
                         cmd = '''ansible-playbook %s -e "host=%s"''' % (ssh_add_key_path, host.ip)
+                        logger.info(cmd)
                         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                         if not p.stderr:
                             for line in p.stdout.readlines():
@@ -2349,10 +2350,6 @@ def config_ssh_public_key(request):
                         else:
                             for line in p.stderr.readlines():
                                 errs += line
-                        # 去掉ansible_ssh_pass
-                        cmd = '''sed -i 's/^%s[[:space:]].*/%s/' %s''' % (ip, ip, ansible_hosts_file)
-                        logger.info(cmd)
-                        subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                         # 验证公钥是否配置成功
                         cmd = '''ansible all -i "%s," -m shell -a "ifconfig"''' % ip
                         logger.info(cmd)
@@ -2366,7 +2363,12 @@ def config_ssh_public_key(request):
                         logger.info(u'=================验证公钥是否配置成功信息=============')
                         # 公钥配置成功后修改连接为公钥连接并清空密码
                         success_msg = '%s | success' % host.ip
-                        if success_msg in p.stdout.readlines():
+                        if success_msg in msg:
+                            # 去掉ansible_ssh_pass
+                            cmd = '''sed -i 's/^%s[[:space:]].*/%s/' %s''' % (ip, ip, ansible_hosts_file)
+                            logger.info(cmd)
+                            subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                            # 修改ssh连接方式为公钥连接
                             host.connect_method = 'PublicKey'
                             host.password = ''
                             host.save()

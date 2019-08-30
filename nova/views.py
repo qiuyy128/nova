@@ -2593,16 +2593,16 @@ def ecctaaDeploy(request):
     if request.method == 'POST':
         config_eccta_ini = json.loads(request.body)['config_eccta_ini']
         logger.info(config_eccta_ini)
-        with open('/tmp/config.ecctaa.ini', 'wb') as f:
+        with open('/u01/auto_deploy/config.ecctaa.ini', 'wb') as f:
             f.write(config_eccta_ini)
-        ecctaa_asset = Asset.objects.get(ip='10.126.3.34')
-        try:
-            RunCmd(host=ecctaa_asset.ip, port=ecctaa_asset.port, username=ecctaa_asset.username,
-                   password=ecctaa_asset.password).upload_file('/tmp/config.ecctaa.ini',
-                                                               '/ecctaa_deploy/config.ecctaa.ini',
-                                                               log_file='/tmp/upload.ecctaa.log')
-        except Exception as e:
-            logger.info(e)
+        #ecctaa_asset = Asset.objects.get(ip='10.126.3.34')
+        #try:
+        #    RunCmd(host=ecctaa_asset.ip, port=ecctaa_asset.port, username=ecctaa_asset.username,
+        #           password=ecctaa_asset.password).upload_file('/tmp/config.ecctaa.ini',
+        #                                                       '/ecctaa_deploy/config.ecctaa.ini',
+        #                                                       log_file='/tmp/upload.ecctaa.log')
+        #except Exception as e:
+        #    logger.info(e)
         data = {'rtn': '00', 'msg': config_eccta_ini}
         return HttpResponse(json.dumps(data))
     else:

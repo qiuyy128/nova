@@ -1,5 +1,5 @@
 celery==3.1.25
-Django==1.10.7
+Django==1.11.29
 django-celery==3.2.1
 MySQL-python==1.2.3
 oss2==2.2.0

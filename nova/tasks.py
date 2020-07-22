@@ -1491,7 +1491,7 @@ def query_fpcy_every_day():
     logger.info('stat_day is: %s' % stat_day)
     zzs_name = "%增值税%"
     # 业务库
-    db_env = 'slave'
+    db_env = 'subordinate'
     # 连接数据库
     try:
         # fpcy库
@@ -1988,7 +1988,7 @@ def ecai_sync_data():
     import script.ecai_stat_sql as ecai_stat_sql
     try:
         # 连接查询库
-        db_env = 'slave'
+        db_env = 'subordinate'
         # lemonacc库
         db_info = Database.objects.get(db_name='lemonacc', env=db_env)
         conn_lemonacc = MsSQL(host=db_info.ip, port=db_info.port, db=db_info.db_name, user=db_info.username,

@@ -1752,7 +1752,7 @@ def fpcy_request_log(request):
 def access_log(request):
     logger.info('User is:%s;Request is: query access log.' % request.user.username)
     db_name = 'app_log'
-    db_env = 'slave'
+    db_env = 'subordinate'
     try:
         db_info = Database.objects.get(db_name=db_name, env=db_env)
     except Database.DoesNotExist:
@@ -1892,7 +1892,7 @@ def get_fpcy_qyjkqy_detail(request):
     end_time = end_time.strftime('%Y-%m-%d %H:%M:%S')
     try:
         # 查询库查询
-        db_env = 'slave'
+        db_env = 'subordinate'
         # fpcy库
         db_info = Database.objects.get(db_name='fpcy', env=db_env)
         conn = Mysql(host=db_info.ip, port=int(db_info.port), db=db_info.db_name, user=db_info.username,
@@ -1916,7 +1916,7 @@ def get_fpcy_qyjkqy_detail(request):
 @csrf_exempt
 @permission_required('nova.access_monitor', raise_exception=True)
 def fpcy_stat(request):
-    db_env = 'slave'
+    db_env = 'subordinate'
     try:
         # 连接mongodb数据库
         info_mongo = Database.objects.get(db_name='stats', env=db_env)
@@ -2180,7 +2180,7 @@ def fpcy_stat(request):
 @csrf_exempt
 def get_fpcy_request_area(request):
     # 业务库
-    db_env = 'slave'
+    db_env = 'subordinate'
     # 连接数据库
     try:
         # fpcy库
@@ -2514,7 +2514,7 @@ def ecai_stat(request):
         import script.ecai_stat_sql as ecai_stat_sql
         try:
             # 连接查询库
-            db_env = 'slave'
+            db_env = 'subordinate'
             # lemonacc库
             db_info = Database.objects.get(db_name='lemonacc', env=db_env)
             conn_lemonacc = MsSQL(host=db_info.ip, port=db_info.port, db=db_info.db_name, user=db_info.username,

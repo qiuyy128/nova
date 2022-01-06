@@ -1,4 +1,4 @@
-celery==3.1.25
+celery==5.2.2
 Django==1.10.7
 django-celery==3.2.1
 MySQL-python==1.2.3
